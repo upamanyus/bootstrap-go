@@ -264,6 +264,20 @@ func (sc *Scope) LowerPost(s *Surface) (*checker.Assn, error) {
 	return a, nil
 }
 
+// LowerTerm lowers a term written against sc. Like a postcondition, it may
+// mention `ret` and may not introduce new logical variables: every name must
+// already be a parameter or a precondition variable.
+func (sc *Scope) LowerTerm(s *SurfaceTerm) (*checker.Term, error) {
+	r := sc.newResolver(true)
+	if _, err := r.inferTerm(s.T, nil); err != nil {
+		return nil, err
+	}
+	if err := r.finishSorts(); err != nil {
+		return nil, err
+	}
+	return r.lowerTerm(s.T)
+}
+
 // finishSorts checks that every variable's sort was determined.
 func (r *resolver) finishSorts() error {
 	var all []*entry

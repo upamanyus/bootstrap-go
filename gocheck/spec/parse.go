@@ -124,6 +124,30 @@ func Parse(src string) (*Surface, error) {
 	return &Surface{Src: src, A: a}, nil
 }
 
+// SurfaceTerm is a parsed term together with its source text.
+type SurfaceTerm struct {
+	Src string
+	T   *Term
+}
+
+// ParseTerm parses a single term: the language written inside ⌜…⌝, but at any
+// sort, so that a location or an integer can be written on its own.
+func ParseTerm(src string) (*SurfaceTerm, error) {
+	toks, err := lex(src)
+	if err != nil {
+		return nil, err
+	}
+	p := &parser{toks: toks}
+	t, err := p.term()
+	if err != nil {
+		return nil, err
+	}
+	if p.cur().kind != tEOF {
+		return nil, p.errf(p.cur(), "unexpected %s after the term", p.cur())
+	}
+	return &SurfaceTerm{Src: src, T: t}, nil
+}
+
 type parser struct {
 	toks []token
 	i    int

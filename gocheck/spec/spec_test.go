@@ -400,3 +400,82 @@ func TestSepVersusMul(t *testing.T) {
 		t.Fatalf("p ↦ a ∗ a lowered to %s", pr.Assn(b))
 	}
 }
+
+// lowerTerm parses and lowers a standalone term in the scope that pre built.
+func lowerTerm(t *testing.T, ps []translate.ParamInfo, pre, src string) (*checker.Term, error) {
+	t.Helper()
+	sc, _, err := lowerPre(t, ps, pre)
+	if err != nil {
+		return nil, err
+	}
+	s, err := spec.ParseTerm(src)
+	if err != nil {
+		return nil, err
+	}
+	return sc.LowerTerm(s)
+}
+
+// TestParseTerm checks the standalone term entry point: a term of any sort,
+// including `ret`, lowered against a scope that it may not extend.
+func TestParseTerm(t *testing.T) {
+	cases := []struct {
+		name string
+		ps   []translate.ParamInfo
+		pre  string
+		src  string
+		want *checker.Term
+	}{
+		{name: "int", ps: doubleParams(), pre: "emp", src: "37 + 37",
+			want: &checker.Term{Kind: checker.TAdd,
+				A: &checker.Term{Kind: checker.TInt, Num: 37},
+				B: &checker.Term{Kind: checker.TInt, Num: 37}}},
+		{name: "loc", ps: doubleParams(), pre: "emp", src: "z",
+			want: &checker.Term{Kind: checker.TVar, Num: 1}},
+		{name: "ghost", ps: doubleParams(), pre: "z ↦ z0", src: "z0",
+			want: &checker.Term{Kind: checker.TVar, Num: 2}},
+		{name: "unit", ps: nil, pre: "emp", src: "()",
+			want: &checker.Term{Kind: checker.TUnit}},
+		{name: "unsigned", ps: maxParams(), pre: "emp", src: "a >=u b",
+			want: &checker.Term{Kind: checker.TNot, A: &checker.Term{Kind: checker.TLtU,
+				A: &checker.Term{Kind: checker.TVar, Num: 0},
+				B: &checker.Term{Kind: checker.TVar, Num: 1}}}},
+		{name: "ret", ps: absParams(), pre: "emp", src: "ret == -x",
+			want: &checker.Term{Kind: checker.TEq,
+				A: &checker.Term{Kind: checker.TResult},
+				B: &checker.Term{Kind: checker.TNeg,
+					A: &checker.Term{Kind: checker.TVar, Num: 0}}}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got, err := lowerTerm(t, c.ps, c.pre, c.src)
+			if err != nil {
+				t.Fatalf("%s: %v", c.src, err)
+			}
+			if !checker.TermEq(got, c.want) {
+				pr := &render.Printer{}
+				t.Fatalf("%s lowered to %s", c.src, pr.Term(got))
+			}
+		})
+	}
+}
+
+// TestParseTermErrors checks that a term may not introduce a logical variable
+// and that trailing input is reported.
+func TestParseTermErrors(t *testing.T) {
+	cases := []struct{ src, match string }{
+		{src: "nosuch", match: "unknown name"},
+		{src: "x +", match: "expected a term"},
+		{src: "x 1", match: "after the term"},
+	}
+	for _, c := range cases {
+		t.Run(c.src, func(t *testing.T) {
+			_, err := lowerTerm(t, absParams(), "emp", c.src)
+			if err == nil {
+				t.Fatalf("%s: expected an error", c.src)
+			}
+			if !strings.Contains(err.Error(), c.match) {
+				t.Fatalf("%s: error %q does not contain %q", c.src, err, c.match)
+			}
+		})
+	}
+}
