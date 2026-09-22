@@ -78,6 +78,16 @@ run 0 "CondStore: a boolean result and a conditional write" \
 run 0 "Swap again, all ASCII (-ascii)" \
 	-pkg $PKG -ascii -pre 'p |-> a * q |-> b' -post 'p |-> b * q |-> a' Swap
 
+# A longer function: Median3 sorts three locals with a three-comparator
+# sorting network and returns the middle one, 8 paths in all. The checker has
+# no arithmetic, so the post names each path's conditions exactly; the last
+# two disjuncts are the two infeasible paths, whose conditions contradict.
+LONG=./checker/examples/long
+MEDIAN_POST='(⌜b <u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜c >=u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜c >=u b⌝ ∗ ⌜c <u a⌝ ∗ ⌜ret == c⌝) ∨ (⌜c >=u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == c⌝) ∨ (⌜b <u a⌝ ∗ ⌜c >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜c <u a⌝ ∗ ⌜b >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜b <u a⌝ ∗ ⌜a <u b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜b <u a⌝)'
+
+run 0 "Median3: a sorting network, eight paths, the median returned" \
+	-pkg $LONG -post "$MEDIAN_POST" Median3
+
 # --- Rejected inputs --------------------------------------------------------
 
 run 1 "Swap without owning q: the load from q is unsafe" \
@@ -85,6 +95,10 @@ run 1 "Swap without owning q: the load from q is unsafe" \
 
 run 1 "Double against a postcondition it does not establish" \
 	-pkg $PKG -pre 'z |-> z0' -post 'z ↦ 74' Double
+
+run 1 "Median3 claiming the maximum, not the median, when c < b < a" \
+	-pkg $LONG -post "${MEDIAN_POST/⌜c <u b⌝ ∗ ⌜ret == b⌝)/⌜c <u b⌝ ∗ ⌜ret == a⌝)}" \
+	Median3
 
 run 2 "Double against an ill-sorted postcondition" \
 	-pkg $PKG -pre 'z |-> z0' -post '⌜x && z0⌝' Double

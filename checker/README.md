@@ -33,6 +33,7 @@ checker/            core, translated by Goose; NO imports (see below)
   match.go          postcondition matching
   check.go          Analyze / Verify / Check / Explain
   examples/         target Go programs for the demo
+  examples/long/    longer targets (Median3), not translated or proved in Rocq
 gocheck/            frontend + CLI (not translated): translate/, spec/, render/, demo.sh
 new/checker/soundness.v   the soundness statement (definitions + Axiom)
 new/proof/github_com/mit_pdos/perennial/checker/examples/   hand-written Rocq
