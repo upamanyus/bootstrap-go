@@ -87,3 +87,25 @@ Everything is behind the opam switch `perennial` (Rocq 9.4+alpha):
    This is a real soundness bug, reachable from ordinary Go (`-x` on a
    `uint64` is legal Go). `applyUnOp` now also requires `typeSigned(t)`.
    Regression test in `TestIllSorted`.
+
+### More tactic notes
+
+- Perennial has **no `wp_bind_inv`** (it is commented out in both
+  `weakestpre.v` and `crash_weakestpre.v`). So a lemma about a WP under an
+  evaluation context has to be *built* with `wp_bind`, not taken apart. That
+  is why `wp_lams` carries "the rest of the application" in its
+  postcondition instead of being stated as a transformation of
+  `WP apply_vals_e ... {{Φ}}`.
+- `iApply (wp_wand with "H")` and bare `iApply wp_wand_r` fail with "Cannot
+  find witness"; `iApply (wp_wand_r _ _ _ <the Φ>)` works.
+- `iApply wp_value'` fails when the value was introduced by `wp_wand_r`,
+  because its type prints as `goose_lang.(language.val)` rather than `val`;
+  `wp_pures` closes the same goal.
+- To beta-reduce exactly once without `wp_pures` running away into the body,
+  prove the step lemma with the body abstract (`wp_beta_recv`,
+  `wp_beta_func`, `wp_beta_anon` in steps.v) and apply it.
+- `#x` is opaque (`into_val` is a field of `GoGlobalContext`), so `#x` and
+  `LitV (LitInt x)` are *not* convertible. A `GoOp` step needs the `#` form,
+  and `teval`'s `match` needs the `LitV` form, so the order is: put the
+  operands in `#` form, `wp_pures`, then `rewrite go.into_val_unfold` and
+  `simpl` (`op_operands` / `op_finish` in steps.v).

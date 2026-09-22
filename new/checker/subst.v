@@ -116,6 +116,9 @@ Proof. done. Qed.
 Lemma delete_names_cons x xs m : delete_names (x :: xs) m = delete x (delete_names xs m).
 Proof. done. Qed.
 
+Lemma delete_names_empty xs : delete_names xs (∅ : gmap string val) = ∅.
+Proof. induction xs as [|y xs IH]; first done. by rewrite delete_names_cons IH delete_empty. Qed.
+
 Lemma delete_names_elem x xs m : x ∈ xs → delete x (delete_names xs m) = delete_names xs m.
 Proof.
   induction xs as [|y xs IH]; first by inversion 1.
@@ -150,6 +153,10 @@ Fixpoint binds (xs : list string) (vs : list val) (m : gmap string val) : gmap s
   | x :: xs', v :: vs' => binds xs' vs' (<[x := v]> m)
   | _, _ => m
   end.
+
+Lemma binds_cons x xs v vs m :
+  binds (x :: xs) (v :: vs) m = binds xs vs (<[x := v]> m).
+Proof. done. Qed.
 
 (** * Substitution under a chain of lambdas *)
 
@@ -188,6 +195,16 @@ Proof.
   destruct (decide (go.go_string_to_string x ∈ pnames xs)) as [Hin|Hnin].
   - rewrite delete_names_insert_elem //. f_equal. by apply delete_names_elem.
   - rewrite delete_names_insert_not_elem // -csubst_insert //.
+Qed.
+
+(** The same, starting from the empty environment: this is the shape the
+    top-level application of [func_val] has. *)
+Lemma lams_step_empty x xs v e :
+  subst (pname x) v (lams xs (expr_of e)) =
+  lams xs (csubst (delete_names (pnames xs) (<[pname x := v]> ∅)) e).
+Proof.
+  rewrite -(lams_step x xs ∅ v e).
+  by rewrite delete_names_empty csubst_empty.
 Qed.
 
 (** * The environment of the checker's linked-list [env] *)
