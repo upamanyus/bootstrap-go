@@ -405,6 +405,48 @@ Proof.
     iExact "Hu".
 Qed.
 
+(** * Memory, without a sort constraint on the value
+
+    [steps.v] proves the load/store/alloc lemmas at a value of the type's
+    sort, which is the shape the operator cases need. The memory *cases of
+    exec* need less: the checker does not check that a stored or allocated
+    value has the type's sort, and it does not have to, because the GooseLang
+    step for a store does not look at the value at all. These are the
+    sort-free versions. *)
+
+#[local] Hint Extern 1 (go.is_primitive ?t) => constructor : typeclass_instances.
+#[local] Hint Extern 1 (go.is_predeclared ?t) => constructor : typeclass_instances.
+
+Lemma wp_ctype_load_any (cty : ctype) (lo : loc) dq (v : val) :
+  {{{ heap_pointsto lo dq v }}}
+    ![type_of cty] #lo
+  {{{ RET v; heap_pointsto lo dq v }}}.
+Proof.
+  pose proof (go.tagged_steps internal).
+  iIntros (Φ) "Hl HΦ". destruct cty; simpl; wp_pures;
+    wp_apply (_internal_wp_untyped_read with "Hl"); iIntros "Hl"; by iApply "HΦ".
+Qed.
+
+Lemma wp_ctype_store_any (cty : ctype) (lo : loc) (v w : val) :
+  {{{ heap_pointsto lo (DfracOwn 1) v }}}
+    GoStore (type_of cty) (#lo, w)%V
+  {{{ RET #(); heap_pointsto lo (DfracOwn 1) w }}}.
+Proof.
+  pose proof (go.tagged_steps internal).
+  iIntros (Φ) "Hl HΦ". destruct cty; simpl; wp_pures;
+    wp_apply (_internal_wp_untyped_store with "Hl"); iIntros "Hl"; by iApply "HΦ".
+Qed.
+
+Lemma wp_ctype_alloc_any (cty : ctype) (v : val) :
+  {{{ True }}}
+    GoAlloc (type_of cty) v
+  {{{ (l : loc), RET #l; heap_pointsto l (DfracOwn 1) v }}}.
+Proof.
+  pose proof (go.tagged_steps internal).
+  iIntros (Φ) "_ HΦ". destruct cty; simpl; wp_pures;
+    wp_apply wp_alloc_untyped; iIntros (l) "Hl"; by iApply "HΦ".
+Qed.
+
 (** * The heap cases
 
     A symbolic cell is a real points-to, so a successful [heapLookup] hands
@@ -450,6 +492,39 @@ Proof.
     iIntros "[Hc HH]".
     iDestruct (IH H'' eq_refl Hx with "HH") as (z) "[Hp Hback]".
     iExists z. iFrame "Hp". iIntros "Hp". iFrame "Hc". by iApply "Hback".
+Qed.
+
+(** * Load
+
+    [exec] requires a cell whose location term is *syntactically* the
+    address, which is what [heapLookup] finds; the value it holds is the
+    result. *)
+Lemma exec_sound_load (cty : ctype) (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → ∃ y, heap_lookup (sheap (pst p)) (pret p) = Some y ∧
+                      mkPath y (pst p) ∈ out) →
+  exec_sound (CELoad cty ce) ρ sst out.
+Proof.
+  intros He Hwfps Hcell Hwf Hρ V Hsat. iIntros "Hheap". simpl.
+  iApply (wp_bind (fill [AppRCtx (Val (GoInstruction (GoLoad (type_of cty))))])).
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars sst)) V ps)).
+  iSplitL "Hheap".
+  { by iApply (He Hwf Hρ V Hsat with "Hheap"). }
+  iIntros (w) "Hw".
+  iDestruct "Hw" as (p V') "(%Hin & %Hag & %Hret & %Hsat' & Hheap')".
+  destruct (Hcell p Hin) as (y & Hlk & Hout).
+  iDestruct (heap_interp_lookup V' _ _ _ Hlk with "Hheap'")
+    as (lo) "(%Hl & Hp & Hback)".
+  rewrite Hret Hl -lval_eq.
+  iApply (wp_ctype_load_any cty lo (DfracOwn 1) (teval V' y) with "Hp").
+  iIntros "!> Hp".
+  iExists (mkPath y (pst p)), V'.
+  iSplit; first (iPureIntro; exact Hout).
+  iSplit; first (iPureIntro; exact Hag).
+  iSplit; first done.
+  iSplit; first (iPureIntro; exact Hsat').
+  by iApply "Hback".
 Qed.
 
 End exec_spec.
