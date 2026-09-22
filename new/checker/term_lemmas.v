@@ -6,9 +6,11 @@
     program; these are the specification functions the Go specs are stated
     over. *)
 From New.proof Require Import proof_prelude.
+From New.golang Require Import theory.
+From New.generatedproof.github_com.mit_pdos.perennial Require Import checker.
 From New.checker Require Import defs.
 
-Set Default Proof Using "Type".
+Set Default Proof Using "All".
 
 (** * Decidable equality *)
 
@@ -17,13 +19,6 @@ Proof. solve_decision. Defined.
 
 #[global] Instance term_eq_dec : EqDecision term.
 Proof. solve_decision. Defined.
-
-#[global] Instance sort_countable : Countable sort.
-Proof.
-  refine (inj_countable' (λ s, match s with SInt => 0 | SBool => 1 | SLoc => 2 | SUnit => 3 end)
-                         (λ n : nat, match n with 0 => SInt | 1 => SBool | 2 => SLoc | _ => SUnit end) _).
-  by intros [].
-Qed.
 
 Section term_semantics.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
@@ -43,9 +38,9 @@ Proof. rewrite /lval. by intros [= ->]. Qed.
 Lemma has_sort_unique v s1 s2 : has_sort v s1 → has_sort v s2 → s1 = s2.
 Proof.
   destruct s1, s2; rewrite /has_sort /ival /bval /lval /uval;
-    intros H1 H2; try done;
-    repeat (destruct H1 as [? H1] || destruct H2 as [? H2]);
-    rewrite H1 in H2; by inversion H2.
+    intros H1 H2; try reflexivity;
+    repeat match goal with H : ∃ _, _ |- _ => destruct H as [? H] end;
+    simplify_eq.
 Qed.
 
 (** * The sort environment of checker/sorts.go *)
@@ -144,22 +139,22 @@ Proof.
   - destruct (sort_of E t1) as [[]|] eqn:H1; try done;
       destruct (sort_of E t2) as [[]|] eqn:H2; try done.
     inversion Hs; subst.
-    destruct (IHt1 SInt HE eq_refl) as [x ->]. destruct (IHt2 SInt HE eq_refl) as [y ->].
+    destruct (IHt1 SInt eq_refl) as [x ->]. destruct (IHt2 SInt eq_refl) as [y ->].
     rewrite /ival /=. by eexists.
   - destruct (sort_of E t1) as [[]|] eqn:H1; try done;
       destruct (sort_of E t2) as [[]|] eqn:H2; try done.
     inversion Hs; subst.
-    destruct (IHt1 SInt HE eq_refl) as [x ->]. destruct (IHt2 SInt HE eq_refl) as [y ->].
+    destruct (IHt1 SInt eq_refl) as [x ->]. destruct (IHt2 SInt eq_refl) as [y ->].
     rewrite /ival /=. by eexists.
   - destruct (sort_of E t1) as [[]|] eqn:H1; try done;
       destruct (sort_of E t2) as [[]|] eqn:H2; try done.
     inversion Hs; subst.
-    destruct (IHt1 SInt HE eq_refl) as [x ->]. destruct (IHt2 SInt HE eq_refl) as [y ->].
+    destruct (IHt1 SInt eq_refl) as [x ->]. destruct (IHt2 SInt eq_refl) as [y ->].
     rewrite /ival /=. by eexists.
   - (* TNeg *)
     destruct (sort_of E t) as [[]|] eqn:H1; try done.
     inversion Hs; subst.
-    destruct (IHt SInt HE eq_refl) as [x ->]. rewrite /ival /=. by eexists.
+    destruct (IHt SInt eq_refl) as [x ->]. rewrite /ival /=. by eexists.
   - (* TEq *)
     destruct (sort_of E t1) as [sa|] eqn:H1; try done;
       destruct (sort_of E t2) as [sb|] eqn:H2; try done.
@@ -169,25 +164,25 @@ Proof.
     destruct (sort_of E t1) as [[]|] eqn:H1; try done;
       destruct (sort_of E t2) as [[]|] eqn:H2; try done.
     inversion Hs; subst.
-    destruct (IHt1 SInt HE eq_refl) as [x ->]. destruct (IHt2 SInt HE eq_refl) as [y ->].
+    destruct (IHt1 SInt eq_refl) as [x ->]. destruct (IHt2 SInt eq_refl) as [y ->].
     rewrite /bval /=. by eexists.
   - (* TLe *)
     destruct (sort_of E t1) as [[]|] eqn:H1; try done;
       destruct (sort_of E t2) as [[]|] eqn:H2; try done.
     inversion Hs; subst.
-    destruct (IHt1 SInt HE eq_refl) as [x ->]. destruct (IHt2 SInt HE eq_refl) as [y ->].
+    destruct (IHt1 SInt eq_refl) as [x ->]. destruct (IHt2 SInt eq_refl) as [y ->].
     rewrite /bval /=. by eexists.
   - (* TNot *)
     destruct (sort_of E t) as [[]|] eqn:H1; try done.
     inversion Hs; subst.
-    destruct (IHt SBool HE eq_refl) as [x ->]. rewrite /bval /=. by eexists.
+    destruct (IHt SBool eq_refl) as [x ->]. rewrite /bval /=. by eexists.
   - (* TIte *)
     destruct (sort_of E t1) as [[]|] eqn:H1; try done;
       destruct (sort_of E t2) as [sa|] eqn:H2; try done;
       destruct (sort_of E t3) as [sb|] eqn:H3; try done.
     all: destruct (decide (_ = _)) eqn:Hd; try done.
     all: inversion Hs; subst.
-    all: destruct (IHt1 SBool HE eq_refl) as [c ->].
+    all: destruct (IHt1 SBool eq_refl) as [c ->].
     all: destruct c; [ by apply IHt2 | by apply IHt3 ].
 Qed.
 
@@ -229,7 +224,10 @@ Proof. done. Qed.
 
 Lemma agree_below_trans k V1 V2 V3 :
   agree_below k V1 V2 → agree_below k V2 V3 → agree_below k V1 V3.
-Proof. intros (?&?&?) (?&?&?). split_and!; [|congruence..]. intros. by etrans. Qed.
+Proof.
+  intros (H1 & ? & ?) (H2 & ? & ?). split_and!; [|congruence..].
+  intros n Hn. rewrite H1 //. by apply H2.
+Qed.
 
 Lemma agree_below_weaken k k' V V' :
   (k' ≤ k)%nat → agree_below k V V' → agree_below k' V V'.
@@ -238,56 +236,56 @@ Proof. intros ? (?&?&?). split_and!; auto with lia. Qed.
 Lemma teval_agree k V V' t :
   agree_below k V V' → vars_below k t → teval V t = teval V' t.
 Proof.
-  intros (Hv & Hp & Hr). induction t; simpl; intros Hb; try done.
-  - by apply Hv.
-  - by rewrite Hp.
-  - by rewrite Hr.
-  - destruct Hb. by rewrite IHt1 // IHt2.
-  - destruct Hb. by rewrite IHt1 // IHt2.
-  - destruct Hb. by rewrite IHt1 // IHt2.
-  - by rewrite IHt.
-  - destruct Hb. by rewrite IHt1 // IHt2.
-  - destruct Hb. by rewrite IHt1 // IHt2.
-  - destruct Hb. by rewrite IHt1 // IHt2.
-  - by rewrite IHt.
-  - destruct Hb as (?&?&?). by rewrite IHt1 // IHt2 // IHt3.
-  - by rewrite IHt.
+  intros (Hv & Hp & Hr). induction t; simpl; intros Hb;
+    destruct_and?;
+    try (by apply Hv); try (by rewrite Hp); try (by rewrite Hr);
+    try (by rewrite IHt //);
+    try (by rewrite IHt1 // IHt2 //);
+    try (by rewrite IHt1 // IHt2 // IHt3 //);
+    done.
 Qed.
 
 (** Sorting is insensitive to variables beyond the table, so extending the
     table preserves the sort of an already well-scoped term. *)
-Lemma sort_of_vars_app vars vars' t s :
-  vars_below (length vars) t →
-  sort_of_vars vars t = Some s →
-  sort_of_vars (vars ++ vars') t = Some s.
+Lemma sort_of_vars_mono vars vars' t s :
+  (∀ n s', vars !! n = Some s' → vars' !! n = Some s') →
+  sort_of_vars vars t = Some s → sort_of_vars vars' t = Some s.
 Proof.
-  rewrite /sort_of_vars /vars_env /=.
-  revert s. induction t; simpl; intros s Hb Hs; try done.
-  - rewrite lookup_app_l //.
+  intros Hsub. rewrite /sort_of_vars /vars_env /=. revert s.
+  induction t; simpl; intros s Hs; try done.
+  - by apply Hsub.
   - destruct (sort_of _ t1) as [[]|] eqn:H1; try done;
-      destruct (sort_of _ t2) as [[]|] eqn:H2; try done;
-      destruct Hb; by rewrite (IHt1 SInt) // (IHt2 SInt).
+      destruct (sort_of _ t2) as [[]|] eqn:H2; try done.
+    by rewrite (IHt1 SInt eq_refl) (IHt2 SInt eq_refl).
   - destruct (sort_of _ t1) as [[]|] eqn:H1; try done;
-      destruct (sort_of _ t2) as [[]|] eqn:H2; try done;
-      destruct Hb; by rewrite (IHt1 SInt) // (IHt2 SInt).
+      destruct (sort_of _ t2) as [[]|] eqn:H2; try done.
+    by rewrite (IHt1 SInt eq_refl) (IHt2 SInt eq_refl).
   - destruct (sort_of _ t1) as [[]|] eqn:H1; try done;
-      destruct (sort_of _ t2) as [[]|] eqn:H2; try done;
-      destruct Hb; by rewrite (IHt1 SInt) // (IHt2 SInt).
-  - destruct (sort_of _ t) as [[]|] eqn:H1; try done. by rewrite (IHt SInt).
+      destruct (sort_of _ t2) as [[]|] eqn:H2; try done.
+    by rewrite (IHt1 SInt eq_refl) (IHt2 SInt eq_refl).
+  - destruct (sort_of _ t) as [[]|] eqn:H1; try done.
+    by rewrite (IHt SInt eq_refl).
   - destruct (sort_of _ t1) as [sa|] eqn:H1; try done;
       destruct (sort_of _ t2) as [sb|] eqn:H2; try done.
-    destruct Hb. rewrite (IHt1 sa) // (IHt2 sb) //.
+    by rewrite (IHt1 sa eq_refl) (IHt2 sb eq_refl).
   - destruct (sort_of _ t1) as [[]|] eqn:H1; try done;
-      destruct (sort_of _ t2) as [[]|] eqn:H2; try done;
-      destruct Hb; by rewrite (IHt1 SInt) // (IHt2 SInt).
+      destruct (sort_of _ t2) as [[]|] eqn:H2; try done.
+    all: by rewrite (IHt1 SInt eq_refl) (IHt2 SInt eq_refl).
   - destruct (sort_of _ t1) as [[]|] eqn:H1; try done;
-      destruct (sort_of _ t2) as [[]|] eqn:H2; try done;
-      destruct Hb; by rewrite (IHt1 SInt) // (IHt2 SInt).
-  - destruct (sort_of _ t) as [[]|] eqn:H1; try done. by rewrite (IHt SBool).
+      destruct (sort_of _ t2) as [[]|] eqn:H2; try done.
+    all: by rewrite (IHt1 SInt eq_refl) (IHt2 SInt eq_refl).
+  - destruct (sort_of _ t) as [[]|] eqn:H1; try done.
+    by rewrite (IHt SBool eq_refl).
   - destruct (sort_of _ t1) as [[]|] eqn:H1; try done;
       destruct (sort_of _ t2) as [sa|] eqn:H2; try done;
       destruct (sort_of _ t3) as [sb|] eqn:H3; try done.
-    destruct Hb as (?&?&?). by rewrite (IHt1 SBool) // (IHt2 sa) // (IHt3 sb).
+    by rewrite (IHt1 SBool eq_refl) (IHt2 sa eq_refl) (IHt3 sb eq_refl).
+Qed.
+
+Corollary sort_of_vars_app vars vars' t s :
+  sort_of_vars vars t = Some s → sort_of_vars (vars ++ vars') t = Some s.
+Proof.
+  apply sort_of_vars_mono. intros n s' Hn. by apply lookup_app_l_Some.
 Qed.
 
 (** * [negate] *)
@@ -302,15 +300,20 @@ Definition negate (t : term) : term :=
 
 Lemma teval_negate V t b : teval V t = bval b → teval V (negate t) = bval (negb b).
 Proof.
-  destruct t; simpl; intros Ht; rewrite ?Ht //=.
-  (* the TNot case: [negate (TNot a) = a] *)
-  destruct (teval V t) eqn:Ha; try (rewrite /bval in Ht; congruence).
-  destruct l; rewrite /bval /uval in Ht |- *; try congruence.
-  inversion Ht. by rewrite negb_involutive.
+  destruct t; simpl; intros Ht; try (by rewrite Ht);
+    cbv [ival bval lval uval exec_v ret_v] in Ht |- *;
+    try congruence.
+  (* [negate (TNot a) = a]: the checker cancels the double negation *)
+  destruct (teval V t) eqn:Ha; try congruence.
+  destruct l; try congruence.
+  injection Ht as <-. by rewrite negb_involutive.
 Qed.
 
 Lemma sort_of_negate E t : sort_of E t = Some SBool → sort_of E (negate t) = Some SBool.
-Proof. destruct t; simpl; try done. destruct (sort_of E t) as [[]|]; try done. Qed.
+Proof.
+  intros Ht. destruct t; simpl in Ht |- *; rewrite ?Ht //.
+  by destruct (sort_of E t) as [[]|]; simplify_eq.
+Qed.
 
 Lemma vars_below_negate k t : vars_below k t → vars_below k (negate t).
 Proof. destruct t; simpl; naive_solver. Qed.
@@ -330,7 +333,7 @@ Lemma pc_sat_snoc V pc t :
   pc_sat V pc → teval V t = bval true → pc_sat V (pc ++ [t]).
 Proof.
   intros ??. apply pc_sat_app; first done.
-  intros ? ->%elem_of_list_singleton. done.
+  intros t' Ht'. assert (t' = t) as -> by set_solver. done.
 Qed.
 
 Lemma pc_sat_weaken V pc1 pc2 : pc1 ⊆ pc2 → pc_sat V pc2 → pc_sat V pc1.

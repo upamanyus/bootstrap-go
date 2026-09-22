@@ -10,17 +10,21 @@
     of GooseLang's [expr] keeps every induction here an 18-case induction over
     the fragment, instead of a mutual induction over [expr]/[val]/keyed
     elements/select clauses. *)
+From Perennial.Helpers Require Import bytes.
 From New.proof Require Import proof_prelude.
 From New.golang Require Import theory.
+From New.generatedproof.github_com.mit_pdos.perennial Require Import checker.
 From New.checker Require Import defs.
 
-Set Default Proof Using "Type".
+Set Default Proof Using "All".
 
 Section subst.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
 
-Definition pname (x : go_string) : string := go.go_string_to_string x.
+(** A notation rather than a definition, so that [csubst] and [expr_of] are
+    syntactically comparable. *)
+Notation pname x := (go.go_string_to_string x).
 
 (** [go_string_to_string] is a bijection onto its image, so distinct Go names
     stay distinct as GooseLang binders. *)
@@ -34,9 +38,9 @@ Proof.
   by rewrite list_fmap_id.
 Qed.
 
-#[global] Instance pname_inj : Inj (=) (=) pname.
+#[global] Instance go_string_to_string_inj : Inj (=) (=) go.go_string_to_string.
 Proof.
-  intros x y Heq. rewrite /pname in Heq.
+  intros x y Heq.
   by rewrite -(string_to_go_string_to_string x) -(string_to_go_string_to_string y) Heq.
 Qed.
 
@@ -87,20 +91,22 @@ Proof.
       destruct (m !! pname x0); simpl; [done|by rewrite decide_False].
   - (* CELet *)
     rewrite IHe1. f_equal. f_equal.
-    destruct (decide (BNamed x ≠ BAnon ∧ BNamed x ≠ BNamed (pname x0))) as [Hd|Hd];
-      rewrite decide_bool_decide.
-    + rewrite (bool_decide_true _ Hd).
-      assert (x ≠ pname x0) as Hne by naive_solver.
-      rewrite delete_commute IHe2 delete_insert_ne //.
-    + rewrite (bool_decide_false _ Hd).
-      assert (x = pname x0) as -> by naive_solver.
-      by rewrite delete_idemp delete_insert_delete.
+    case_decide as Hd.
+    + assert (x ≠ go.go_string_to_string x0) as Hne by naive_solver.
+      rewrite delete_delete IHe2 delete_insert_ne //.
+    + assert (x = go.go_string_to_string x0) as ->.
+      { destruct (decide (x = go.go_string_to_string x0)) as [->|?]; first done.
+        exfalso. apply Hd. split; congruence. }
+      by rewrite delete_delete_eq delete_insert_eq.
 Qed.
 
 (** * Deleting a list of names, and the environment a curried application
       builds *)
 
-Definition pnames (xs : list go_string) : list string := pname <$> xs.
+Definition pnames (xs : list go_string) : list string := go.go_string_to_string <$> xs.
+
+Lemma pnames_cons x xs : pnames (x :: xs) = go.go_string_to_string x :: pnames xs.
+Proof. done. Qed.
 
 Definition delete_names (xs : list string) (m : gmap string val) : gmap string val :=
   foldr delete m xs.
@@ -114,8 +120,8 @@ Lemma delete_names_elem x xs m : x ∈ xs → delete x (delete_names xs m) = del
 Proof.
   induction xs as [|y xs IH]; first by inversion 1.
   rewrite delete_names_cons.
-  intros [->|Hin]%elem_of_cons; first by rewrite delete_idemp.
-  by rewrite delete_commute IH.
+  intros [->|Hin]%elem_of_cons; first by rewrite delete_delete_eq.
+  by rewrite delete_delete IH.
 Qed.
 
 Lemma delete_names_insert_not_elem x xs v m :
@@ -133,7 +139,7 @@ Proof.
   intros Hin. rewrite !delete_names_cons.
   destruct (decide (x ∈ xs)) as [Hin'|Hnin']; first by rewrite IH.
   apply elem_of_cons in Hin as [->|?]; last done.
-  by rewrite delete_names_insert_not_elem // delete_insert_delete.
+  by rewrite delete_names_insert_not_elem // delete_insert_eq.
 Qed.
 
 (** The environment built by applying [vs] to the parameters [xs]: later
@@ -147,23 +153,29 @@ Fixpoint binds (xs : list string) (vs : list val) (m : gmap string val) : gmap s
 
 (** * Substitution under a chain of lambdas *)
 
+(** [subst] stops at a binder that shadows the substituted name. *)
+Lemma subst_lam_named x v y e :
+  subst x v (Rec BAnon (BNamed y) e) =
+  Rec BAnon (BNamed y) (if decide (x = y) then e else subst x v e).
+Proof.
+  simpl. f_equal.
+  destruct (decide (x = y)) as [->|Hne].
+  - rewrite decide_False //. naive_solver.
+  - rewrite decide_True //. split; naive_solver.
+Qed.
+
 Lemma subst_lams x v xs e :
   subst x v (lams xs e) =
     lams xs (if decide (x ∈ pnames xs) then e else subst x v e).
 Proof.
-  induction xs as [|y ys IH]; simpl.
-  { by rewrite decide_False; last set_solver. }
-  rewrite /Lam. f_equal. rewrite decide_bool_decide.
-  destruct (decide (x = pname y)) as [->|Hne].
-  - rewrite bool_decide_false; last naive_solver.
+  induction xs as [|y ys IH]; cbn [lams].
+  { by rewrite /pnames /=. }
+  rewrite subst_lam_named. f_equal.
+  destruct (decide (x = go.go_string_to_string y)) as [Heq|Hne].
+  - (* the binder shadows [x]: substitution stops here *)
     rewrite decide_True //. rewrite /pnames fmap_cons. set_solver.
-  - rewrite bool_decide_true; last naive_solver.
-    rewrite IH. f_equal.
-    rewrite /pnames fmap_cons.
-    destruct (decide (x ∈ pname y :: (pname <$> ys))) as [Hin|Hnin];
-      destruct (decide (x ∈ (pname <$> ys))) as [Hin'|Hnin']; try done.
-    + set_solver.
-    + set_solver.
+  - rewrite IH. f_equal. apply decide_ext.
+    rewrite /pnames fmap_cons. set_solver.
 Qed.
 
 (** The body of a curried function after one argument has been consumed. *)
@@ -172,8 +184,8 @@ Lemma lams_step x xs m v e :
   lams xs (csubst (delete_names (pnames xs) (<[pname x := v]> m)) e).
 Proof.
   rewrite subst_lams. f_equal.
-  rewrite /pnames fmap_cons delete_names_cons.
-  destruct (decide (pname x ∈ pnames xs)) as [Hin|Hnin].
+  rewrite pnames_cons delete_names_cons.
+  destruct (decide (go.go_string_to_string x ∈ pnames xs)) as [Hin|Hnin].
   - rewrite delete_names_insert_elem //. f_equal. by apply delete_names_elem.
   - rewrite delete_names_insert_not_elem // -csubst_insert //.
 Qed.
@@ -204,7 +216,7 @@ Lemma env_interp_lookup V ρ x :
 Proof.
   induction ρ as [|[y t] ρ IH]; simpl; first by rewrite lookup_empty.
   destruct (decide (y = x)) as [->|Hne]; first by rewrite lookup_insert_eq.
-  rewrite lookup_insert_ne //. by intros ?%pname_inj.
+  rewrite lookup_insert_ne //. by intros ?%(inj go.go_string_to_string).
 Qed.
 
 End subst.

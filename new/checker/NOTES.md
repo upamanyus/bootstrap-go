@@ -31,3 +31,38 @@ Everything is behind the opam switch `perennial` (Rocq 9.4+alpha):
 - Split `soundness.v` into `defs.v` (definitions) + `soundness.v` (the axiom).
   The axiom's text is character-identical to before, so the statement cannot
   have drifted. Nothing else in the tree required `soundness.v`.
+
+### Build gotchas
+
+- **Delete the `.vos`/`.vok` files.** `make ... .vos` (what `SOUNDNESS_PLAN.md`
+  suggests for dependencies) leaves a `.vos` next to every `.vo`, and a
+  `Require` then loads a mixture: a file compiled against `proof_prelude.vos`
+  cannot be loaded next to `proof_prelude.vo`, and Rocq reports
+
+      Compiled library New.checker.term_lemmas makes inconsistent assumptions
+      over library New.proof.proof_prelude
+
+  which looks like a proof error and is not one. Build the whole closure as
+  `.vo` and keep it that way:
+
+      find src new \( -name '*.vos' -o -name '*.vok' \) -delete
+
+- `rocq-warm` needs real `.vo` dependencies, so the `.vo` closure of
+  `new/checker/defs.v` (~150 files, about half an hour on 8 cores) has to be
+  built once. After that the edit loop is a few seconds per check.
+- `Set Default Proof Using "Type"` does not work in these sections (the
+  section variables are all instances); use `"All"`.
+- Error line numbers from `rocq-warm` are 0-based: an error "at line N" is at
+  line N+1 of the file.
+
+### Tactic notes
+
+- `case_decide` is unreliable here: it silently fails (`No matching clauses
+  for match`) when `destruct` cannot abstract the `decide` out of a
+  hypothesis. Use `destruct (decide P)` with `P` written out, or
+  `rewrite decide_True/decide_False/decide_ext`.
+- `destruct (decide P)` already reduces an `if decide P then _ else _` in the
+  goal, so a following `rewrite decide_True` has nothing to rewrite and
+  fails. Do one or the other.
+- `rewrite /Lam` is a notation, not a definition: it cannot be unfolded.
+  `cbn [lams]` unfolds the `lams` fixpoint without reducing the `decide`s.
