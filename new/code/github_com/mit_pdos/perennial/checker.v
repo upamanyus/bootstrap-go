@@ -1934,7 +1934,8 @@ Definition applyUnOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
     (if: (⟨go.bool⟩! (![go.bool] "oka")) || ((![Sort] "sa") ≠⟨Sort⟩ (![Sort] "ts"))
     then return: (Convert go.untyped_nil (go.PointerType Term) UntypedNil, #false)
     else do:  #());;;
-    (if: Convert go.untyped_bool go.bool (((![Op] "op") =⟨Op⟩ OpNeg) && ((![Sort] "ts") =⟨Sort⟩ SortInt))
+    (if: (((![Op] "op") =⟨Op⟩ OpNeg) && ((![Sort] "ts") =⟨Sort⟩ SortInt)) && (let: "$a0" := (![go.PointerType Type'] "t") in
+    (FuncResolve typeSigned [] #()) "$a0")
     then
       return: (GoAlloc Term (let: "$v0" := TNeg in
        let: "$v1" := (![go.PointerType Term] "a") in

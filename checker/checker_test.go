@@ -14,6 +14,7 @@ import (
 // the example functions below are still built by hand.
 
 func tyInt() *checker.Type    { return &checker.Type{Kind: checker.TyInt} }
+func tyInt64() *checker.Type  { return &checker.Type{Kind: checker.TyInt64} }
 func tyUint64() *checker.Type { return &checker.Type{Kind: checker.TyUint64} }
 func tyBool() *checker.Type   { return &checker.Type{Kind: checker.TyBool} }
 func tyPtr(t *checker.Type) *checker.Type {
@@ -472,6 +473,25 @@ func TestIllSorted(t *testing.T) {
 	_, fail = checker.Analyze(f4, xInt.vars, xInt.pre)
 	if fail == nil || fail.Reason != checker.RIllSorted {
 		t.Fatal("!int should be rejected")
+	}
+	// -x at an unsigned type. Go allows it, but GooseLang has no GoUnOp
+	// GoNeg at uint/uint64, so the translated program is stuck there and the
+	// checker must not call it safe.
+	xU64 := newScope(t, params([]string{"x"}, []*checker.Type{tyUint64()}), "emp")
+	f5 := &checker.Func{Params: []string{"x"}, Body: eUn(checker.OpNeg, tyUint64(), eVar("x"))}
+	_, fail = checker.Analyze(f5, xU64.vars, xU64.pre)
+	if fail == nil || fail.Reason != checker.RIllSorted {
+		t.Fatal("unary minus at uint64 should be rejected")
+	}
+	// ... but it is still accepted at the signed types.
+	f6 := &checker.Func{Params: []string{"x"}, Body: eUn(checker.OpNeg, tyInt(), eVar("x"))}
+	if _, fail = checker.Analyze(f6, xInt.vars, xInt.pre); fail != nil {
+		t.Fatalf("unary minus at int should be accepted, got reason %d", fail.Reason)
+	}
+	f7 := &checker.Func{Params: []string{"x"}, Body: eUn(checker.OpNeg, tyInt64(), eVar("x"))}
+	x64 := newScope(t, params([]string{"x"}, []*checker.Type{tyInt64()}), "emp")
+	if _, fail = checker.Analyze(f7, x64.vars, x64.pre); fail != nil {
+		t.Fatalf("unary minus at int64 should be accepted, got reason %d", fail.Reason)
 	}
 	// An ill-sorted precondition. Sort inference in the surface language
 	// rejects these, so the checker only sees them from a caller that built

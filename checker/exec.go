@@ -434,7 +434,10 @@ func applyUnOp(op Op, t *Type, vars []Sort, a *Term) (*Term, bool) {
 	if !oka || sa != ts {
 		return nil, false
 	}
-	if op == OpNeg && ts == SortInt {
+	// Unary minus only exists at the signed integer types: GooseLang has no
+	// GoUnOp GoNeg for uint/uint64 (see new/golang/defn/predeclared.v), so
+	// -x on an unsigned type is stuck and must not be accepted as safe.
+	if op == OpNeg && ts == SortInt && typeSigned(t) {
 		return &Term{Kind: TNeg, A: a}, true
 	}
 	if op == OpNot && ts == SortBool {

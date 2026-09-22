@@ -66,3 +66,24 @@ Everything is behind the opam switch `perennial` (Rocq 9.4+alpha):
   fails. Do one or the other.
 - `rewrite /Lam` is a notation, not a definition: it cannot be unfolded.
   `cbn [lams]` unfolds the `lams` fixpoint without reducing the `decide`s.
+
+### Bugs found in the checker while proving it
+
+1. **`is_term`/`is_assn` were not injective** (fixed in `defs.v`). `TVar n`
+   with `n : nat` is represented as `W64 n`, so `TVar 0` and `TVar (2^64)`
+   have the *same* heap representation while `teval` gives them different
+   meanings. `check_sound` as written was therefore false: take
+   `vars = [SBool]`, `pre = ⌜TVar 0⌝`, `post = ⌜TVar (2^64)⌝`; the checker
+   sees the same term twice and answers `true`, but the triple it is then
+   claimed to establish relates two unrelated values. The representation
+   predicates now carry `idx_wf n := n < 2^64`.
+
+2. **Unary minus at an unsigned type** (fixed in `checker/exec.go`).
+   `applyUnOp` accepted `OpNeg` whenever the type's sort was `SortInt`, which
+   includes `uint` and `uint64`. GooseLang has no `GoUnOp GoNeg` at those
+   types -- `new/golang/defn/predeclared.v` defines `neg_int`, `neg_int64`,
+   `neg_int32/16/8` and `neg_untyped_int` and nothing else -- so `-x` on a
+   `uint64` is *stuck*, and the checker was calling a stuck program safe.
+   This is a real soundness bug, reachable from ordinary Go (`-x` on a
+   `uint64` is legal Go). `applyUnOp` now also requires `typeSigned(t)`.
+   Regression test in `TestIllSorted`.
