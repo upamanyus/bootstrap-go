@@ -14,11 +14,32 @@
 > - `exec_spec.v`: `exec_sound`, its monotonicity in the path list (which is
 >   what lets the loops in `exec.go` concatenate results), and the cases that
 >   neither fork nor touch the heap.
+> - `exec_spec.v` also has the semantic composition lemma for every
+>   compound case of `exec` except the store: `let`, sequencing, `if` (the
+>   forking one), load, allocation (the one that extends the valuation), and
+>   the three exception-monad cases. Each says "if the pieces are sound, so
+>   is the whole", independently of the Go code.
 > - §6a, one file per Go function under `new/checker/fn/`: `TypeEq`,
 >   `TypeSort`, `typeSigned`, `typeZero`, `termEq`, `TermEq`, `negate`,
 >   `copySorts`, `envLookup`, `envBind`, `onePath`, `hasPat`, `heapLookup`,
 >   `heapUpdate`, `(*State).clone`, `assnHasOr`, `assnHasExists`, `assnHeap`,
->   `assnPure`, `condHolds`.
+>   `assnPure`, `condHolds`, `findCell`, `instantiate`, `applyBinOp`,
+>   `applyUnOp`, `growPats`, `flatten`, `collectDisjuncts`, and
+>   `atomWellSorted`.
+> - `disjunct.v` gives the postcondition matcher's `disjunct` a
+>   representation predicate carrying the `pats`/`patOk` length invariant.
+>
+> Not done:
+>
+> - `sortOfEnv` and `SortOf` are parked as `*__nobuild.v`: the script is
+>   essentially complete but the single Löb induction over all eighteen term
+>   shapes produces a proof term too large to check. Splitting it per shape
+>   is the fix. `atomWellSorted` currently *assumes* `wp_sortOfEnv` as a
+>   section hypothesis, which is the one thing in the development that is not
+>   yet discharged.
+> - The store case of `exec_sound`, `matchTerm`, `checkDisjunct`,
+>   `parseDisjunct`, `parseDisjuncts`, `firstUnresolved`, `assnWellSorted`,
+>   and then §6b `exec`/`execIf` themselves and §6c `Analyze`/`Verify`/`Check`.
 >
 > Two bugs found while proving, both fixed:
 >
@@ -37,6 +58,14 @@
 >    translated program is *stuck* and the checker was calling a stuck
 >    program safe. Reachable from ordinary Go, since `-x` on a `uint64` is
 >    legal Go. Fixed in `checker/exec.go` with a regression test.
+>
+> Three further findings about the Go code, none of them soundness bugs, all
+> recorded in `new/checker/NOTES.md`: `growPats` does not terminate for an
+> input-controlled large `∃`-index; `findCell` indexes `used` without
+> requiring it to be as long as the heap; and `instantiate` can build a node
+> with a nil child if `ret` is nil, which no `term` describes. Also, `exec`
+> skipped the `let` binding for an empty name while the denotation always
+> binds -- that divergence is fixed.
 >
 > `new/checker/NOTES.md` is the running log, and is worth reading before
 > adding to this development: it records the Perennial-side traps that cost
