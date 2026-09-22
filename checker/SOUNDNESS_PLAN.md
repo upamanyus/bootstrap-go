@@ -34,9 +34,10 @@
 > - `sortOfEnv` and `SortOf` are parked as `*__nobuild.v`: the script is
 >   essentially complete but the single Löb induction over all eighteen term
 >   shapes produces a proof term too large to check. Splitting it per shape
->   is the fix. `atomWellSorted` currently *assumes* `wp_sortOfEnv` as a
->   section hypothesis, which is the one thing in the development that is not
->   yet discharged.
+>   is the fix. Three finished files assume it as a section hypothesis until
+>   then: `applyBinOp` and `applyUnOp` assume `wp_SortOf`, and
+>   `atomWellSorted` assumes `wp_sortOfEnv`. `new/checker/NOTES.md` has the
+>   grep that lists every outstanding assumption.
 > - The store case of `exec_sound`, `matchTerm`, `checkDisjunct`,
 >   `parseDisjunct`, `parseDisjuncts`, `firstUnresolved`, `assnWellSorted`,
 >   and then §6b `exec`/`execIf` themselves and §6c `Analyze`/`Verify`/`Check`.

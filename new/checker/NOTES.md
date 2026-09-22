@@ -330,3 +330,42 @@ collectors alone.
   `sortOfEnv` and `matchTerm` need when they bounds-check one and index the
   other, so `is_disjunct` carries the length equality rather than each
   specification assuming it.
+
+### Auditing what is still assumed
+
+    grep -rn "^Axiom\|^Context (wp_\|^Hypothesis" new/checker/*.v new/checker/fn/*.v \
+      | grep -v __nobuild
+
+Today that prints `Axiom check_sound` in `soundness.v` (the goal of the whole
+exercise) and three section hypotheses, all of which are the *same* missing
+piece: `fn/applyBinOp.v` and `fn/applyUnOp.v` assume `wp_SortOf`, and
+`fn/atomWellSorted.v` assumes `wp_sortOfEnv`. Finishing the parked
+`fn/sortOfEnv__nobuild.v` discharges all three.
+
+### Late lessons
+
+- **`Set Default Proof Using "All"` poisons *pure* lemmas.** A Gallina-only
+  lemma stated inside the proof section gets generalized over `Σ`, `hG`, ...
+  even though its statement never mentions them, and then
+  `destruct (pure_lemma ...)` fails in confusing ways because `Σ` is
+  unconstrained. Keep a mirror's definitions and its pure lemmas *outside*
+  `Section proof`.
+- **Do the wide `destruct` of a mirror in a separate, small lemma.**
+  Destructing 18 term shapes inside a `wp` goal produced 54 subgoals in a
+  huge context and ran for over ten minutes; factored into a node-rebuilding
+  lemma with a small context, the same file checks in about a minute. This is
+  the same proof-term-size problem the project as a whole is about, and it is
+  what defeated the single-induction proof of `sortOfEnv`.
+- **`slice.for_range`'s index is always called `"i"`.** If the Go function
+  has its own local `i`, `wp_auto` has already taken the Rocq name `i_ptr`
+  and then fails at the range-index allocation -- the same "Failed to
+  progress" as a name clash you introduced, but the clashing name comes from
+  the compiler. Allocate it by hand with `wp_alloc ridx as "..."`.
+- `iFrame` will not match `is_term l t` against `is_oterm l (Some t)`; open
+  the framing subgoal with `cbn [is_oterm]. iFrame "#".`
+- `rewrite bool_decide_eq_true_2 //` is fragile -- the `//` does not reliably
+  close the side goal and the failure surfaces one tactic later. Use
+  `assert (bool_decide P = true) as H by (by apply bool_decide_eq_true_2)`.
+- stdpp renames in this switch: `elem_of_list_lookup_2` →
+  `list_elem_of_lookup_2`, `elem_of_list_singleton` →
+  `list_elem_of_singleton`; `elem_of_app` keeps its name.
