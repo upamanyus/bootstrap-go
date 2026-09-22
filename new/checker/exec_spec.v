@@ -7,6 +7,7 @@
     closed under concatenating result lists, which is what the loops in
     checker/exec.go build. *)
 From New.checker Require Import prelude nodes.
+From New.checker.fn Require Import heapLookup heapUpdate.
 
 Section exec_spec.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
@@ -402,6 +403,53 @@ Proof.
     iApply (paths_post_mono _ _ qs out _ Hsub).
     iApply (paths_post_compose _ (length (svars (pst p))) V V' qs u Hgrow Hag).
     iExact "Hu".
+Qed.
+
+(** * The heap cases
+
+    A symbolic cell is a real points-to, so a successful [heapLookup] hands
+    out the points-to the load needs, and a successful [heapUpdate] is the
+    frame-preserving update the store performs. *)
+
+Lemma heap_interp_lookup V H (x y : term) :
+  heap_lookup H x = Some y →
+  heap_interp V H -∗
+  ∃ lo : loc, ⌜teval V x = lval lo⌝ ∗ heap_pointsto lo (DfracOwn 1) (teval V y) ∗
+              (heap_pointsto lo (DfracOwn 1) (teval V y) -∗ heap_interp V H).
+Proof.
+  induction H as [|c H IH]; first done.
+  simpl. destruct (decide (cloc c = x)) as [Heq|Hne].
+  - intros Hy. assert (y = cval c) as -> by congruence.
+    iIntros "[Hc HH]". iDestruct "Hc" as (lo) "[%Hl Hp]".
+    iExists lo. rewrite Heq in Hl. iFrame "Hp". iSplit; first done.
+    iIntros "Hp". iFrame "HH". iExists lo. rewrite Heq. by iFrame "Hp".
+  - intros Hlk. iIntros "[Hc HH]".
+    iDestruct (IH Hlk with "HH") as (lo) "(%Hl & Hp & Hback)".
+    iExists lo. iFrame "Hp". iSplit; first done.
+    iIntros "Hp". iFrame "Hc". by iApply "Hback".
+Qed.
+
+(** Updating the first matching cell: the rest of the heap is untouched. *)
+Lemma heap_interp_update V H H' (x y : term) (lo : loc) :
+  heap_update H x y = Some H' →
+  teval V x = lval lo →
+  heap_interp V H -∗
+  ∃ z : term, heap_pointsto lo (DfracOwn 1) (teval V z) ∗
+              (heap_pointsto lo (DfracOwn 1) (teval V y) -∗ heap_interp V H').
+Proof.
+  revert H'. induction H as [|c H IH]; first done.
+  intros H'. simpl. destruct (decide (cloc c = x)) as [Heq|Hne].
+  - intros Hh Hx. assert (H' = mkCell (cloc c) y :: H) as -> by congruence.
+    iIntros "[Hc HH]". iDestruct "Hc" as (lo') "[%Hl Hp]".
+    rewrite Heq Hx in Hl.
+    assert (lo' = lo) as -> by (symmetry; by apply lval_inj).
+    iExists (cval c). iFrame "Hp". iIntros "Hp". iFrame "HH".
+    iExists lo. rewrite /= Heq Hx. by iFrame "Hp".
+  - destruct (heap_update H x y) as [H''|] eqn:Hup; last done.
+    intros Hh Hx. assert (H' = c :: H'') as -> by (simpl in Hh; congruence).
+    iIntros "[Hc HH]".
+    iDestruct (IH H'' eq_refl Hx with "HH") as (z) "[Hp Hback]".
+    iExists z. iFrame "Hp". iIntros "Hp". iFrame "Hc". by iApply "Hback".
 Qed.
 
 End exec_spec.

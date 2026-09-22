@@ -290,3 +290,11 @@ because `Analyze` runs `assnHasOr` and `assnHasExists` first and rejects such
 preconditions. The two collectors are not meaningful in isolation, and the
 `Analyze` proof has to use that ordering rather than a property of the
 collectors alone.
+
+- `rewrite <an iProp ⊣⊢ lemma>` in a non-proof-mode entailment can fail with
+  the opaque "`pattern_value` is used in conclusion". `big_sepL` on a cons
+  reduces definitionally, so `iIntros "[Hc HH]"` and `iFrame` work directly
+  and the rewrite is unnecessary.
+- An intro pattern that substitutes (`intros [= <-]`) can leave the goal in a
+  state where a later `rewrite` hits the same error; `assert (... = ...) as ->
+  by congruence` is the safe form.
