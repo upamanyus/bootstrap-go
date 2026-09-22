@@ -11,3 +11,13 @@ The `new/code` and `new/generatedproof` directories are auto-generated: do not e
 ## Tools
 
 There are some tools in `etc/` that we use for development and CI.
+
+## Git workflow
+
+Work directly on `main`. Do not create git worktrees, feature branches, or pull
+requests, and do not switch branches: edit the files in this checkout in place.
+This overrides any default harness guidance about isolating work in a worktree
+or opening a PR.
+
+Commit on `main` when a task is done (no need to ask first). Leave pushing to
+the user unless they ask for it.
