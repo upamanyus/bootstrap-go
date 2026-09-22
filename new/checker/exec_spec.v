@@ -106,4 +106,92 @@ Proof.
   iPureIntro. split_and!; [set_solver|apply agree_below_refl|done|done].
 Qed.
 
+(** * Composing sound result lists
+
+    Every compound case of [exec] runs a subexpression, then continues from
+    each of its paths. The valuation may grow (an allocation introduces a
+    fresh logical variable), so the continuation's paths are stated over a
+    valuation that only agrees with the caller's below the caller's number of
+    variables -- which is exactly what [paths_post] records. *)
+
+Lemma paths_post_compose k k' V V' qs v :
+  (k ≤ k')%nat → agree_below k V V' →
+  paths_post k' V' qs v -∗ paths_post k V qs v.
+Proof.
+  iIntros (Hle Hag) "H".
+  iDestruct "H" as (q V'') "(%Hin & %Hag' & %Hret & %Hsat & Hheap)".
+  iExists q, V''. iFrame "Hheap". iPureIntro. split_and!; [done| |done|done].
+  eapply agree_below_trans; first done.
+  by eapply agree_below_weaken.
+Qed.
+
+(** An environment whose terms are all scoped by the caller's variables means
+    the same thing under any valuation that agrees that far. *)
+Lemma env_interp_agree k V V' ρ :
+  agree_below k V V' → env_below k ρ → env_interp V ρ = env_interp V' ρ.
+Proof.
+  intros Hag Hb. induction ρ as [|[gy y] ρ IH]; first done.
+  rewrite !env_interp_bind.
+  rewrite (teval_agree k V V' y) //; last by apply (Hb (gy, y)); set_solver.
+  rewrite IH //. intros xt Hxt. apply Hb. set_solver.
+Qed.
+
+(** * [let]
+
+    [exec] evaluates the bound expression, then continues from each of its
+    paths with the name bound to that path's return term. The GooseLang term
+    binds the name with a beta step, so the two meet at [csubst_insert]. *)
+
+Lemma wp_beta_rec_expr (gx : string) (B : expr) (v : val) (Ψ : val → iProp Σ) :
+  WP subst gx v B {{ Ψ }} -∗ WP App (Rec BAnon (BNamed gx) B) (Val v) {{ Ψ }}.
+Proof. iIntros "H". by wp_pures. Qed.
+
+(** The argument of an application is evaluated first, which is the order
+    [exec] uses too. *)
+Lemma wp_let_bind (gx : string) (B e1 : expr) (Φ : val → iProp Σ) :
+  WP e1 {{ w, WP subst gx w B {{ Φ }} }} -∗
+  WP App (Rec BAnon (BNamed gx) B) e1 {{ Φ }}.
+Proof.
+  iIntros "H".
+  iApply (wp_bind (fill [AppRCtx (Rec BAnon (BNamed gx) B)])).
+  iApply (wp_wand_r _ _ _ (λ w, WP subst gx w B {{ Φ }})%I).
+  iSplitL "H"; first iExact "H".
+  iIntros (w) "Hw". by iApply wp_beta_rec_expr.
+Qed.
+
+Lemma exec_sound_let (gx : go_string) (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound ce1 ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧
+        exec_sound ce2 ((gx, pret p) :: ρ) (pst p) qs) →
+  exec_sound (CELet gx ce1 ce2) ρ sst out.
+Proof.
+  intros He1 Hwfps Hcont Hwf Hρ V Hsat.
+  iIntros "Hheap". simpl.
+  iApply wp_let_bind.
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars sst)) V ps)).
+  iSplitL "Hheap".
+  { by iApply (He1 Hwf Hρ V Hsat with "Hheap"). }
+  iIntros (w) "Hw".
+  iDestruct "Hw" as (p V') "(%Hin & %Hag & %Hret & %Hsat' & Hheap')".
+  destruct (Hcont p Hin) as (qs & Hsub & Hqs).
+  assert (wf_state (pst p)) as Hwfp by (by apply (paths_wf_state _ _ Hwfps)).
+  assert ((length (svars sst) ≤ length (svars (pst p)))%nat) as Hgrow
+    by (by apply (paths_wf_grow _ _ Hwfps)).
+  assert (env_below (length (svars (pst p))) ((gx, pret p) :: ρ)) as Hbp.
+  { apply env_below_cons.
+    - by apply (paths_wf_ret _ _ Hwfps).
+    - by eapply env_below_mono. }
+  rewrite csubst_insert.
+  rewrite (env_interp_agree (length (svars sst)) V V') //.
+  rewrite Hret -env_interp_bind.
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars (pst p))) V' qs)).
+  iSplitL "Hheap'".
+  { by iApply (Hqs Hwfp Hbp V' Hsat' with "Hheap'"). }
+  iIntros (u) "Hu".
+  iApply (paths_post_mono _ _ qs out _ Hsub).
+  iApply (paths_post_compose _ (length (svars (pst p))) V V' qs u Hgrow Hag).
+  iExact "Hu".
+Qed.
+
 End exec_spec.
