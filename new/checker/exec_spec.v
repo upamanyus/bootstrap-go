@@ -194,4 +194,117 @@ Proof.
   iExact "Hu".
 Qed.
 
+(** * Sequencing
+
+    [ESeq] is [ELet] with an anonymous binder: the continuation runs in the
+    caller's environment. *)
+
+Lemma wp_beta_anon_expr (B : expr) (v : val) (Ψ : val → iProp Σ) :
+  WP B {{ Ψ }} -∗ WP App (Rec BAnon BAnon B) (Val v) {{ Ψ }}.
+Proof. iIntros "H". by wp_pures. Qed.
+
+Lemma wp_seq_bind (B e1 : expr) (Φ : val → iProp Σ) :
+  WP e1 {{ _, WP B {{ Φ }} }} -∗ WP App (Rec BAnon BAnon B) e1 {{ Φ }}.
+Proof.
+  iIntros "H".
+  iApply (wp_bind (fill [AppRCtx (Rec BAnon BAnon B)])).
+  iApply (wp_wand_r _ _ _ (λ _, WP B {{ Φ }})%I).
+  iSplitL "H"; first iExact "H".
+  iIntros (w) "Hw". by iApply wp_beta_anon_expr.
+Qed.
+
+Lemma exec_sound_seq (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound ce1 ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧ exec_sound ce2 ρ (pst p) qs) →
+  exec_sound (CESeq ce1 ce2) ρ sst out.
+Proof.
+  intros He1 Hwfps Hcont Hwf Hρ V Hsat.
+  iIntros "Hheap". simpl.
+  iApply wp_seq_bind.
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars sst)) V ps)).
+  iSplitL "Hheap".
+  { by iApply (He1 Hwf Hρ V Hsat with "Hheap"). }
+  iIntros (w) "Hw".
+  iDestruct "Hw" as (p V') "(%Hin & %Hag & %Hret & %Hsat' & Hheap')".
+  destruct (Hcont p Hin) as (qs & Hsub & Hqs).
+  assert (wf_state (pst p)) as Hwfp by (by apply (paths_wf_state _ _ Hwfps)).
+  assert ((length (svars sst) ≤ length (svars (pst p)))%nat) as Hgrow
+    by (by apply (paths_wf_grow _ _ Hwfps)).
+  assert (env_below (length (svars (pst p))) ρ) as Hbp
+    by (by eapply env_below_mono).
+  rewrite (env_interp_agree (length (svars sst)) V V') //.
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars (pst p))) V' qs)).
+  iSplitL "Hheap'".
+  { by iApply (Hqs Hwfp Hbp V' Hsat' with "Hheap'"). }
+  iIntros (u) "Hu".
+  iApply (paths_post_mono _ _ qs out _ Hsub).
+  iApply (paths_post_compose _ (length (svars (pst p))) V V' qs u Hgrow Hag).
+  iExact "Hu".
+Qed.
+
+(** * The exception monad
+
+    [teval] of [TExec]/[TRet] is exactly [execute_val]/[return_val], so these
+    cases are pure steps once the subexpression's path is in hand. *)
+
+Lemma exec_sound_do (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  (∀ p, p ∈ ps → mkPath TExec (pst p) ∈ out) →
+  exec_sound (CEDo ce) ρ sst out.
+Proof.
+  intros He Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
+  iApply (wp_bind (fill [AppRCtx (Val do_execute)])).
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars sst)) V ps)).
+  iSplitL "Hheap".
+  { by iApply (He Hwf Hρ V Hsat with "Hheap"). }
+  iIntros (w) "Hw".
+  iDestruct "Hw" as (p V') "(%Hin & %Hag & %Hret & %Hsat' & Hheap')".
+  iApply (wp_do w). iExists (mkPath TExec (pst p)), V'. iFrame "Hheap'".
+  iPureIntro. split_and!; [by apply Hcont|done|done|done].
+Qed.
+
+Lemma exec_sound_return (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  (∀ p, p ∈ ps → mkPath (TRet (pret p)) (pst p) ∈ out) →
+  exec_sound (CEReturn ce) ρ sst out.
+Proof.
+  intros He Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
+  iApply (wp_bind (fill [AppRCtx (Val do_return)])).
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars sst)) V ps)).
+  iSplitL "Hheap".
+  { by iApply (He Hwf Hρ V Hsat with "Hheap"). }
+  iIntros (w) "Hw".
+  iDestruct "Hw" as (p V') "(%Hin & %Hag & %Hret & %Hsat' & Hheap')".
+  iApply (wp_return w). iExists (mkPath (TRet (pret p)) (pst p)), V'.
+  iFrame "Hheap'". iPureIntro. split_and!; [by apply Hcont|done| |done].
+  by rewrite /= -Hret.
+Qed.
+
+(** [exception_do] strips the label: an [execute] becomes [()] and a
+    [return v] becomes [v]. The checker case-splits on the *term*, which is
+    exactly what [teval] turns into the two monad values. *)
+Lemma exec_sound_exc_do (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  (∀ p, p ∈ ps →
+     (pret p = TExec ∧ mkPath TUnit (pst p) ∈ out) ∨
+     (∃ x, pret p = TRet x ∧ mkPath x (pst p) ∈ out)) →
+  exec_sound (CEExcDo ce) ρ sst out.
+Proof.
+  intros He Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
+  iApply (wp_bind (fill [AppRCtx (Val exception_do)])).
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars sst)) V ps)).
+  iSplitL "Hheap".
+  { by iApply (He Hwf Hρ V Hsat with "Hheap"). }
+  iIntros (w) "Hw".
+  iDestruct "Hw" as (p V') "(%Hin & %Hag & %Hret & %Hsat' & Hheap')".
+  destruct (Hcont p Hin) as [[Hex Hout]|(x & Hrx & Hout)].
+  - rewrite Hret Hex /=. iApply wp_exc_do_exec.
+    iExists (mkPath TUnit (pst p)), V'. iFrame "Hheap'".
+    iPureIntro. split_and!; [done|done|done|done].
+  - rewrite Hret Hrx /=. iApply (wp_exc_do_ret (teval V' x)).
+    iExists (mkPath x (pst p)), V'. iFrame "Hheap'".
+    iPureIntro. split_and!; [done|done|done|done].
+Qed.
+
 End exec_spec.
