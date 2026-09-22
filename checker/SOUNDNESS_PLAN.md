@@ -1,5 +1,47 @@
 # Plan: proving `check_sound` for the Go checker
 
+> **Status (updated as the proof goes).** The plan below is the original
+> design; this box records what has actually been established.
+>
+> Done, all checked in Rocq:
+>
+> - `new/checker/defs.v` -- the definitions the statement is over, split out
+>   of `soundness.v` so the proof can depend on them without depending on the
+>   statement. The axiom's text is unchanged.
+> - §1 `term_lemmas.v`, §2 `subst.v`, §3 `steps.v`, §4 `interp.v`,
+>   §5 `repr.v` (+ `nodes.v` for `Expr`/`Assn` nodes and `sortEnv`),
+>   `prelude.v`.
+> - `exec_spec.v`: `exec_sound`, its monotonicity in the path list (which is
+>   what lets the loops in `exec.go` concatenate results), and the cases that
+>   neither fork nor touch the heap.
+> - §6a, one file per Go function under `new/checker/fn/`: `TypeEq`,
+>   `TypeSort`, `typeSigned`, `typeZero`, `termEq`, `TermEq`, `negate`,
+>   `copySorts`, `envLookup`, `envBind`, `onePath`, `hasPat`, `heapLookup`,
+>   `heapUpdate`, `(*State).clone`, `assnHasOr`, `assnHasExists`, `assnHeap`,
+>   `assnPure`, `condHolds`.
+>
+> Two bugs found while proving, both fixed:
+>
+> 1. **The statement was not provable.** `is_term` represented `TVar n`
+>    (`n : nat`) as `W64 n`, so terms whose indices differ by 2^64 had the
+>    same heap representation while `teval` gave them different meanings: a
+>    precondition mentioning `TVar 0` and a postcondition mentioning
+>    `TVar (2^64)` are indistinguishable to the checker but not to
+>    `pre_interp`/`post_interp`. The representation predicates now carry an
+>    in-range side condition (`idx_wf`), which every tree the frontend builds
+>    satisfies.
+> 2. **A soundness bug in the checker.** `applyUnOp` accepted unary minus at
+>    `uint`/`uint64`, but GooseLang has no `GoUnOp GoNeg` at those types
+>    (`new/golang/defn/predeclared.v` defines `neg_int`, `neg_int64`,
+>    `neg_int32/16/8` and `neg_untyped_int` and nothing else), so the
+>    translated program is *stuck* and the checker was calling a stuck
+>    program safe. Reachable from ordinary Go, since `-x` on a `uint64` is
+>    legal Go. Fixed in `checker/exec.go` with a regression test.
+>
+> `new/checker/NOTES.md` is the running log, and is worth reading before
+> adding to this development: it records the Perennial-side traps that cost
+> the most time.
+
 Target: turn `Axiom check_sound` in `new/checker/soundness.v` into a `Lemma`,
 proved in Perennial about the Goose translation of `checker.Check`
 (`new/code/github_com/mit_pdos/perennial/checker.v`). Nothing about the Go code or
