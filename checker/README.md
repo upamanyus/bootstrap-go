@@ -35,6 +35,9 @@ checker/            core, translated by Goose; NO imports (see below)
   examples/         target Go programs for the demo
 gocheck/            frontend + CLI (not translated): translate/, spec/, render/, demo.sh
 new/checker/soundness.v   the soundness statement (definitions + Axiom)
+new/proof/github_com/mit_pdos/perennial/checker/examples/   hand-written Rocq
+                          proofs of the same five specifications, one file
+                          per function
 new/code/github_com/mit_pdos/perennial/checker.v      Goose output for checker/
 new/code/github_com/mit_pdos/perennial/checker/examples.v  Goose output for the examples
 ```
@@ -115,6 +118,21 @@ bash gocheck/demo.sh
 It runs the five examples with their specs, three failing cases (a missing
 points-to, a wrong post, an ill-sorted spec) and a few variants, asserting the
 exit code of each.
+
+The last section of the demo establishes each of the five specifications the
+other way too, with the hand-written Rocq proof of it in
+`new/proof/github_com/mit_pdos/perennial/checker/examples/`, and prints the
+wall-clock time of each. It rebuilds one `.vok` file per function -- the
+incremental cost of re-checking that one proof against prebuilt dependencies --
+and compares it against one whole run of the checker. This part needs `rocq` in
+`PATH` and the dependencies built once, with
+
+```
+make -j$(nproc) TIMED=false \
+  new/proof/github_com/mit_pdos/perennial/checker/examples/examples_init.vos
+```
+
+and says so and skips itself if either is missing.
 
 Or by hand, e.g.
 
