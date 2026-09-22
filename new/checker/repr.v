@@ -115,6 +115,122 @@ Proof.
   iIntros "H". iDestruct "H" as (le) "[H #He]". iExists le. by iFrame "H He".
 Qed.
 
+(** A [Term] node's [A]/[B]/[C] fields are [null] where the constructor has
+    no child there. *)
+Definition is_oterm (l : loc) (t : option term) : iProp Σ :=
+  match t with None => ⌜l = null⌝ | Some t' => is_term l t' end%I.
+
+#[global] Instance is_oterm_persistent l t : Persistent (is_oterm l t).
+Proof. destruct t; apply _. Qed.
+
+Lemma is_oterm_null l t : is_oterm l t -∗ ⌜l = null ↔ t = None⌝.
+Proof.
+  destruct t as [t'|]; simpl; last by iIntros "%"; iPureIntro; naive_solver.
+  iIntros "H". iDestruct (is_term_not_null with "H") as %?.
+  iPureIntro. naive_solver.
+Qed.
+
+Definition term_code (t : term) : w64 :=
+  match t with
+  | TVar _ => W64 1 | TPat _ => W64 2 | TResult => W64 3 | TInt _ => W64 4
+  | TBool _ => W64 5 | TUnit => W64 6 | TNull => W64 7
+  | TPlus _ _ => W64 8 | TMinus _ _ => W64 9 | TMul _ _ => W64 10
+  | TNeg _ => W64 11 | TEq _ _ => W64 12
+  | TLt sg _ _ => if sg then W64 13 else W64 14
+  | TLe sg _ _ => if sg then W64 15 else W64 16
+  | TNot _ => W64 17 | TIte _ _ _ => W64 18 | TExec => W64 19 | TRet _ => W64 20
+  end.
+
+Definition term_num (t : term) : w64 :=
+  match t with
+  | TVar n | TPat n => W64 n
+  | TInt w => w
+  | TBool b => bool_code b
+  | _ => W64 0
+  end.
+
+Definition term_a (t : term) : option term :=
+  match t with
+  | TPlus x _ | TMinus x _ | TMul x _ | TEq x _ | TLt _ x _ | TLe _ x _
+  | TNeg x | TNot x | TRet x | TIte x _ _ => Some x
+  | _ => None
+  end.
+
+Definition term_b (t : term) : option term :=
+  match t with
+  | TPlus _ y | TMinus _ y | TMul _ y | TEq _ y | TLt _ _ y | TLe _ _ y
+  | TIte _ y _ => Some y
+  | _ => None
+  end.
+
+Definition term_c (t : term) : option term :=
+  match t with TIte _ _ z => Some z | _ => None end.
+
+(** The side condition that makes the [Num] field pin down the index. *)
+Definition term_idx_wf (t : term) : Prop :=
+  match t with TVar n | TPat n => idx_wf n | _ => True end.
+
+Lemma is_term_node l t :
+  is_term l t -∗ ∃ la lb lc : loc,
+    ⌜term_idx_wf t⌝ ∗
+    l ↦□ tnode (term_code t) (term_num t) la lb lc ∗
+    is_oterm la (term_a t) ∗ is_oterm lb (term_b t) ∗ is_oterm lc (term_c t).
+Proof.
+  iIntros "H". destruct t; simpl.
+  - (* TVar *)
+    iDestruct "H" as "[%Hw H]"; iExists null, null, null;
+    iFrame "H"; iPureIntro; done.
+  - (* TPat *)
+    iDestruct "H" as "[%Hw H]"; iExists null, null, null;
+    iFrame "H"; iPureIntro; done.
+  - (* TResult *)
+    iExists null, null, null; iFrame "H"; iPureIntro; done.
+  - (* TInt *)
+    iExists null, null, null; iFrame "H"; iPureIntro; done.
+  - (* TBool *)
+    iExists null, null, null; iFrame "H"; iPureIntro; done.
+  - (* TUnit *)
+    iExists null, null, null; iFrame "H"; iPureIntro; done.
+  - (* TNull *)
+    iExists null, null, null; iFrame "H"; iPureIntro; done.
+  - (* TPlus *)
+    iDestruct "H" as (x y) "(H & #H1 & #H2)"; iExists x, y, null;
+    iFrame "H H1 H2"; iPureIntro; done.
+  - (* TMinus *)
+    iDestruct "H" as (x y) "(H & #H1 & #H2)"; iExists x, y, null;
+    iFrame "H H1 H2"; iPureIntro; done.
+  - (* TMul *)
+    iDestruct "H" as (x y) "(H & #H1 & #H2)"; iExists x, y, null;
+    iFrame "H H1 H2"; iPureIntro; done.
+  - (* TNeg *)
+    iDestruct "H" as (x) "(H & #H1)"; iExists x, null, null;
+    iFrame "H H1"; iPureIntro; done.
+  - (* TEq *)
+    iDestruct "H" as (x y) "(H & #H1 & #H2)"; iExists x, y, null;
+    iFrame "H H1 H2"; iPureIntro; done.
+  - (* TLt *)
+    iDestruct "H" as (x y) "(H & #H1 & #H2)"; iExists x, y, null;
+    iFrame "H H1 H2"; iPureIntro; done.
+  - (* TLe *)
+    iDestruct "H" as (x y) "(H & #H1 & #H2)"; iExists x, y, null;
+    iFrame "H H1 H2"; iPureIntro; done.
+  - (* TNot *)
+    iDestruct "H" as (x) "(H & #H1)"; iExists x, null, null;
+    iFrame "H H1"; iPureIntro; done.
+  - (* TIte *)
+    iDestruct "H" as (x y z) "(H & #H1 & #H2 & #H3)"; iExists x, y, z;
+    iFrame "H H1 H2 H3"; iPureIntro; done.
+  - (* TExec *)
+    iExists null, null, null; iFrame "H"; iPureIntro; done.
+  - (* TRet *)
+    iDestruct "H" as (x) "(H & #H1)"; iExists x, null, null;
+    iFrame "H H1"; iPureIntro; done.
+Qed.
+
+(** Index equality at the [Num] field. *)
+Lemma W64_nat_inj (n m : nat) : idx_wf n → idx_wf m → W64 n = W64 m → n = m.
+Proof. rewrite /idx_wf. intros Hn Hm Heq. by rewrite -Hn -Hm Heq. Qed.
+
 (** * The checker's internal data *)
 
 Definition is_cell (c : checker.Cell.t) (sc : scell) : iProp Σ :=

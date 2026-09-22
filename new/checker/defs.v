@@ -327,7 +327,7 @@ Definition tnode (k n : w64) (a b c : loc) : checker.Term.t := checker.Term.mk k
     representation predicate only pins down the index modulo 2^64. The
     in-range side condition below is what makes [is_term] (and [is_assn])
     injective, and it is trivially true of every tree the frontend builds. *)
-Definition idx_wf (n : nat) : Prop := (n < 2 ^ 64)%nat.
+Definition idx_wf (n : nat) : Prop := uint.nat (W64 n) = n.
 
 Fixpoint is_term (l : loc) (t : term) : iProp Σ :=
   match t with

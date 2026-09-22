@@ -135,3 +135,14 @@ under `new/checker/fn/`. `new/checker/fn/TypeEq.v` is the worked example.
 - A recursive Go function that recurses into a possibly-nil field needs its
   specification over an *option* of the mirror type (`is_otype` in repr.v),
   since the nil child is a real call.
+
+### Arithmetic on w64 kind codes
+
+- `word` does **not** prove `W64 13 ≠ W64 14`, and its failure message is the
+  unhelpful "Cannot find witness". For a disequality between two *literal*
+  kind codes use `by vm_compute`.
+- `word` also does not see through `W64 a = W64 b` on its own; first
+  `apply (f_equal uint.Z) in H`.
+- `idx_wf n` is `uint.nat (W64 n) = n` rather than `n < 2^64`, because the
+  round-trip form is what every proof actually needs (`lia` struggles with
+  `(2 ^ 64)%nat`, which it has to evaluate).
