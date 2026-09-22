@@ -109,3 +109,29 @@ Everything is behind the opam switch `perennial` (Rocq 9.4+alpha):
   and `teval`'s `match` needs the `LitV` form, so the order is: put the
   operands in `#` form, `wp_pures`, then `rewrite go.into_val_unfold` and
   `simpl` (`op_operands` / `op_finish` in steps.v).
+
+### Writing a per-function proof
+
+Layout: `new/checker/prelude.v` exports everything; one file per Go function
+under `new/checker/fn/`. `new/checker/fn/TypeEq.v` is the worked example.
+
+- **Never name a Rocq variable after a Go local.** `wp_auto`'s
+  `wp_alloc_auto` derives a Rocq identifier (`x_ptr`) and an Iris name (`x`)
+  from the Go variable name, and if a Rocq variable of a clashing name is in
+  scope the whole of `wp_auto` silently fails with "Failed to progress" --
+  not at the allocation, at the very first step, with no hint why. `TypeEq`'s
+  Go locals are `a` and `b`, so its proof calls the types `ta`/`tb` and the
+  locations `la`/`lb`.
+- `wp_if_destruct` ends with `try wp_auto`, so a following `wp_auto` usually
+  has nothing to do and fails; write `try wp_auto`.
+- `wp_if_destruct` on `if: c ≠ d` gives the *equal* case first (the `else`
+  branch of the Go `if`).
+- It also runs `cleanup_bool_decide`, which silently discharges
+  `bool_decide` of a hypothesis already in scope -- so the goal may be
+  further along than expected.
+- Recursion: `iLöb as "IH" forall (...)` before `wp_start`, then
+  `wp_apply ("IH" $! args with "[$]")`. The specification's postcondition
+  being `True` means `wp_apply` leaves no continuation to introduce.
+- A recursive Go function that recurses into a possibly-nil field needs its
+  specification over an *option* of the mirror type (`is_otype` in repr.v),
+  since the nil child is a real call.

@@ -20,6 +20,23 @@ Proof. solve_decision. Defined.
 #[global] Instance term_eq_dec : EqDecision term.
 Proof. solve_decision. Defined.
 
+Section input_syntax.
+Context {ext : ffi_syntax}.
+
+#[global] Instance ctype_eq_dec : EqDecision ctype.
+Proof. solve_decision. Defined.
+
+#[global] Instance cop_eq_dec : EqDecision cop.
+Proof. solve_decision. Defined.
+
+#[global] Instance cexpr_eq_dec : EqDecision cexpr.
+Proof. solve_decision. Defined.
+
+#[global] Instance cassn_eq_dec : EqDecision cassn.
+Proof. solve_decision. Defined.
+
+End input_syntax.
+
 Section term_semantics.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
