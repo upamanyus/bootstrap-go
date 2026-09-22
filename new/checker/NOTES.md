@@ -219,3 +219,12 @@ paths, and `git grep Admitted HEAD -- new/checker/` after every commit.
 - `wp_slice_literal` leaves the contents in insert form; normalize with
   `replace (Z.to_nat (word.signed (W64 0))) with 0%nat by word` then
   `iSimpl in "Hsl"`.
+
+- **Rocq comments nest**, so a `(*T)` inside a doc comment (as in writing the
+  Go receiver `(*State).clone`) opens a comment that is never closed. The
+  error is "Syntax error: end of file inside an unterminated sentence" and
+  points at nothing useful.
+- `make` and `copy` are `wp_slice_make2` and `wp_slice_copy`; both end with a
+  `wp_auto`, so the next `wp_auto` usually has nothing to do. After a copy,
+  `rewrite length_replicate take_ge; last lia. rewrite drop_ge; last (rewrite
+  length_replicate; lia). rewrite app_nil_r.` normalises the result.
