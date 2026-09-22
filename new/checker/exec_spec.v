@@ -307,4 +307,101 @@ Proof.
     iPureIntro. split_and!; [done|done|done|done].
 Qed.
 
+(** * [if]
+
+    The condition is boolean-sorted -- that is what [execIf] checks with
+    [SortOf] -- so it really evaluates to a boolean, and the branch taken is
+    determined by it. The checker explores both branches, recording the
+    condition on one and its negation on the other; a valuation satisfies at
+    most one of the two extended path conditions, which is why the two
+    branches can be analysed independently. *)
+
+(** The two states [execIf] forks into. *)
+Definition st_assume (sst : sstate) (x : term) : sstate :=
+  mkState (sheap sst) (spc sst ++ [x]) (svars sst).
+
+Lemma wf_state_assume sst x :
+  wf_state sst → vars_below (length (svars sst)) x → wf_state (st_assume sst x).
+Proof.
+  intros [Hh Hpc] Hx. split; simpl; first done.
+  intros y [Hy|Hy]%elem_of_app; first by apply Hpc.
+  assert (y = x) as -> by set_solver. done.
+Qed.
+
+Lemma st_sat_assume V sst x :
+  st_sat V sst → teval V x = bval true → st_sat V (st_assume sst x).
+Proof.
+  intros [Hv Hpc] Hx. split; simpl; first done.
+  by apply pc_sat_snoc.
+Qed.
+
+Lemma wp_if_bval (b : bool) (A B : expr) (Ψ : val → iProp Σ) :
+  WP (if b then A else B) {{ Ψ }} -∗ WP If (Val (bval b)) A B {{ Ψ }}.
+Proof. iIntros "H". rewrite -bval_eq. destruct b; by wp_pures. Qed.
+
+Lemma exec_sound_if (cc ct cf : cexpr) ρ sst ps out :
+  exec_sound cc ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (* the condition is boolean-sorted on every path *)
+  (∀ p, p ∈ ps → sort_of_vars (svars (pst p)) (pret p) = Some SBool) →
+  (* and each branch is analysed under the corresponding assumption *)
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧
+        exec_sound ct ρ (st_assume (pst p) (pret p)) qs) →
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧
+        exec_sound cf ρ (st_assume (pst p) (negate (pret p))) qs) →
+  exec_sound (CEIf cc ct cf) ρ sst out.
+Proof.
+  intros Hc Hwfps Hsort Hthen Helse Hwf Hρ V Hsat.
+  iIntros "Hheap". simpl.
+  iApply (wp_bind (fill [IfCtx (csubst (env_interp V ρ) ct)
+                               (csubst (env_interp V ρ) cf)])).
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars sst)) V ps)).
+  iSplitL "Hheap".
+  { by iApply (Hc Hwf Hρ V Hsat with "Hheap"). }
+  iIntros (w) "Hw".
+  iDestruct "Hw" as (p V') "(%Hin & %Hag & %Hret & %Hsat' & Hheap')".
+  assert (wf_state (pst p)) as Hwfp by (by apply (paths_wf_state _ _ Hwfps)).
+  assert ((length (svars sst) ≤ length (svars (pst p)))%nat) as Hgrow
+    by (by apply (paths_wf_grow _ _ Hwfps)).
+  assert (vars_below (length (svars (pst p))) (pret p)) as Hbret
+    by (by apply (paths_wf_ret _ _ Hwfps)).
+  assert (env_below (length (svars (pst p))) ρ) as Hbp
+    by (by eapply env_below_mono).
+  (* the condition really is a boolean *)
+  assert (has_sort (teval V' (pret p)) SBool) as [b Hb].
+  { eapply sort_of_vars_sound; last by apply Hsort.
+    by destruct Hsat'. }
+  rewrite Hret Hb (env_interp_agree (length (svars sst)) V V') //.
+  iApply wp_if_bval. destruct b; simpl.
+  - (* the [then] branch, with the condition recorded *)
+    destruct (Hthen p Hin) as (qs & Hsub & Hqs).
+    iApply (wp_wand_r _ _ _
+              (paths_post (length (svars (st_assume (pst p) (pret p)))) V' qs)).
+    iSplitL "Hheap'".
+    { iApply (Hqs _ _ V' _ with "Hheap'").
+      Unshelve.
+      - by apply wf_state_assume.
+      - exact Hbp.
+      - by apply st_sat_assume. }
+    iIntros (u) "Hu".
+    iApply (paths_post_mono _ _ qs out _ Hsub).
+    iApply (paths_post_compose _ (length (svars (pst p))) V V' qs u Hgrow Hag).
+    iExact "Hu".
+  - (* the [else] branch, with the negation recorded *)
+    destruct (Helse p Hin) as (qs & Hsub & Hqs).
+    iApply (wp_wand_r _ _ _
+              (paths_post (length (svars (st_assume (pst p) (negate (pret p))))) V' qs)).
+    iSplitL "Hheap'".
+    { iApply (Hqs _ _ V' _ with "Hheap'").
+      Unshelve.
+      - apply wf_state_assume; [done|by apply vars_below_negate].
+      - exact Hbp.
+      - apply st_sat_assume; first done.
+        rewrite (teval_negate V' (pret p) false) //. }
+    iIntros (u) "Hu".
+    iApply (paths_post_mono _ _ qs out _ Hsub).
+    iApply (paths_post_compose _ (length (svars (pst p))) V V' qs u Hgrow Hag).
+    iExact "Hu".
+Qed.
+
 End exec_spec.
