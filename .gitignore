@@ -56,3 +56,6 @@ src/dpdgraph.v
 
 # Claude Code agent worktrees
 /.claude/worktrees/
+
+# rocq-warm daemon state (socket, log, session table)
+/.rocq-warm/
