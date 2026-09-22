@@ -108,10 +108,11 @@ func exec(e *Expr, en *env, st *State) ([]Path, *Failure) {
 		}
 		var out []Path
 		for _, p := range ps {
-			en2 := en
-			if e.Name != "" {
-				en2 = envBind(en, e.Name, p.Ret)
-			}
+			// The name is always bound, even when it is empty: Goose emits
+			// `let: Name := A in B`, which binds Name whatever it is, and
+			// the checker has to agree with that denotation exactly. (A
+			// real Go declaration never has an empty name anyway.)
+			en2 := envBind(en, e.Name, p.Ret)
 			ps2, fl2 := exec(e.B, en2, p.St)
 			if fl2 != nil {
 				return nil, fl2

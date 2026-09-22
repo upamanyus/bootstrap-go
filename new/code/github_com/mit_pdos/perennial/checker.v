@@ -972,16 +972,11 @@ Definition execⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
                 do:  ("p" <-[Path] "$value");;;
                 do:  "$key";;;
                 let: "en2" := (GoAlloc (go.PointerType env) (GoZeroVal (go.PointerType env) #())) in
-                let: "$r0" := (![go.PointerType env] "en") in
+                let: "$r0" := (let: "$a0" := (![go.PointerType env] "en") in
+                let: "$a1" := (![go.string] (StructFieldRef Expr "Name"%go (![go.PointerType Expr] "e"))) in
+                let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+                (FuncResolve envBind [] #()) "$a0" "$a1" "$a2") in
                 do:  ("en2" <-[go.PointerType env] "$r0");;;
-                (if: Convert go.untyped_bool go.bool ((![go.string] (StructFieldRef Expr "Name"%go (![go.PointerType Expr] "e"))) ≠⟨go.string⟩ #""%go)
-                then
-                  let: "$r0" := (let: "$a0" := (![go.PointerType env] "en") in
-                  let: "$a1" := (![go.string] (StructFieldRef Expr "Name"%go (![go.PointerType Expr] "e"))) in
-                  let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                  (FuncResolve envBind [] #()) "$a0" "$a1" "$a2") in
-                  do:  ("en2" <-[go.PointerType env] "$r0")
-                else do:  #());;;
                 let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
                 let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
                 let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
@@ -1670,7 +1665,7 @@ Definition execⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
    without forking; otherwise the state forks, with c added to the path
    condition of the `then` state and its negation to that of the `else` state.
 
-   go: exec.go:340:6 *)
+   go: exec.go:341:6 *)
 Definition execIfⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "e" "en" "c" "st",
     exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
@@ -1766,7 +1761,7 @@ Definition execIfⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : va
 (* applyBinOp builds the term for a binary Go operator at type t, checking
    that both operands have the sort of t.
 
-   go: exec.go:371:6 *)
+   go: exec.go:372:6 *)
 Definition applyBinOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" "t" "vars" "a" "b",
     exception_do (let: "b" := (GoAlloc (go.PointerType Term) "b") in
@@ -1904,7 +1899,7 @@ Definition applyBinOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
 
 (* applyUnOp builds the term for a unary Go operator at type t.
 
-   go: exec.go:428:6 *)
+   go: exec.go:429:6 *)
 Definition applyUnOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" "t" "vars" "a",
     exception_do (let: "a" := (GoAlloc (go.PointerType Term) "a") in
