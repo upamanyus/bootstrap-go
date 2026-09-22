@@ -527,4 +527,120 @@ Proof.
   by iApply "Hback".
 Qed.
 
+(** * Allocation
+
+    [exec] introduces a fresh logical variable for the new location: the
+    state's sort table grows by one [SLoc], and the heap by a cell whose
+    location term is that variable. The valuation is extended to send the new
+    variable to the location GooseLang produced -- which is exactly the
+    freedom [paths_post] leaves, since the extension is at an index at or
+    above the caller's count. *)
+
+Definition upd_var (V : valuation) (n : nat) (v : val) : valuation :=
+  mkVal (λ m, if decide (m = n) then v else vvar V m) (vpat V) (vret V).
+
+Lemma agree_below_upd_var k V n v : (k ≤ n)%nat → agree_below k V (upd_var V n v).
+Proof.
+  intros Hle. split_and!; [|done|done].
+  intros m Hm. simpl. rewrite decide_False //. lia.
+Qed.
+
+Lemma upd_var_here V n v : vvar (upd_var V n v) n = v.
+Proof. simpl. by rewrite decide_True. Qed.
+
+Lemma teval_upd_var_here V n v : teval (upd_var V n v) (TVar n) = v.
+Proof. simpl. by rewrite decide_True. Qed.
+
+Lemma upd_var_other V n m v : m ≠ n → vvar (upd_var V n v) m = vvar V m.
+Proof. intros. simpl. by rewrite decide_False. Qed.
+
+(** The state [exec] forks to on an allocation. *)
+Definition st_alloc (sst : sstate) (x : term) : sstate :=
+  mkState (sheap sst ++ [mkCell (TVar (length (svars sst))) x])
+          (spc sst)
+          (svars sst ++ [SLoc]).
+
+Lemma wf_state_alloc sst x :
+  wf_state sst → vars_below (length (svars sst)) x → wf_state (st_alloc sst x).
+Proof.
+  intros [Hh Hpc] Hx. split; cbn [st_alloc svars sheap spc]; rewrite length_app /=.
+  - intros c Hc. apply elem_of_app in Hc as [Hin1|Hin2].
+    + destruct (Hh c Hin1) as [H1 H2]. split.
+      * eapply vars_below_mono; last exact H1. lia.
+      * eapply vars_below_mono; last exact H2. lia.
+    + assert (c = mkCell (TVar (length (svars sst))) x) as Heqc.
+      { apply elem_of_cons in Hin2 as [?|Hnil]; [done|set_solver]. }
+      rewrite Heqc. split; cbn [cloc cval vars_below]; first lia.
+      eapply vars_below_mono; last exact Hx. lia.
+  - intros y Hy. eapply vars_below_mono; last by apply Hpc. lia.
+Qed.
+
+Lemma st_sat_alloc V sst x (lo : loc) :
+  wf_state sst → st_sat V sst →
+  st_sat (upd_var V (length (svars sst)) (lval lo)) (st_alloc sst x).
+Proof.
+  intros Hwf [Hv Hpc]. split; cbn [st_alloc svars spc].
+  - intros m sg Hsv.
+    destruct (decide (m = length (svars sst))) as [Heqm|Hne].
+    + assert (sg = SLoc) as Hsg.
+      { rewrite lookup_app_Some in Hsv. destruct Hsv as [Hl|[_ Hr]].
+        - exfalso. apply lookup_lt_Some in Hl. lia.
+        - assert (m - length (svars sst) = 0)%nat as Hz by lia.
+          rewrite Hz /= in Hr. congruence. }
+      rewrite Hsg Heqm upd_var_here. by eexists.
+    + rewrite upd_var_other //. apply Hv.
+      rewrite lookup_app_Some in Hsv. destruct Hsv as [Hl|[Hge Hr]]; first done.
+      exfalso. apply lookup_lt_Some in Hr. simpl in Hr.
+      apply Hne. lia.
+  - eapply pc_sat_agree; [by apply agree_below_upd_var| |done].
+    by apply (wf_pc _ Hwf).
+Qed.
+
+Lemma exec_sound_alloc (cty : ctype) (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps →
+     mkPath (TVar (length (svars (pst p)))) (st_alloc (pst p) (pret p)) ∈ out) →
+  exec_sound (CEAlloc cty ce) ρ sst out.
+Proof.
+  intros He Hwfps Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
+  iApply (wp_bind (fill [AppRCtx (Val (GoInstruction (GoAlloc (type_of cty))))])).
+  iApply (wp_wand_r _ _ _ (paths_post (length (svars sst)) V ps)).
+  iSplitL "Hheap".
+  { by iApply (He Hwf Hρ V Hsat with "Hheap"). }
+  iIntros (w) "Hw".
+  iDestruct "Hw" as (p V') "(%Hin & %Hag & %Hret & %Hsat' & Hheap')".
+  assert (wf_state (pst p)) as Hwfp by (by apply (paths_wf_state _ _ Hwfps)).
+  assert ((length (svars sst) ≤ length (svars (pst p)))%nat) as Hgrow
+    by (by apply (paths_wf_grow _ _ Hwfps)).
+  assert (vars_below (length (svars (pst p))) (pret p)) as Hbret
+    by (by apply (paths_wf_ret _ _ Hwfps)).
+  iApply (wp_ctype_alloc_any cty w with "[//]").
+  iIntros "!>" (lo) "Hp".
+  assert (agree_below (length (svars (pst p))) V'
+            (upd_var V' (length (svars (pst p))) (lval lo))) as Hag2
+    by (by apply agree_below_upd_var).
+  iExists (mkPath (TVar (length (svars (pst p)))) (st_alloc (pst p) (pret p))),
+          (upd_var V' (length (svars (pst p))) (lval lo)).
+  iSplit; first (iPureIntro; by apply Hcont).
+  iSplit.
+  { iPureIntro. eapply agree_below_trans; first exact Hag.
+    by eapply agree_below_weaken. }
+  iSplit.
+  { iPureIntro. rewrite lval_eq. by rewrite teval_upd_var_here. }
+  iSplit; first (iPureIntro; by apply st_sat_alloc).
+  (* the new cell, and the old heap under the extended valuation *)
+  cbn [st_alloc sheap]. rewrite heap_interp_app.
+  iSplitL "Hheap'".
+  { rewrite -(heap_interp_agree (length (svars (pst p))) V'
+                (upd_var V' (length (svars (pst p))) (lval lo))) //.
+    by apply (wf_heap _ Hwfp). }
+  rewrite /heap_interp big_sepL_singleton.
+  iExists lo. cbn [cloc cval].
+  rewrite teval_upd_var_here. iSplit; first done.
+  rewrite -(teval_agree (length (svars (pst p))) V'
+              (upd_var V' (length (svars (pst p))) (lval lo)) (pret p)) //.
+  rewrite -Hret. iExact "Hp".
+Qed.
+
 End exec_spec.

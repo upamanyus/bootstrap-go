@@ -298,3 +298,35 @@ collectors alone.
 - An intro pattern that substitutes (`intros [= <-]`) can leave the goal in a
   state where a later `rewrite` hits the same error; `assert (... = ...) as ->
   by congruence` is the safe form.
+
+### Reading Rocq's error messages here
+
+- **"Tactic failure: Cannot find witness"** is this Rocq's generic failure
+  message for several unrelated tactics (`word`, `apply ... in H as pat`,
+  `iApply`, a bracket list with the wrong number of branches). It says
+  nothing about what went wrong; bisect by splitting the tactic.
+- `apply <an iff> in H as pat` misbehaves (wrong branch count, or the
+  hypothesis silently disappears). `rewrite <the iff> in H` then
+  `destruct H as pat` is reliable.
+- `tac; first tac2` applies `tac2` to the first goal *of each* goal `tac`
+  produced, so `split; eapply lem; [|a| |b]` is not four goals -- write the
+  branches out.
+- An intro pattern that reuses a name for both branches
+  (`as [Hc|Hc]`) can lose the hypothesis. Use distinct names.
+- `cbn [f g]` only unfolds what you list, so a `lia` that needs `vars_below`
+  unfolded has to be given `cbn [... vars_below]`.
+
+### Findings about the Go code
+
+- **`growPats` does not terminate for a large index** (liveness, not
+  soundness). `for uint64(len(d.pats)) <= n` appends one element per
+  iteration, and `n` is `body.Var` straight out of a parsed `AExists` node --
+  input-controlled. A postcondition `∃ x_{2^40}, ...` makes the checker hang
+  and exhaust memory. The proof is unaffected, because a WP is partial
+  correctness and the diverging runs satisfy the specification vacuously, but
+  a bound would be worth adding.
+- `pats` and `patOk` are extended together in the same loop body, and nothing
+  else appends to either, so they cannot get out of step today. That is what
+  `sortOfEnv` and `matchTerm` need when they bounds-check one and index the
+  other, so `is_disjunct` carries the length equality rather than each
+  specification assuming it.
