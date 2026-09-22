@@ -52,8 +52,9 @@ Everything is behind the opam switch `perennial` (Rocq 9.4+alpha):
   built once. After that the edit loop is a few seconds per check.
 - `Set Default Proof Using "Type"` does not work in these sections (the
   section variables are all instances); use `"All"`.
-- Error line numbers from `rocq-warm` are 0-based: an error "at line N" is at
-  line N+1 of the file.
+- Error line numbers from `rocq-warm` are sometimes 0-based and sometimes
+  1-based (it depends on which layer reports the error). Check the character
+  offsets against the line to be sure which tactic is at fault.
 
 ### Tactic notes
 
@@ -146,3 +147,38 @@ under `new/checker/fn/`. `new/checker/fn/TypeEq.v` is the worked example.
 - `idx_wf n` is `uint.nat (W64 n) = n` rather than `n < 2^64`, because the
   round-trip form is what every proof actually needs (`lia` struggles with
   `(2 ^ 64)%nat`, which it has to evaluate).
+
+### More per-function lessons
+
+- **`wp_auto` cannot do an anonymous `GoAlloc`.** It handles
+  `let: "x" := GoAlloc t v in ...` (that is `wp_alloc_auto`), but a Go
+  `&T{...}` in return position is a bare `GoAlloc t #v` and `wp_auto` just
+  stops with the same useless "Failed to progress" as the name-clash trap.
+  Use `wp_alloc l as "Hl"` for it. There is no plain `wp_alloc` without the
+  `ident as constr` arguments.
+- **Allocating a node that a representation predicate wants persistent**:
+  `iApply wp_fupd.` first, then `wp_alloc l as "Hl"`, `wp_auto`,
+  `iPersist "Hl"`, `iModIntro`, `iApply "HΦ"`. (`iPersist` often works
+  without the `wp_fupd` because the `ElimModal` instance for `wp` absorbs the
+  update, but only while the goal is still a `WP`.)
+- **Case-split on the Gallina value, not with `wp_if_destruct`, for kind
+  dispatch.** Once the mirror value is destructed, the node's kind code is a
+  literal and `wp_auto` evaluates the whole chain of `=⟨Kind⟩` tests and `||`s
+  by computation -- which also avoids the `word` problems with literal `W64`
+  disequalities.
+- After a recursive call in non-tail position, `wp_auto` often has nothing
+  left to do (the goal is already `Φ v`); write `try wp_auto` or go straight
+  to `by iApply "HΦ"`.
+- `term`'s `TLt`/`TLe` binder is called `signed`, which matters for
+  `destruct`.
+- `rewrite lem; last tac` silently applies `tac` to the *main* goal when the
+  rewrite produced no side condition, and the failure then surfaces as a
+  confusing error on the `rewrite` line.
+- `copy` and `make` are library calls with ready-made specs
+  (`wp_slice_make2`, `wp_slice_copy`), not inlined loops -- `copySorts` needs
+  no loop invariant.
+
+### Working with several agents in one checkout
+
+`git add -A` will sweep up another agent's half-finished file. Commit named
+paths, and `git grep Admitted HEAD -- new/checker/` after every commit.
