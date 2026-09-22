@@ -115,9 +115,8 @@ type entry struct {
 // function's parameters and grows with the ghost variables mentioned by the
 // precondition.
 type Scope struct {
-	Names []string        // index -> name
-	sorts []checker.Sort  // index -> sort
-	types []*checker.Type // index -> Go type (nil if unknown)
+	Names []string       // index -> name
+	sorts []checker.Sort // index -> sort
 	base  map[string]*entry
 
 	// patNames records, per postcondition disjunct, the names of the pattern
@@ -138,7 +137,6 @@ func NewScope(params []translate.ParamInfo) (*Scope, error) {
 		}
 		sc.Names = append(sc.Names, p.Name)
 		sc.sorts = append(sc.sorts, s)
-		sc.types = append(sc.types, p.Ty)
 		sv := conc(s)
 		sv.desc = fmt.Sprintf("%q", p.Name)
 		sc.base[p.Name] = &entry{name: p.Name, idx: uint64(i), sv: sv, ty: p.Ty}
@@ -153,12 +151,18 @@ func (sc *Scope) Vars() []checker.Sort {
 	return out
 }
 
-// GoType returns the Go type of logical variable i, or nil.
+// GoType returns the Go type of logical variable i, or nil if none was
+// inferred. The type is held on the variable's entry, where the resolver
+// records and reads it; this is only a lookup by index, for diagnostics.
 func (sc *Scope) GoType(i int) *checker.Type {
-	if i < 0 || i >= len(sc.types) {
+	if i < 0 || i >= len(sc.Names) {
 		return nil
 	}
-	return sc.types[i]
+	e, ok := sc.base[sc.Names[i]]
+	if !ok {
+		return nil
+	}
+	return e.ty
 }
 
 // Sort returns the sort of logical variable i.
@@ -232,7 +236,6 @@ func (sc *Scope) LowerPre(s *Surface) (*checker.Assn, error) {
 	for _, e := range r.newVars {
 		sc.Names = append(sc.Names, e.name)
 		sc.sorts = append(sc.sorts, e.sv.find().s)
-		sc.types = append(sc.types, e.ty)
 		sc.base[e.name] = e
 	}
 	return a, nil
