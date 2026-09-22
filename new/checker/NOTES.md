@@ -228,3 +228,37 @@ paths, and `git grep Admitted HEAD -- new/checker/` after every commit.
   `wp_auto`, so the next `wp_auto` usually has nothing to do. After a copy,
   `rewrite length_replicate take_ge; last lia. rewrite drop_ge; last (rewrite
   length_replicate; lia). rewrite app_nil_r.` normalises the result.
+
+### Loop proofs (`for _, x := range s`)
+
+- **`wp_for` swallows the whole spatial context**, not just the `iAssert`:
+  `wp_for_core` is `iApply (wp_for with "[-]"); [by iNamedAccu | ...]`, so
+  `HΦ` and every unrelated points-to become part of the invariant
+  automatically. The `iAssert` therefore only needs what *changes* each
+  iteration (counter, accumulator), existentially quantified.
+- **Name the invariant's conjuncts after the Go locals** (`"i"`, `"c"`,
+  `"out"`, `"found"`) -- `wp_auto` looks points-to facts up by those Iris
+  names. This is the mirror image of the rule about Rocq variable names.
+- In the body: `wp_if_destruct`, then `rewrite -> decide_True; last word.`
+  to get past `IndexRef`'s bounds check, then `list_elem cs (sint.nat n) as
+  cur` and `wp_apply (wp_load_slice_index with "[$Hs]")`.
+- A `return` inside the loop lands as `for_postcondition ... (return_val v)`;
+  `wp_for_post` then selects `wp_for_post_return`, which *discards* the loop
+  invariant, so the ambient context survives.
+- **Never put a `bool_decide` in a loop invariant**: `rewrite
+  bool_decide_eq_true_2` with no explicit argument grabs the first
+  `bool_decide` in the entailment, which is the one inside `HΦ`, and silently
+  rewrites the specification instead. Carry a boolean existential and a pure
+  conjunct relating it to the mirror.
+- `wp_slice_literal` hands a one-element literal back as
+  `<[Z.to_nat (sint.Z (W64 0)) := y]> [zero_val]`, and `simpl` detonates the
+  WP; prove a two-line `insert0_singleton` helper instead.
+
+### An invariant the soundness proof will have to supply
+
+`heapUpdate` replaces only the *first* cell whose location term matches, so
+nothing is said about a symbolic heap holding two cells with syntactically
+equal locations. That configuration is unreachable -- `heap_interp` of it is
+`False`, since it would assert two `heap_pointsto` at one location -- but the
+checker does not *enforce* it, so the exec proof has to derive it from
+`heap_interp` rather than assume it.
