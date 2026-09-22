@@ -20,8 +20,9 @@ Proof.
   iApply wp_fupd.
   wp_auto.
   wp_apply (wp_TypeSort lt (Some t) with "[$]").
-  destruct t; simpl; wp_auto.
-  Show.
-Admitted.
+  destruct t; simpl; wp_auto;
+    wp_alloc lz as "Hz"; iPersist "Hz"; wp_auto;
+    iModIntro; iApply "HΦ"; iFrame "Hz".
+Qed.
 
 End proof.
