@@ -262,3 +262,31 @@ equal locations. That configuration is unreachable -- `heap_interp` of it is
 `False`, since it would assert two `heap_pointsto` at one location -- but the
 checker does not *enforce* it, so the exec proof has to derive it from
 `heap_interp` rather than assume it.
+
+### Slice appends
+
+- **`iFrame` picks the wrong slice in `wp_slice_append`.** Its precondition
+  is `s ↦* vs ∗ own_slice_cap V s 1 ∗ s2 ↦*{dq} vs'`; with `s`/`s2` still
+  evars, `iFrame` frames the *nil* hypothesis into the `s2` slot, unifies
+  `s2 := slice.nil`, and then reports "cannot frame" on the real slice. Pass
+  all five arguments explicitly. When one slice is an unnameable literal,
+  wrap the nil-append in a helper lemma over universally quantified
+  `s2`/`vs` -- inside the lemma the names are variables and framing is
+  unambiguous.
+- **`wp_slice_literal` leaves the element Go type as a shelved evar**, which
+  typeclass resolution never revisits, so `Qed` fails with "the proof term is
+  not complete" and *no visible open goals*. Cure:
+  `Unshelve. all: first [ exact <the go type> | apply _ ].` before `Qed`.
+  Passing `(t := ...)` through `wp_apply` is silently ignored.
+- A function that returns a slice built by appending has to hand back
+  `own_slice_cap` as well, because `wp_slice_append` consumes and returns it.
+
+### An ordering constraint the soundness proof must preserve
+
+`assnHeap` and `assnPure` do not descend into `AOr`/`AExists` children, so on
+an assertion containing either they silently drop atoms --
+`AExists(n, APointsTo(x, y))` yields the empty heap. That is sound only
+because `Analyze` runs `assnHasOr` and `assnHasExists` first and rejects such
+preconditions. The two collectors are not meaningful in isolation, and the
+`Analyze` proof has to use that ordering rather than a property of the
+collectors alone.
