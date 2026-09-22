@@ -124,8 +124,15 @@ other way too, with the hand-written Rocq proof of it in
 `new/proof/github_com/mit_pdos/perennial/checker/examples/`, and prints the
 wall-clock time of each. It rebuilds one `.vok` file per function -- the
 incremental cost of re-checking that one proof against prebuilt dependencies --
-and compares it against one whole run of the checker. This part needs `rocq` in
-`PATH` and the dependencies built once, with
+and compares it against one whole run of the checker.
+
+Most of a `-vok` run is spent loading the proof's imports, which says nothing
+about the proof, so the table splits the Rocq time in two: `rocq compile -time`
+attributes wall-clock time to each vernacular command, and an import is one
+command, so the time spent on the imports and the time spent checking the proof
+can be summed separately.
+
+This part needs `rocq` in `PATH` and the dependencies built once, with
 
 ```
 make -j$(nproc) TIMED=false \

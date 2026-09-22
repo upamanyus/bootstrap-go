@@ -106,6 +106,12 @@ echo "$pass cases behaved as expected, $fail did not"
 # re-check that one proof against already-built dependencies, the way an
 # incremental `make` would -- and run the checker on the same specification,
 # and report both wall-clock times.
+#
+# Most of a -vok run is spent loading the proof's imports (the Perennial and
+# Iris prelude), which says nothing about the proof itself, so we also report
+# the time without it: `rocq compile -time` attributes wall-clock time to each
+# vernacular command, and every import is one command, so the two phases can
+# be summed separately.
 
 PROOFS=new/proof/github_com/mit_pdos/perennial/checker/examples
 # examples_init.vos is the last .vos in the proofs' dependency closure, so its
@@ -125,6 +131,32 @@ now_us() {
 }
 
 secs() { awk -v us="$1" 'BEGIN { printf "%.2f", us / 1e6 }'; }
+
+# rocq_phase_secs LOG imports|proof -- add up the times `rocq compile -time`
+# reported for the import commands, or for every other command. Its lines look
+# like
+#
+#   Chars 721 - 738 [wp_start~as~"Hz".] 0.158 secs (0.155u,0.001s)
+#
+# with spaces in the command replaced by ~ and the command truncated to 30
+# characters, which is why an import is recognised by its leading From or
+# Require rather than by the word Require.
+rocq_phase_secs() {
+	awk -v want="$2" '
+		/^Chars [0-9]+ - [0-9]+ \[/ {
+			rest = $0
+			sub(/^Chars [0-9]+ - [0-9]+ \[/, "", rest)
+			close_bracket = index(rest, "]")
+			cmd = substr(rest, 1, close_bracket - 1)
+			split(substr(rest, close_bracket + 2), field, " ")
+			is_import = (cmd ~ /^(From|Require)/)
+			if ((want == "imports") == is_import) {
+				total += field[1] + 0
+			}
+		}
+		END { printf "%.2f", total + 0 }
+	' "$1"
+}
 
 # The global arguments Rocq needs, extracted from _RocqProject the same way
 # the Makefile does.
@@ -152,19 +184,21 @@ rocq_available() {
 cmp_pass=0
 cmp_fail=0
 
+row() { printf '%-11s %10s %9s %10s %10s %9s\n' "$@"; }
+
 # compare NAME PROOF-BASENAME GOCHECK-ARGS...
 compare() {
 	local name=$1 proof=$2
 	shift 2
 	local vok=$PROOFS/$proof.vok
-	local t0 t1 rocq_us gocheck_us status ok=yes
+	local t0 t1 rocq_us gocheck_us status ok=yes imports proof_only
 
 	# Rocq: rebuild this one .vok, nothing else.
 	rm -f "$vok"
 	t0=$(now_us)
 	# shellcheck disable=SC2046 # the _RocqProject arguments must split
-	rocq compile $(rocq_args) -vok -o "$vok" "$PROOFS/$proof.v" \
-		>/dev/null 2>&1
+	rocq compile $(rocq_args) -vok -time -o "$vok" "$PROOFS/$proof.v" \
+		>"$TIMELOG" 2>/dev/null
 	status=$?
 	t1=$(now_us)
 	rocq_us=$((t1 - t0))
@@ -172,6 +206,8 @@ compare() {
 		echo "$name: rocq failed on $PROOFS/$proof.v"
 		ok=no
 	fi
+	imports=$(rocq_phase_secs "$TIMELOG" imports)
+	proof_only=$(rocq_phase_secs "$TIMELOG" proof)
 
 	# The checker, on the same specification.
 	t0=$(now_us)
@@ -189,10 +225,13 @@ compare() {
 	else
 		cmp_fail=$((cmp_fail + 1))
 	fi
-	printf '%-11s %12s %12s %10s\n' "$name" \
-		"$(secs "$rocq_us")" "$(secs "$gocheck_us")" \
-		"$(awk -v r="$rocq_us" -v g="$gocheck_us" \
-			'BEGIN { if (g > 0) printf "%.1fx", r / g; else printf "-" }')"
+	row "$name" "$(secs "$rocq_us")" "$imports" "$proof_only" \
+		"$(secs "$gocheck_us")" \
+		"$(awk -v r="$proof_only" -v g="$gocheck_us" \
+			'BEGIN {
+				g /= 1e6
+				if (g > 0) printf "%.0fx", r / g; else printf "-"
+			}')"
 }
 
 echo
@@ -201,8 +240,8 @@ echo "# The same five specifications, proved in Rocq and checked"
 echo "--------------------------------------------------------------"
 if rocq_available; then
 	rocq --version | head -1
-	printf '%-11s %12s %12s %10s\n' \
-		function "rocq -vok" gocheck speedup
+	TIMELOG=$(mktemp)
+	row function "-vok total" imports proof gocheck speedup
 	compare Double double -pkg $PKG -pre "$DOUBLE_PRE" \
 		-post "$DOUBLE_POST" Double
 	compare Max max -pkg $PKG -post "$MAX_POST" Max
@@ -210,11 +249,16 @@ if rocq_available; then
 	compare Abs abs -pkg $PKG -post "$ABS_POST" Abs
 	compare CondStore cond_store -pkg $PKG -pre "$CONDSTORE_PRE" \
 		-post "$CONDSTORE_POST" CondStore
+	rm -f "$TIMELOG"
 	echo "--------------------------------------------------------------"
-	echo "times are wall-clock seconds, including process startup;"
-	echo "the Rocq column re-checks one proof file against prebuilt"
-	echo "dependencies, and the gocheck column is one whole run of the"
-	echo "checker over the Go source."
+	echo "Seconds. -vok total is the wall-clock time of rebuilding that"
+	echo "one .vok against prebuilt dependencies; imports and proof split"
+	echo "it into loading the proof's imports and checking the proof"
+	echo "itself, as rocq -time attributes time per command. The two do"
+	echo "not quite add up to the total, which also pays for Rocq's own"
+	echo "startup. The gocheck column is one whole run of the checker,"
+	echo "process startup and loading the Go package included, so the"
+	echo "speedup -- proof over that whole run -- is conservative."
 	echo "$cmp_pass of $((cmp_pass + cmp_fail)) comparisons agreed"
 	[ "$cmp_fail" -eq 0 ] || fail=$((fail + cmp_fail))
 fi
