@@ -9,7 +9,7 @@
 #   1  the checker rejected the program (unsafe) or the postcondition
 #   2  a usage, parse, translation or sort error
 #
-# The last section re-checks the same five specifications the slow way, with
+# The last section re-checks the same six specifications the slow way, with
 # the hand-written Rocq proofs in
 # new/proof/github_com/mit_pdos/perennial/checker/examples/, and times each
 # proof against the corresponding run of the checker.
@@ -56,6 +56,10 @@ SWAP_POST='p ↦ b ∗ q ↦ a'
 ABS_POST='(⌜x <s 0⌝ ∗ ⌜ret == -x⌝) ∨ (⌜x >=s 0⌝ ∗ ⌜ret == x⌝)'
 CONDSTORE_PRE='p |-> v0'
 CONDSTORE_POST='(⌜!flag⌝ ∗ p ↦ v0 ∗ ⌜ret == false⌝) ∨ (⌜flag⌝ ∗ p ↦ v ∗ ⌜ret == true⌝)'
+# The checker has no arithmetic, so the median is stated path by path, with
+# each path's conditions exactly as they print; the last two disjuncts are the
+# two infeasible paths, whose conditions contradict.
+MEDIAN_POST='(⌜b <u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜c >=u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜c >=u b⌝ ∗ ⌜c <u a⌝ ∗ ⌜ret == c⌝) ∨ (⌜c >=u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == c⌝) ∨ (⌜b <u a⌝ ∗ ⌜c >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜c <u a⌝ ∗ ⌜b >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜b <u a⌝ ∗ ⌜a <u b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜b <u a⌝)'
 
 # --- Verified examples ------------------------------------------------------
 
@@ -79,14 +83,9 @@ run 0 "Swap again, all ASCII (-ascii)" \
 	-pkg $PKG -ascii -pre 'p |-> a * q |-> b' -post 'p |-> b * q |-> a' Swap
 
 # A longer function: Median3 sorts three locals with a three-comparator
-# sorting network and returns the middle one, 8 paths in all. The checker has
-# no arithmetic, so the post names each path's conditions exactly; the last
-# two disjuncts are the two infeasible paths, whose conditions contradict.
-LONG=./checker/examples/long
-MEDIAN_POST='(⌜b <u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜c >=u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜c >=u b⌝ ∗ ⌜c <u a⌝ ∗ ⌜ret == c⌝) ∨ (⌜c >=u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == c⌝) ∨ (⌜b <u a⌝ ∗ ⌜c >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜c <u a⌝ ∗ ⌜b >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜b <u a⌝ ∗ ⌜a <u b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜b <u a⌝)'
-
+# sorting network and returns the middle one, 8 paths in all.
 run 0 "Median3: a sorting network, eight paths, the median returned" \
-	-pkg $LONG -post "$MEDIAN_POST" Median3
+	-pkg $PKG -post "$MEDIAN_POST" Median3
 
 # --- Rejected inputs --------------------------------------------------------
 
@@ -97,7 +96,7 @@ run 1 "Double against a postcondition it does not establish" \
 	-pkg $PKG -pre 'z |-> z0' -post 'z ↦ 74' Double
 
 run 1 "Median3 claiming the maximum, not the median, when c < b < a" \
-	-pkg $LONG -post "${MEDIAN_POST/⌜c <u b⌝ ∗ ⌜ret == b⌝)/⌜c <u b⌝ ∗ ⌜ret == a⌝)}" \
+	-pkg $PKG -post "${MEDIAN_POST/⌜c <u b⌝ ∗ ⌜ret == b⌝)/⌜c <u b⌝ ∗ ⌜ret == a⌝)}" \
 	Median3
 
 run 2 "Double against an ill-sorted postcondition" \
@@ -250,7 +249,7 @@ compare() {
 
 echo
 echo "=============================================================="
-echo "# The same five specifications, proved in Rocq and checked"
+echo "# The same six specifications, proved in Rocq and checked"
 echo "--------------------------------------------------------------"
 if rocq_available; then
 	rocq --version | head -1
@@ -263,6 +262,7 @@ if rocq_available; then
 	compare Abs abs -pkg $PKG -post "$ABS_POST" Abs
 	compare CondStore cond_store -pkg $PKG -pre "$CONDSTORE_PRE" \
 		-post "$CONDSTORE_POST" CondStore
+	compare Median3 median3 -pkg $PKG -post "$MEDIAN_POST" Median3
 	rm -f "$TIMELOG"
 	echo "--------------------------------------------------------------"
 	echo "Seconds. -vok total is the wall-clock time of rebuilding that"

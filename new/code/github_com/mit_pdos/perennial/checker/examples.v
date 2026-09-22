@@ -17,6 +17,8 @@ Definition Abs {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "gi
 
 Definition CondStore {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker/examples.CondStore"%go.
 
+Definition Median3 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker/examples.Median3"%go.
+
 (* Double is the motivating example: heap access, arithmetic, control flow.
 
    go: examples.go:6:6 *)
@@ -90,6 +92,58 @@ Definition CondStoreⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
     do:  ((![go.PointerType go.uint64] "p") <-[go.uint64] "$r0");;;
     return: (#true)).
 
+(* Median3 returns the median of three unsigned integers, the long way: it
+   copies them into locals, sorts the locals with a three-comparator sorting
+   network (each comparator swaps its pair into order), and returns the middle
+   one.
+
+   go: examples.go:50:6 *)
+Definition Median3ⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "a" "b" "c",
+    exception_do (let: "c" := (GoAlloc go.uint64 "c") in
+    let: "b" := (GoAlloc go.uint64 "b") in
+    let: "a" := (GoAlloc go.uint64 "a") in
+    let: "x" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: "$r0" := (![go.uint64] "a") in
+    do:  ("x" <-[go.uint64] "$r0");;;
+    let: "y" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: "$r0" := (![go.uint64] "b") in
+    do:  ("y" <-[go.uint64] "$r0");;;
+    let: "z" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: "$r0" := (![go.uint64] "c") in
+    do:  ("z" <-[go.uint64] "$r0");;;
+    (if: Convert go.untyped_bool go.bool ((![go.uint64] "y") <⟨go.uint64⟩ (![go.uint64] "x"))
+    then
+      let: "t" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+      let: "$r0" := (![go.uint64] "x") in
+      do:  ("t" <-[go.uint64] "$r0");;;
+      let: "$r0" := (![go.uint64] "y") in
+      do:  ("x" <-[go.uint64] "$r0");;;
+      let: "$r0" := (![go.uint64] "t") in
+      do:  ("y" <-[go.uint64] "$r0")
+    else do:  #());;;
+    (if: Convert go.untyped_bool go.bool ((![go.uint64] "z") <⟨go.uint64⟩ (![go.uint64] "y"))
+    then
+      let: "t" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+      let: "$r0" := (![go.uint64] "y") in
+      do:  ("t" <-[go.uint64] "$r0");;;
+      let: "$r0" := (![go.uint64] "z") in
+      do:  ("y" <-[go.uint64] "$r0");;;
+      let: "$r0" := (![go.uint64] "t") in
+      do:  ("z" <-[go.uint64] "$r0")
+    else do:  #());;;
+    (if: Convert go.untyped_bool go.bool ((![go.uint64] "y") <⟨go.uint64⟩ (![go.uint64] "x"))
+    then
+      let: "t" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+      let: "$r0" := (![go.uint64] "x") in
+      do:  ("t" <-[go.uint64] "$r0");;;
+      let: "$r0" := (![go.uint64] "y") in
+      do:  ("x" <-[go.uint64] "$r0");;;
+      let: "$r0" := (![go.uint64] "t") in
+      do:  ("y" <-[go.uint64] "$r0")
+    else do:  #());;;
+    return: (![go.uint64] "y")).
+
 #[global] Instance info' : PkgInfo pkg_id.examples :=
 {|
   pkg_imported_pkgs := []
@@ -108,5 +162,6 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] Swap_unfold :: FuncUnfold Swap [] (Swapⁱᵐᵖˡ);
   #[global] Abs_unfold :: FuncUnfold Abs [] (Absⁱᵐᵖˡ);
   #[global] CondStore_unfold :: FuncUnfold CondStore [] (CondStoreⁱᵐᵖˡ);
+  #[global] Median3_unfold :: FuncUnfold Median3 [] (Median3ⁱᵐᵖˡ);
 }.
 End examples.

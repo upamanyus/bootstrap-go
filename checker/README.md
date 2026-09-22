@@ -33,11 +33,10 @@ checker/            core, translated by Goose; NO imports (see below)
   match.go          postcondition matching
   check.go          Analyze / Verify / Check / Explain
   examples/         target Go programs for the demo
-  examples/long/    longer targets (Median3), not translated or proved in Rocq
 gocheck/            frontend + CLI (not translated): translate/, spec/, render/, demo.sh
 new/checker/soundness.v   the soundness statement (definitions + Axiom)
 new/proof/github_com/mit_pdos/perennial/checker/examples/   hand-written Rocq
-                          proofs of the same five specifications, one file
+                          proofs of the same six specifications, one file
                           per function
 new/code/github_com/mit_pdos/perennial/checker.v      Goose output for checker/
 new/code/github_com/mit_pdos/perennial/checker/examples.v  Goose output for the examples
@@ -116,11 +115,11 @@ notation.
 bash gocheck/demo.sh
 ```
 
-It runs the five examples with their specs, three failing cases (a missing
-points-to, a wrong post, an ill-sorted spec) and a few variants, asserting the
+It runs the six examples with their specs, four failing cases (a missing
+points-to, two wrong posts, an ill-sorted spec) and a few variants, asserting the
 exit code of each.
 
-The last section of the demo establishes each of the five specifications the
+The last section of the demo establishes each of the six specifications the
 other way too, with the hand-written Rocq proof of it in
 `new/proof/github_com/mit_pdos/perennial/checker/examples/`, and prints the
 wall-clock time of each. It rebuilds one `.vok` file per function -- the
