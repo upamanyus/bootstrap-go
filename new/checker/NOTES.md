@@ -182,3 +182,40 @@ under `new/checker/fn/`. `new/checker/fn/TypeEq.v` is the worked example.
 
 `git add -A` will sweep up another agent's half-finished file. Commit named
 paths, and `git grep Admitted HEAD -- new/checker/` after every commit.
+
+### Lessons from the parallel wave
+
+- **The naming trap covers the lemma statement, not just the proof.** Rename
+  the universally quantified variables in the specification itself; the
+  statements stay alpha-equivalent to the "official" spelling.
+- **Induction rather than Löb** for a function that recurses down a Gallina
+  list: state a helper with `∀ le` *inside* the statement, `induction ρ`,
+  then `wp_start`. Derive the public form by plain `apply`, not `iApply` --
+  a Hoare triple is a `∀ Φ`, not an entailment.
+- **After a tail call, `wp_apply` still leaves a WP.** Goose compiles
+  `return f(...)` as `let: ("$ret0", "$ret1") := ... in return: (...)`, so a
+  `wp_auto` is still needed before `iApply "HΦ"`.
+- **`iApply "HΦ"` sometimes fails where `iSpecialize ("HΦ" with "[//]");
+  iExact "HΦ"` works** (the same `language.val` vs `val` mismatch as with
+  `wp_value'`).
+- **A specification's postcondition gets delta-unfolded** by the `simpl` in
+  `wp_auto`, so after `wp_apply ("IH" ...)` the returned boolean appears in
+  its expanded form and `destruct (f x) eqn:...` abstracts nothing. Fold it
+  back first: `fold (f x)`.
+- **Case analysis over a pair of 18-constructor mirrors must not do a
+  `vm_compute` per case** -- 324 of them exhaust memory. Route the kind codes
+  through a `nat` mirror proved equal once per constructor, then
+  `discriminate`.
+- `uint.nat` is a notation, so `f_equal uint.nat` is rejected
+  ("Abbreviation is not applied enough"); wrap it in a `Definition`.
+- Numeric literals in the branches of an `if` inside a `nat`-returning
+  definition elaborate in `Z_scope`; annotate with `%nat`.
+- `wp_apply (spec with "[$]")` on a specification whose precondition has two
+  same-shaped resources can frame them in the wrong order and instantiate the
+  arguments wrongly; pass the arguments explicitly.
+- `wp_slice_append` needs its arguments pinned positionally for the same
+  reason, and shelves `IntoValTyped` side goals -- close them with
+  `Unshelve. all: apply _.` before `Qed`.
+- `wp_slice_literal` leaves the contents in insert form; normalize with
+  `replace (Z.to_nat (word.signed (W64 0))) with 0%nat by word` then
+  `iSimpl in "Hsl"`.
