@@ -461,3 +461,34 @@ the missing `sortOfEnv` proof, and are now discharged by `fn/sortOfEnv.v`.
   never destructed inside the WP.
 - `by apply bool_decide_eq_false_2` fails on `¬ (None ≠ None)`; use
   `apply bool_decide_eq_false_2; naive_solver`.
+
+### Lessons from the matcher, Analyze and Check proofs
+
+- A pure lemma proved inside an `fn` file's section is unusable from pure
+  code (it takes Σ and the other section variables): `term_eq_iff`
+  (termEq.v) and `has_pat_node` (hasPat.v) had to be re-proved outside any
+  section in match_sound.v.
+- After `iFrame` fills an existential by unification, a later `rewrite` can
+  fail to find a displayed subterm; give witnesses with `iExists` first.
+- A failure literal that re-reads a slice element makes `wp_auto` fail with
+  "walk_expr: no match for expr": `wp_pures; try wp_auto`, then the bounds
+  `rewrite decide_True` and `wp_load_slice_index` by hand.
+- Loading a field through a slice element (`p.St.Heap[j].Val`):
+  `own_slice_elem_acc (sint.Z idx)`, then `wp_auto`; close with
+  `list_insert_id`.
+- `wp_apply` of a spec with no postcondition binders already runs `wp_auto`
+  (next one: "Failed to progress"); likewise a `wp_apply … with "[$…]"` that
+  leaves no side goal makes a following `{ … }` fail ("cannot be unfocused").
+- stdpp: `list_lookup_insert_eq`/`list_lookup_insert_ne`; bare `filter_app`
+  is `List.filter_app`; `done` does not close from `None = Some _`
+  (`discriminate`).
+- The inner Hoare triple's `▷` continuation: use `wp_frame_step_l'`, whose
+  `TCEq (to_val e) None` side goal needs `apply TCEq_eq; exact (lemma args)`
+  (`goose_lang.(language.to_val)` vs `to_val` do not unify syntactically).
+- `wp_if_destruct` auto-names hypotheses `n`, `n0`, ...; a later `∃ (n : w64)`
+  in a loop invariant is silently renamed and `sint.Z n` then means the wrong
+  thing. Use another binder name.
+- A points-to with a discarded fraction lands in the persistent context, so
+  `"[$H]"` does not consume it and reusing the name later is "not fresh".
+- `Print Assumptions` of a top-level spec exceeds rocq-warm's default 4.2 GB.
+- fn/exec.v (18 dispatch lemmas, 7.5 min) is the second most expensive file.
