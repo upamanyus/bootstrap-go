@@ -447,3 +447,17 @@ the missing `sortOfEnv` proof, and are now discharged by `fn/sortOfEnv.v`.
   only half; use `split; first word. split.`
 - exec_sound_b.v has `exec_post_ok` / `exec_post_fail` for unfolding
   `exec_post` without fighting `decide`.
+
+### Lessons from the exec leaf/monad cases
+
+- An `&Term{...}` argument still needs a manual `wp_alloc lt as "Hlt";
+  iPersist "Hlt"`; `iPersist` right after `wp_alloc`, while the goal is still
+  a WP, needs no `wp_fupd`.
+- Dispatching on a term's kind (`p.Ret.Kind == TExec`): `is_term_node` gives
+  the kind as `term_code`; `rewrite /checker.TExec`,
+  `destruct (decide (term_code x = W64 19))`,
+  `rewrite bool_decide_eq_true_2/false_2 //`, and small pure lemmas
+  (`term_code_TExec`, exec_sound_a.v) recover the constructor -- the term is
+  never destructed inside the WP.
+- `by apply bool_decide_eq_false_2` fails on `¬ (None ≠ None)`; use
+  `apply bool_decide_eq_false_2; naive_solver`.
