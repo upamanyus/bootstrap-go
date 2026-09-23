@@ -1,18 +1,21 @@
 (** Statement of soundness for the Go symbolic-execution checker in checker/.
 
     The checker (checker/*.go, translated by Goose into
-    new/code/github_com/mit_pdos/perennial/checker.v) is being verified. This
-    file only *states* what a [true] answer of [checker.Check] means, as
-    [Axiom check_sound] at the end; the definitions it is stated over live in
-    new/checker/defs.v, which this file exports.
+    new/code/github_com/mit_pdos/perennial/checker.v) is verified. This file
+    states what a [true] answer of [checker.Check] means, as [check_sound] at
+    the end; the definitions it is stated over live in new/checker/defs.v,
+    which this file exports. The proof is [check_sound_proof]
+    (new/checker/check_sound.v), about the Goose translation of the checker;
+    new/checker/NOTES.md and checker/SOUNDNESS_PLAN.md describe it.
 
-    Trust boundary of the whole pipeline: the GooseLang semantics, this axiom,
-    and the unverified frontend (gocheck/) that produces the checker's input
-    from Go source. *)
+    Trust boundary of the whole pipeline: the GooseLang semantics, the Goose
+    translation of the checker, and the unverified frontend (gocheck/) that
+    produces the checker's input from Go source. *)
 From New.proof Require Import proof_prelude.
 From New.golang Require Import theory.
 From New.generatedproof.github_com.mit_pdos.perennial Require Import checker.
 From New.checker Require Export defs.
+From New.checker Require Import check_sound.
 
 Set Default Proof Using "Type".
 
@@ -27,10 +30,8 @@ Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
     [post], then for every valuation of the logical variables respecting the
     sorts, [f] applied to the values of variables [0 .. nparams-1] satisfies the
     Hoare triple with precondition [pre] and postcondition [post] (in which
-    [ret] denotes the return value). This is the only unproved assumption of
-    the pipeline besides the GooseLang semantics itself; the checker is not
-    verified. *)
-Axiom check_sound :
+    [ret] denotes the return value). *)
+Lemma check_sound :
   ∀ (f : cfunc) (vars : list sort) (pre post : cassn)
     (lf : loc) (svars : slice.t) (lpre lpost : loc),
   {{{ is_pkg_init checker ∗
@@ -43,5 +44,6 @@ Axiom check_sound :
           {{{ pre_interp θ pre }}}
             apply_vals (func_val f) (arg_vals f θ)
           {{{ (v : val), RET v; post_interp θ v post }}} ⌝ }}}.
+Proof using All. exact check_sound_proof. Qed.
 
 End semantics.

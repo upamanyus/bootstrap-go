@@ -18,19 +18,6 @@ Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
 Set Default Proof Using "All".
 
-(** TEMPORARY: discharged by fn/exec.v (the dispatcher, by induction on the
-    [cexpr]). *)
-Context (wp_exec : ∀ e : cexpr, ⊢ exec_like checker.exec e).
-
-(** The matcher, as in fn/Verify.v. TEMPORARY: discharged by
-    fn/checkDisjunct.v. *)
-Context (wp_checkDisjunct : ∀ (p : checker.Path.t) (sp : spath) (ld : loc) (dj : cdisjunct)
-        (sv : slice.t) (vars : list sort),
-    {{{ is_pkg_init checker ∗ is_path p sp ∗ is_disjunct_ro ld dj ∗ is_sorts sv vars }}}
-      @! checker.checkDisjunct #p #ld #sv
-    {{{ (lf : loc), RET #lf;
-        is_path p sp ∗ ⌜lf = null → d_fail dj = false ∧ path_sat_dj vars sp dj⌝ }}}).
-
 (** A function application is never a value, so the [▷] in front of a Hoare
     triple's continuation can be stripped by its first step. *)
 Lemma apply_vals_e_not_val (h : expr) (vs : list val) :
@@ -98,7 +85,7 @@ Lemma wp_Check (cf : cfunc) (vs : list sort) (P Q : cassn)
 Proof.
   wp_start as "(#Hf & #Hsv & #Hpre & #Hpost)".
   wp_auto.
-  wp_apply (wp_Analyze wp_exec lf cf sv vs lpre P with "[$Hf $Hsv $Hpre]")
+  wp_apply (wp_Analyze lf cf sv vs lpre P with "[$Hf $Hsv $Hpre]")
     as (s lfail) "Hres".
   try wp_auto.
   destruct (decide (lfail = null)) as [->|Hne].
@@ -108,7 +95,7 @@ Proof.
   rewrite bool_decide_eq_true_2 //.
   iDestruct "Hres" as (ps) "(Hps & %Hwf & %Hwp)".
   wp_auto.
-  wp_apply (wp_Verify wp_checkDisjunct s ps sv vs lpost Q with "[$Hps $Hsv $Hpost]")
+  wp_apply (wp_Verify s ps sv vs lpost Q with "[$Hps $Hsv $Hpost]")
     as (lv) "%Hver".
   try wp_auto.
   iApply "HΦ". iPureIntro. intros Hb θ Hθ.

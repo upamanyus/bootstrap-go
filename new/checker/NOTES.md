@@ -336,11 +336,10 @@ collectors alone.
     grep -rn "^Axiom\|^Context (wp_\|^Hypothesis" new/checker/*.v new/checker/fn/*.v \
       | grep -v __nobuild
 
-Today that prints only `Axiom check_sound` in `soundness.v` (the goal of the
-whole exercise). The three section hypotheses that used to be listed here --
-`wp_SortOf` in `fn/applyBinOp.v` and `fn/applyUnOp.v`, `wp_sortOfEnv` in
-`fn/atomWellSorted.v`, and `wp_sortOfEnv_pts` in `fn/SortOf.v` -- were all
-the missing `sortOfEnv` proof, and are now discharged by `fn/sortOfEnv.v`.
+Today it prints nothing: `check_sound` in soundness.v is a `Lemma`, proved
+by `check_sound_proof` (check_sound.v), and no section hypothesis is left.
+`Print Assumptions check_sound` lists only axioms of the Go/Perennial
+libraries themselves (see the commit that discharged the axiom).
 
 ### Late lessons
 

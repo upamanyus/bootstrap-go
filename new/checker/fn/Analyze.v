@@ -12,17 +12,13 @@
     and [st] (and the range loop's own index is also called [i]), so no Rocq
     variable here may be called any of those (see NOTES.md). *)
 From New.checker Require Import prelude nodes exec_spec exec_def pre_sound.
-From New.checker.fn Require Import assnHasOr assnHasExists assnWellSorted
+From New.checker.fn Require Import exec assnHasOr assnHasExists assnWellSorted
   assnHeap assnPure copySorts envBind.
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
 Set Default Proof Using "All".
-
-(** TEMPORARY: discharged by fn/exec.v (the dispatcher, by induction on the
-    [cexpr]). *)
-Context (wp_exec : ∀ e : cexpr, ⊢ exec_like checker.exec e).
 
 Local Ltac reject :=
   try wp_auto;

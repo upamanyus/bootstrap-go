@@ -19,15 +19,6 @@ Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
 Set Default Proof Using "All".
 
-(** The matcher, as in fn/anyDisjunct.v. TEMPORARY: discharged by
-    fn/checkDisjunct.v. *)
-Context (wp_checkDisjunct : ∀ (p : checker.Path.t) (sp : spath) (ld : loc) (dj : cdisjunct)
-        (sv : slice.t) (vars : list sort),
-    {{{ is_pkg_init checker ∗ is_path p sp ∗ is_disjunct_ro ld dj ∗ is_sorts sv vars }}}
-      @! checker.checkDisjunct #p #ld #sv
-    {{{ (lf : loc), RET #lf;
-        is_path p sp ∗ ⌜lf = null → d_fail dj = false ∧ path_sat_dj vars sp dj⌝ }}}).
-
 (** What a path needs from the postcondition. *)
 Definition path_ok (vs : list sort) (P : cassn) (sp : spath) : Prop :=
   ∃ dj, d_fail dj = false ∧ path_sat_dj vs sp dj ∧ ∀ V, dj_interp V dj ⊢ assn_interp V P.
@@ -83,7 +74,7 @@ Proof.
     { word. }
     { done. }
     try wp_auto.
-    wp_apply (wp_anyDisjunct wp_checkDisjunct x sp sd djs svs vs with "[$Hp $Hds $Hvs]")
+    wp_apply (wp_anyDisjunct x sp sd djs svs vs with "[$Hp $Hds $Hvs]")
       as (b) "[Hp %Hb]".
     iDestruct ("Hxs" with "Hp") as "Hxs".
     destruct b.

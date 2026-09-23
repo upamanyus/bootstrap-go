@@ -1,76 +1,46 @@
 # Plan: proving `check_sound` for the Go checker
 
-> **Status (updated as the proof goes).** The plan below is the original
-> design; this box records what has actually been established.
+> **Status: done.** `check_sound` (new/checker/soundness.v) is a `Lemma`,
+> proved by `check_sound_proof` in new/checker/check_sound.v, with no
+> `Admitted`, axiom or section hypothesis anywhere under new/checker/.
 >
-> Done, all checked in Rocq:
+> How the proof ended up, relative to the plan below:
 >
-> - `new/checker/defs.v` -- the definitions the statement is over, split out
->   of `soundness.v` so the proof can depend on them without depending on the
->   statement. The axiom's text is unchanged.
-> - §1 `term_lemmas.v`, §2 `subst.v`, §3 `steps.v`, §4 `interp.v`,
->   §5 `repr.v` (+ `nodes.v` for `Expr`/`Assn` nodes and `sortEnv`),
->   `prelude.v`.
-> - `exec_spec.v`: `exec_sound`, its monotonicity in the path list (which is
->   what lets the loops in `exec.go` concatenate results), and the cases that
->   neither fork nor touch the heap.
-> - `exec_spec.v` also has the semantic composition lemma for every
->   compound case of `exec` except the store: `let`, sequencing, `if` (the
->   forking one), load, allocation (the one that extends the valuation), and
->   the three exception-monad cases. Each says "if the pieces are sound, so
->   is the whole", independently of the Go code.
-> - §6a, one file per Go function under `new/checker/fn/`: `TypeEq`,
->   `TypeSort`, `typeSigned`, `typeZero`, `termEq`, `TermEq`, `negate`,
->   `copySorts`, `envLookup`, `envBind`, `onePath`, `hasPat`, `heapLookup`,
->   `heapUpdate`, `(*State).clone`, `assnHasOr`, `assnHasExists`, `assnHeap`,
->   `assnPure`, `condHolds`, `findCell`, `instantiate`, `applyBinOp`,
->   `applyUnOp`, `growPats`, `flatten`, `collectDisjuncts`, and
->   `atomWellSorted`.
-> - `disjunct.v` gives the postcondition matcher's `disjunct` a
->   representation predicate carrying the `pats`/`patOk` length invariant.
+> - The Go code was restructured (no change in behaviour) as §9 suggested:
+>   `exec` is a dispatcher over one function per case, all with its
+>   signature, so one specification template (`exec_like`, exec_def.v)
+>   covers them; the nested loops of `EStore`/`EBinOp` are `storeAll` and
+>   `binOpAll`; `checkDisjunct` is split into `checkSorts`, `matchHeap`
+>   (`matchPass`, `matchAtom`) and `checkPure`; `Verify`'s inner loop is
+>   `anyDisjunct`. One file per Go function under new/checker/fn/.
+> - `wp_exec` (fn/exec.v) is by induction on the `cexpr`, with one small
+>   dispatch lemma per kind; each case's semantics is an `exec_sound_*`
+>   composition lemma (exec_spec.v, exec_sound_{a,b,c}.v).
+> - The postcondition side meets in verify_def.v: a parsed disjunct entails
+>   the postcondition (`dj_interp`, parse_sound.v), and a successful
+>   `checkDisjunct` gives `path_sat_dj` (match_sound.v).
 >
-> Not done:
+> Bugs found while proving, all fixed:
 >
-> - `sortOfEnv` and `SortOf` are parked as `*__nobuild.v`: the script is
->   essentially complete but the single Löb induction over all eighteen term
->   shapes produces a proof term too large to check. Splitting it per shape
->   is the fix. Three finished files assume it as a section hypothesis until
->   then: `applyBinOp` and `applyUnOp` assume `wp_SortOf`, and
->   `atomWellSorted` assumes `wp_sortOfEnv`. `new/checker/NOTES.md` has the
->   grep that lists every outstanding assumption.
-> - The store case of `exec_sound`, `matchTerm`, `checkDisjunct`,
->   `parseDisjunct`, `parseDisjuncts`, `firstUnresolved`, `assnWellSorted`,
->   and then §6b `exec`/`execIf` themselves and §6c `Analyze`/`Verify`/`Check`.
+> 1. **The statement was not provable** as first written: `is_term`
+>    represented `TVar n` as `W64 n`, so indices differing by 2^64 had the
+>    same representation. The representation predicates carry `idx_wf`.
+> 2. **Unary minus at `uint`/`uint64`** was accepted, but GooseLang has no
+>    `GoNeg` there, so the program is stuck. `applyUnOp` requires a signed
+>    type.
+> 3. **Postconditions could name allocated variables.** `checkDisjunct`
+>    sort-checked the postcondition against the path's variables, which
+>    include the fresh locations allocation adds, while `post_interp`
+>    interprets `TVar n` by the caller's valuation. `Check` accepted
+>    `{emp} new(int) {TVar 0 ↦ 0}` with no declared variables, a false
+>    triple. The postcondition is now sort-checked against the declared
+>    variables (regression test `TestPostNamesAllocatedVar`).
 >
-> Two bugs found while proving, both fixed:
->
-> 1. **The statement was not provable.** `is_term` represented `TVar n`
->    (`n : nat`) as `W64 n`, so terms whose indices differ by 2^64 had the
->    same heap representation while `teval` gave them different meanings: a
->    precondition mentioning `TVar 0` and a postcondition mentioning
->    `TVar (2^64)` are indistinguishable to the checker but not to
->    `pre_interp`/`post_interp`. The representation predicates now carry an
->    in-range side condition (`idx_wf`), which every tree the frontend builds
->    satisfies.
-> 2. **A soundness bug in the checker.** `applyUnOp` accepted unary minus at
->    `uint`/`uint64`, but GooseLang has no `GoUnOp GoNeg` at those types
->    (`new/golang/defn/predeclared.v` defines `neg_int`, `neg_int64`,
->    `neg_int32/16/8` and `neg_untyped_int` and nothing else), so the
->    translated program is *stuck* and the checker was calling a stuck
->    program safe. Reachable from ordinary Go, since `-x` on a `uint64` is
->    legal Go. Fixed in `checker/exec.go` with a regression test.
->
-> Three further findings about the Go code, none of them soundness bugs, all
-> recorded in `new/checker/NOTES.md`: `growPats` does not terminate for an
-> input-controlled large `∃`-index; `findCell` indexes `used` without
-> requiring it to be as long as the heap; and `instantiate` can build a node
-> with a nil child if `ret` is nil, which no `term` describes. Also, `exec`
-> skipped the `let` binding for an empty name while the denotation always
-> binds -- that divergence is fixed.
->
-> `new/checker/NOTES.md` is the running log, and is worth reading before
-> adding to this development: it records the Perennial-side traps that cost
-> the most time.
+> Also changed in the development: `vars_below` excludes `TPat`/`TResult`
+> (execution terms never contain them, and the matcher needs that);
+> a state's sort table is persistent (`is_vars`); `clone` returns
+> `is_state_fresh`; a parsed disjunct is frozen (`is_disjunct_ro`) before
+> matching. new/checker/NOTES.md records the Perennial-side lessons.
 
 Target: turn `Axiom check_sound` in `new/checker/soundness.v` into a `Lemma`,
 proved in Perennial about the Goose translation of `checker.Check`

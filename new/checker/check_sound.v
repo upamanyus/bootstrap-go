@@ -16,18 +16,6 @@ Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
 Set Default Proof Using "All".
 
-(** TEMPORARY: discharged by fn/exec.v (the dispatcher, by induction on the
-    [cexpr]). *)
-Context (wp_exec : ∀ e : cexpr, ⊢ exec_like checker.exec e).
-
-(** TEMPORARY: discharged by fn/checkDisjunct.v. *)
-Context (wp_checkDisjunct : ∀ (p : checker.Path.t) (sp : spath) (ld : loc) (dj : cdisjunct)
-        (sv : slice.t) (vars : list sort),
-    {{{ is_pkg_init checker ∗ is_path p sp ∗ is_disjunct_ro ld dj ∗ is_sorts sv vars }}}
-      @! checker.checkDisjunct #p #ld #sv
-    {{{ (lf : loc), RET #lf;
-        is_path p sp ∗ ⌜lf = null → d_fail dj = false ∧ path_sat_dj vars sp dj⌝ }}}).
-
 Lemma check_sound_proof :
   ∀ (f : cfunc) (vars : list sort) (pre post : cassn)
     (lf : loc) (svars : slice.t) (lpre lpost : loc),
@@ -43,7 +31,7 @@ Lemma check_sound_proof :
           {{{ (v : val), RET v; post_interp θ v post }}} ⌝ }}}.
 Proof.
   intros f vars pre post lf svars lpre lpost.
-  apply (wp_Check wp_exec wp_checkDisjunct f vars pre post lf svars lpre lpost).
+  apply (wp_Check f vars pre post lf svars lpre lpost).
 Qed.
 
 End semantics.

@@ -5,21 +5,12 @@
     introduces [i], so no Rocq variable here is called any of those (see
     NOTES.md). *)
 From New.checker Require Import prelude nodes disjunct disjunct_ro verify_def.
+From New.checker.fn Require Import checkDisjunct.
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
 Set Default Proof Using "All".
-
-(** The matcher. TEMPORARY: this hypothesis is discharged by
-    fn/checkDisjunct.v, which is being proved in parallel; its statement
-    there is exactly this one. *)
-Context (wp_checkDisjunct : ∀ (p : checker.Path.t) (sp : spath) (ld : loc) (dj : cdisjunct)
-        (sv : slice.t) (vars : list sort),
-    {{{ is_pkg_init checker ∗ is_path p sp ∗ is_disjunct_ro ld dj ∗ is_sorts sv vars }}}
-      @! checker.checkDisjunct #p #ld #sv
-    {{{ (lf : loc), RET #lf;
-        is_path p sp ∗ ⌜lf = null → d_fail dj = false ∧ path_sat_dj vars sp dj⌝ }}}).
 
 (** The parsed postcondition, frozen: [Verify] only reads it. *)
 Definition is_disjuncts_ro (s : slice.t) (djs : list cdisjunct) : iProp Σ :=
