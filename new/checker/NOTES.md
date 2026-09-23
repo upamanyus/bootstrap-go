@@ -336,11 +336,11 @@ collectors alone.
     grep -rn "^Axiom\|^Context (wp_\|^Hypothesis" new/checker/*.v new/checker/fn/*.v \
       | grep -v __nobuild
 
-Today that prints `Axiom check_sound` in `soundness.v` (the goal of the whole
-exercise) and three section hypotheses, all of which are the *same* missing
-piece: `fn/applyBinOp.v` and `fn/applyUnOp.v` assume `wp_SortOf`, and
-`fn/atomWellSorted.v` assumes `wp_sortOfEnv`. Finishing the parked
-`fn/sortOfEnv__nobuild.v` discharges all three.
+Today that prints only `Axiom check_sound` in `soundness.v` (the goal of the
+whole exercise). The three section hypotheses that used to be listed here --
+`wp_SortOf` in `fn/applyBinOp.v` and `fn/applyUnOp.v`, `wp_sortOfEnv` in
+`fn/atomWellSorted.v`, and `wp_sortOfEnv_pts` in `fn/SortOf.v` -- were all
+the missing `sortOfEnv` proof, and are now discharged by `fn/sortOfEnv.v`.
 
 ### Late lessons
 
@@ -369,3 +369,22 @@ piece: `fn/applyBinOp.v` and `fn/applyUnOp.v` assume `wp_SortOf`, and
 - stdpp renames in this switch: `elem_of_list_lookup_2` →
   `list_elem_of_lookup_2`, `elem_of_list_singleton` →
   `list_elem_of_singleton`; `elem_of_app` keeps its name.
+
+### sortOfEnv (2026-09-23)
+
+- `fn/sortOfEnv.v` is the most expensive file in the tree: about 18 minutes
+  and 8 GB in a cold `rocq-warm` session, most of it in the dispatch lemma's
+  `Qed` (a batch `make` of it: 20 minutes, 3 GB). `rocq-warm`'s default per-session ceiling on this 15 GB machine is
+  4.2 GB, and it silently discards the session at that point without any
+  verdict. Check it with
+  `ROCQ_WARM_MAX_RSS_GB=8.5 ROCQ_WARM_MAX_SESSION_GB=8.5` (start the daemon
+  with those set: `rocq-warm stop` first), and do not rename the file while
+  iterating -- sessions are keyed by path, so a rename is another cold start.
+- A lemma proved in a `Section` with `Context (Hwf : ...)` and
+  `Default Proof Using "All"` takes `Hwf` as an argument, so
+  `iApply (step_X with "IH")` leaves `sort_env_wf Env` as a side goal and the
+  bullet reports "Current bullet - is not finished" on the *next* bullet.
+  `by iApply ...` closes it.
+- A Go named constant such as `SortLoc` can stay folded after `wp_auto`
+  (`checker.SortLoc` is a `val` definition equal to `#(W64 2)`); `rewrite
+  /checker.SortLoc` before `iApply "HΦ"`.
