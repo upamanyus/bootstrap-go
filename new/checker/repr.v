@@ -248,13 +248,35 @@ Definition is_heap (s : slice.t) (H : list scell) : iProp Σ :=
 Definition is_cond (s : slice.t) (pc : list term) : iProp Σ :=
   (∃ ls : list loc, s ↦* ls ∗ [∗ list] l;t ∈ ls;pc, is_term l t)%I.
 
+(** A state's sort table is written only while the state is fresh (the one
+    [append] in [EAlloc], on a clone), so it is read-only as part of a state:
+    [SortOf], [applyBinOp] and [applyUnOp] all need it persistent. *)
 Definition is_vars (s : slice.t) (vars : list sort) : iProp Σ :=
-  (s ↦* (sort_code <$> vars))%I.
+  (s ↦*□ (sort_code <$> vars))%I.
+
+#[global] Instance is_vars_persistent s vars : Persistent (is_vars s vars).
+Proof. apply _. Qed.
 
 Definition is_state (l : loc) (st : sstate) : iProp Σ :=
   (∃ hs cs vs : slice.t,
       l ↦ checker.State.mk hs cs vs ∗
       is_heap hs (sheap st) ∗ is_cond cs (spc st) ∗ is_vars vs (svars st))%I.
+
+(** A state straight out of [clone], before it is changed and published: all
+    three slices owned together with their capacities, which is what the
+    [append]s of [EIf] and [EAlloc] consume. *)
+Definition is_state_fresh (l : loc) (st : sstate) : iProp Σ :=
+  (∃ hs cs vs : slice.t,
+      l ↦ checker.State.mk hs cs vs ∗
+      is_heap hs (sheap st) ∗ own_slice_cap checker.Cell.t hs (DfracOwn 1) ∗
+      is_cond cs (spc st) ∗ own_slice_cap loc cs (DfracOwn 1) ∗
+      vs ↦* (sort_code <$> svars st) ∗ own_slice_cap w64 vs (DfracOwn 1))%I.
+
+Lemma is_state_fresh_publish l st : is_state_fresh l st ==∗ is_state l st.
+Proof.
+  iIntros "H". iDestruct "H" as (hs cs vs) "(Hl & Hh & _ & Hc & _ & Hv & _)".
+  iPersist "Hv". iModIntro. iExists hs, cs, vs. rewrite /is_vars. iFrame "∗#".
+Qed.
 
 Definition is_path (p : checker.Path.t) (sp : spath) : iProp Σ :=
   (is_term p.(checker.Path.Ret') (pret sp) ∗ is_state p.(checker.Path.St') (pst sp))%I.

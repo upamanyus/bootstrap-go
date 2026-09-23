@@ -336,11 +336,10 @@ collectors alone.
     grep -rn "^Axiom\|^Context (wp_\|^Hypothesis" new/checker/*.v new/checker/fn/*.v \
       | grep -v __nobuild
 
-Today that prints `Axiom check_sound` in `soundness.v` (the goal of the whole
-exercise) and three section hypotheses, all of which are the *same* missing
-piece: `fn/applyBinOp.v` and `fn/applyUnOp.v` assume `wp_SortOf`, and
-`fn/atomWellSorted.v` assumes `wp_sortOfEnv`. Finishing the parked
-`fn/sortOfEnv__nobuild.v` discharges all three.
+Today it prints nothing: `check_sound` in soundness.v is a `Lemma`, proved
+by `check_sound_proof` (check_sound.v), and no section hypothesis is left.
+`Print Assumptions check_sound` lists only axioms of the Go/Perennial
+libraries themselves (see the commit that discharged the axiom).
 
 ### Late lessons
 
@@ -369,3 +368,126 @@ piece: `fn/applyBinOp.v` and `fn/applyUnOp.v` assume `wp_SortOf`, and
 - stdpp renames in this switch: `elem_of_list_lookup_2` →
   `list_elem_of_lookup_2`, `elem_of_list_singleton` →
   `list_elem_of_singleton`; `elem_of_app` keeps its name.
+
+### sortOfEnv (2026-09-23)
+
+- `fn/sortOfEnv.v` is the most expensive file in the tree: about 18 minutes
+  and 8 GB in a cold `rocq-warm` session, most of it in the dispatch lemma's
+  `Qed` (a batch `make` of it: 20 minutes, 3 GB). `rocq-warm`'s default per-session ceiling on this 15 GB machine is
+  4.2 GB, and it silently discards the session at that point without any
+  verdict. Check it with
+  `ROCQ_WARM_MAX_RSS_GB=8.5 ROCQ_WARM_MAX_SESSION_GB=8.5` (start the daemon
+  with those set: `rocq-warm stop` first), and do not rename the file while
+  iterating -- sessions are keyed by path, so a rename is another cold start.
+- A lemma proved in a `Section` with `Context (Hwf : ...)` and
+  `Default Proof Using "All"` takes `Hwf` as an argument, so
+  `iApply (step_X with "IH")` leaves `sort_env_wf Env` as a side goal and the
+  bullet reports "Current bullet - is not finished" on the *next* bullet.
+  `by iApply ...` closes it.
+- A Go named constant such as `SortLoc` can stay folded after `wp_auto`
+  (`checker.SortLoc` is a `val` definition equal to `#(W64 2)`); `rewrite
+  /checker.SortLoc` before `iApply "HΦ"`.
+
+### Lessons from the parser/Verify proofs (2026-09-23)
+
+- **`wp_for` with an `&&` condition**: its value lands in
+  `if decide (v = #true) then … else …`; compute it once with
+  `iApply (wp_wand_r _ _ _ (λ v, ⌜v = #(f ob)⌝ ∗ …)%I)` against a Gallina
+  boolean `f`, then `destruct (f ob) eqn:…`. On exit:
+  `rewrite decide_False; last done. rewrite decide_True; last done.`
+- **`wp_load_slice_index` can pick the wrong value** when the load feeds an
+  `if:` (the value evar unifies with a literal); pass the value positionally,
+  `wp_load_slice_index _ _ _ _ okk` (`(v:=…)` is rejected).
+- **`wp_store_slice_index` needs a `wp_auto` first** after the bounds-check
+  `rewrite -> decide_True; last word.`, or `wp_apply` says "cannot apply".
+- **`wp_slice_literal`'s binder is the slice's `ptr` (a `loc`)**, not the
+  slice; pass `_` for the literal slice to `wp_slice_append`.
+- There is no `big_sepL2_bupd`; freezing a `[∗ list]` of `is_disjunct` is a
+  five-line induction (`big_disjunct_freeze` in fn/Verify.v).
+- A section-hypothesis spec used by one lemma becomes an argument of that
+  lemma, so every caller's file needs the same hypothesis until it is
+  discharged.
+- Pure lemmas about `teval` need `ffi_syntax`, so outside a section they fail
+  with "Could not find an instance for ffi_syntax" -- put them inside, as
+  term_lemmas.v does (but beware the `Default Proof Using "All"` note above).
+
+### Lessons from the exec case proofs (if/alloc/store)
+
+- `wp_start` unfolds `is_expr` into its `fix` body for the children; `fold
+  (is_expr la ce)` each child right after destructing the node.
+- Using a premise `Hex : ⊢ exec_like checker.exec ce`:
+  `wp_apply (Hex $! la lρ lst ρ sst with "[$Hst]")`, then `{ iFrame "#". done. }`.
+- After a call returning `exec_post`, `wp_if_destruct` on the failure test
+  gives the `lf = null` case first; `rewrite decide_True` does not match the
+  `if decide (lf = null)` in `exec_post` -- use
+  `destruct (decide (null = null)) as [_|]; last congruence.`
+- `wp_if_destruct` may name its hypothesis `n`, a Go local in several exec
+  functions (the naming trap again).
+- A `return` inside a range loop needs `wp_for_post` before `iApply "HΦ"`.
+- In a loop invariant with an evar'd accumulator list, a bare `iFrame` in the
+  initial-invariant proof frames the *input* list into the accumulator slot;
+  give the witnesses first (`iExists (W64 0), _, slice.nil, [], []`).
+- Consuming each path's state in a range loop: keep
+  `[∗ list] y;o ∈ drop k xs; drop k pl, is_path y o` in the invariant and peel
+  one element per iteration with `drop_S`.
+- `elem_of_list_fmap` is now `list_elem_of_fmap`.
+- Lemmas that call exec_spec's section lemmas must themselves be in a section
+  with the same Context, even when pure, or the instance evars are not inferred.
+
+### Lessons from the exec case proofs (let/seq/load/unop/binop)
+
+- The invariant goal after `wp_for_post` also contains the unchanged local
+  points-tos (`"en"`, `"e"`, ...); frame them by name before `iExists`, or it
+  reports "not an existential".
+- The `Default Proof Using "All"` trap also hits pure lemmas *outside* a
+  section that use section lemmas under `eapply`: "the proof term is not
+  complete" at `Qed` with no open goals. Moving the lemma inside fixed it.
+- `split_and!` also splits `0 ≤ x ≤ n`, so a following `first word` closes
+  only half; use `split; first word. split.`
+- exec_sound_b.v has `exec_post_ok` / `exec_post_fail` for unfolding
+  `exec_post` without fighting `decide`.
+
+### Lessons from the exec leaf/monad cases
+
+- An `&Term{...}` argument still needs a manual `wp_alloc lt as "Hlt";
+  iPersist "Hlt"`; `iPersist` right after `wp_alloc`, while the goal is still
+  a WP, needs no `wp_fupd`.
+- Dispatching on a term's kind (`p.Ret.Kind == TExec`): `is_term_node` gives
+  the kind as `term_code`; `rewrite /checker.TExec`,
+  `destruct (decide (term_code x = W64 19))`,
+  `rewrite bool_decide_eq_true_2/false_2 //`, and small pure lemmas
+  (`term_code_TExec`, exec_sound_a.v) recover the constructor -- the term is
+  never destructed inside the WP.
+- `by apply bool_decide_eq_false_2` fails on `¬ (None ≠ None)`; use
+  `apply bool_decide_eq_false_2; naive_solver`.
+
+### Lessons from the matcher, Analyze and Check proofs
+
+- A pure lemma proved inside an `fn` file's section is unusable from pure
+  code (it takes Σ and the other section variables): `term_eq_iff`
+  (termEq.v) and `has_pat_node` (hasPat.v) had to be re-proved outside any
+  section in match_sound.v.
+- After `iFrame` fills an existential by unification, a later `rewrite` can
+  fail to find a displayed subterm; give witnesses with `iExists` first.
+- A failure literal that re-reads a slice element makes `wp_auto` fail with
+  "walk_expr: no match for expr": `wp_pures; try wp_auto`, then the bounds
+  `rewrite decide_True` and `wp_load_slice_index` by hand.
+- Loading a field through a slice element (`p.St.Heap[j].Val`):
+  `own_slice_elem_acc (sint.Z idx)`, then `wp_auto`; close with
+  `list_insert_id`.
+- `wp_apply` of a spec with no postcondition binders already runs `wp_auto`
+  (next one: "Failed to progress"); likewise a `wp_apply … with "[$…]"` that
+  leaves no side goal makes a following `{ … }` fail ("cannot be unfocused").
+- stdpp: `list_lookup_insert_eq`/`list_lookup_insert_ne`; bare `filter_app`
+  is `List.filter_app`; `done` does not close from `None = Some _`
+  (`discriminate`).
+- The inner Hoare triple's `▷` continuation: use `wp_frame_step_l'`, whose
+  `TCEq (to_val e) None` side goal needs `apply TCEq_eq; exact (lemma args)`
+  (`goose_lang.(language.to_val)` vs `to_val` do not unify syntactically).
+- `wp_if_destruct` auto-names hypotheses `n`, `n0`, ...; a later `∃ (n : w64)`
+  in a loop invariant is silently renamed and `sint.Z n` then means the wrong
+  thing. Use another binder name.
+- A points-to with a discarded fraction lands in the persistent context, so
+  `"[$H]"` does not consume it and reusing the name later is "not fresh".
+- `Print Assumptions` of a top-level spec exceeds rocq-warm's default 4.2 GB.
+- fn/exec.v (18 dispatch lemmas, 7.5 min) is the second most expensive file.

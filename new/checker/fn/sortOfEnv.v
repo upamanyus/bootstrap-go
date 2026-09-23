@@ -1,17 +1,3 @@
-(** UNFINISHED -- parked out of the build (the Makefile skips
-    [*__nobuild.v]).
-
-    The script is essentially complete, but the single Löb-induction proof
-    over all eighteen term shapes produces a proof term too large to check
-    (87519 evars, over 20 minutes, then a syntax error from the truncated
-    tail). The fix is the one the plan warns about for long Iris files: split
-    it into one lemma per term shape, passing the Löb hypothesis explicitly
-    as a section hypothesis, and have the top-level lemma dispatch. See
-    new/checker/NOTES.md.
-
-    [new/checker/fn/atomWellSorted.v] currently assumes this file's
-    specification as a section hypothesis; discharging it is the first thing
-    to do once this compiles. *)
 (** [checker.sortOfEnv] (checker/sorts.go): the sort of a term in a sort
     environment.
 
@@ -165,45 +151,37 @@ Qed.
 
 Lemma step_TLt (sg : bool) (x1 x2 : term) : IH -∗ SPEC (Some (TLt sg x1 x2)).
 Proof.
-  iIntros "#IH". destruct sg; open_node;
-    iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)";
-    cbn [term_code term_num term_idx_wf] in Hidx |- *;
-    wp_auto;
-    [ wp_apply ("IH" $! la (term_a (TLt true x1 x2))
-                 with "[$Hstruct $Hvars $Hpats $Hpok $Hta]")
-        as "(Hstruct & Hvars & Hpats & Hpok)"
-    | wp_apply ("IH" $! la (term_a (TLt false x1 x2))
-                 with "[$Hstruct $Hvars $Hpats $Hpok $Hta]")
-        as "(Hstruct & Hvars & Hpats & Hpok)" ];
+  (* [sg] only changes the kind code, so [open_node] -- whose trailing
+     [wp_auto] walks the whole function body -- is done once, before the
+     split, rather than once per sign. [term_a]/[term_b] do not mention
+     [sg] at all, so the two recursive calls are shared too. *)
+  iIntros "#IH". open_node.
+  iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)".
+  cbn [term_code term_num term_idx_wf term_a term_b term_c] in Hidx |- *.
+  destruct sg; wp_auto;
+    wp_apply ("IH" $! la (Some x1) with "[$Hstruct $Hvars $Hpats $Hpok $Hta]")
+      as "(Hstruct & Hvars & Hpats & Hpok)";
     try wp_auto;
-    [ wp_apply ("IH" $! lb (term_b (TLt true x1 x2))
-                 with "[$Hstruct $Hvars $Hpats $Hpok $Htb]")
-        as "(Hstruct & Hvars & Hpats & Hpok)"
-    | wp_apply ("IH" $! lb (term_b (TLt false x1 x2))
-                 with "[$Hstruct $Hvars $Hpats $Hpok $Htb]")
-        as "(Hstruct & Hvars & Hpats & Hpok)" ];
+    wp_apply ("IH" $! lb (Some x2) with "[$Hstruct $Hvars $Hpats $Hpok $Htb]")
+      as "(Hstruct & Hvars & Hpats & Hpok)";
     red_sort; bin_int Env x1 x2.
 Qed.
 
 Lemma step_TLe (sg : bool) (x1 x2 : term) : IH -∗ SPEC (Some (TLe sg x1 x2)).
 Proof.
-  iIntros "#IH". destruct sg; open_node;
-    iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)";
-    cbn [term_code term_num term_idx_wf] in Hidx |- *;
-    wp_auto;
-    [ wp_apply ("IH" $! la (term_a (TLe true x1 x2))
-                 with "[$Hstruct $Hvars $Hpats $Hpok $Hta]")
-        as "(Hstruct & Hvars & Hpats & Hpok)"
-    | wp_apply ("IH" $! la (term_a (TLe false x1 x2))
-                 with "[$Hstruct $Hvars $Hpats $Hpok $Hta]")
-        as "(Hstruct & Hvars & Hpats & Hpok)" ];
+  (* [sg] only changes the kind code, so [open_node] -- whose trailing
+     [wp_auto] walks the whole function body -- is done once, before the
+     split, rather than once per sign. [term_a]/[term_b] do not mention
+     [sg] at all, so the two recursive calls are shared too. *)
+  iIntros "#IH". open_node.
+  iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)".
+  cbn [term_code term_num term_idx_wf term_a term_b term_c] in Hidx |- *.
+  destruct sg; wp_auto;
+    wp_apply ("IH" $! la (Some x1) with "[$Hstruct $Hvars $Hpats $Hpok $Hta]")
+      as "(Hstruct & Hvars & Hpats & Hpok)";
     try wp_auto;
-    [ wp_apply ("IH" $! lb (term_b (TLe true x1 x2))
-                 with "[$Hstruct $Hvars $Hpats $Hpok $Htb]")
-        as "(Hstruct & Hvars & Hpats & Hpok)"
-    | wp_apply ("IH" $! lb (term_b (TLe false x1 x2))
-                 with "[$Hstruct $Hvars $Hpats $Hpok $Htb]")
-        as "(Hstruct & Hvars & Hpats & Hpok)" ];
+    wp_apply ("IH" $! lb (Some x2) with "[$Hstruct $Hvars $Hpats $Hpok $Htb]")
+      as "(Hstruct & Hvars & Hpats & Hpok)";
     red_sort; bin_int Env x1 x2.
 Qed.
 
@@ -287,7 +265,7 @@ Proof.
     cbn [term_code term_num term_idx_wf] in Hidx |- *.
     iDestruct (own_slice_len with "Hvars") as %[Hlv Hlv2].
     rewrite length_fmap in Hlv. rewrite /idx_wf in Hidx.
-    wp_auto.
+    try wp_auto.
     wp_if_destruct.
     + (* the index is out of range *)
       assert (se_vars Env !! k = None) as Hlook by (apply lookup_ge_None_2; word).
@@ -310,7 +288,7 @@ Proof.
     iDestruct (own_slice_len with "Hpok") as %[Hlk Hlk2].
     rewrite length_fmap in Hlp.
     rewrite /idx_wf in Hidx. rewrite /sort_env_wf in Hwf.
-    wp_auto.
+    try wp_auto.
     wp_if_destruct.
     + (* the index is out of range *)
       assert (se_pats Env !! k = None) as Hlook by (apply lookup_ge_None_2; word).
@@ -345,58 +323,84 @@ Proof.
     open_node.
     iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)".
     cbn [term_code term_num term_idx_wf] in Hidx |- *.
-    wp_auto. red_sort. finish.
+    try wp_auto. red_sort. finish.
   - (* TBool *)
     open_node.
     iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)".
     cbn [term_code term_num term_idx_wf] in Hidx |- *.
-    wp_auto. red_sort. finish.
+    try wp_auto. red_sort. finish.
   - (* TUnit *)
     open_node.
     iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)".
     cbn [term_code term_num term_idx_wf] in Hidx |- *.
-    wp_auto. red_sort. finish.
+    try wp_auto. red_sort. finish.
   - (* TNull *)
     open_node.
     iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)".
     cbn [term_code term_num term_idx_wf] in Hidx |- *.
-    wp_auto. red_sort. finish.
-  - iApply (step_TPlus with "IH").
-  - iApply (step_TMinus with "IH").
-  - iApply (step_TMul with "IH").
-  - iApply (step_TNeg with "IH").
-  - iApply (step_TEq with "IH").
-  - iApply (step_TLt with "IH").
-  - iApply (step_TLe with "IH").
-  - iApply (step_TNot with "IH").
-  - iApply (step_TIte with "IH").
+    try wp_auto. red_sort. rewrite /checker.SortLoc. finish.
+  - by iApply (step_TPlus with "IH").
+  - by iApply (step_TMinus with "IH").
+  - by iApply (step_TMul with "IH").
+  - by iApply (step_TNeg with "IH").
+  - by iApply (step_TEq with "IH").
+  - by iApply (step_TLt with "IH").
+  - by iApply (step_TLe with "IH").
+  - by iApply (step_TNot with "IH").
+  - by iApply (step_TIte with "IH").
   - (* TExec *)
     open_node.
     iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)".
     cbn [term_code term_num term_idx_wf] in Hidx |- *.
-    wp_auto. red_sort. finish.
+    try wp_auto. red_sort. finish.
   - (* TRet *)
     open_node.
     iDestruct (is_term_node with "Hot") as (la lb lc) "(%Hidx & #Hnode & #Hta & #Htb & #Htc)".
     cbn [term_code term_num term_idx_wf] in Hidx |- *.
-    wp_auto. red_sort. finish.
+    try wp_auto. red_sort. finish.
 Qed.
 
 (** * The public specifications *)
 
+(** The unpacked form, with the [sortEnv] struct and its three slices written
+    out: what [SortOf] needs, since it builds the struct itself. *)
+Lemma wp_sortOfEnv_pts (dq : dfrac) (lenv : loc) (Env : sort_env)
+    (svs sps sks : slice.t) (lterm : loc) (oty : option term) :
+  sort_env_wf Env →
+  {{{ is_pkg_init checker ∗
+      lenv ↦{dq} checker.sortEnv.mk svs sps sks
+                   (sort_code (se_ret Env)) (se_ret_ok Env) ∗
+      svs ↦*{dq} (sort_code <$> se_vars Env) ∗
+      sps ↦*{dq} (sort_code <$> se_pats Env) ∗
+      sks ↦*{dq} se_pat_ok Env ∗
+      is_oterm lterm oty }}}
+    @! checker.sortOfEnv #lenv #lterm
+  {{{ RET (#(osort_code (osort_of Env oty)), #(osort_ok (osort_of Env oty)));
+      lenv ↦{dq} checker.sortEnv.mk svs sps sks
+                   (sort_code (se_ret Env)) (se_ret_ok Env) ∗
+      svs ↦*{dq} (sort_code <$> se_vars Env) ∗
+      sps ↦*{dq} (sort_code <$> se_pats Env) ∗
+      sks ↦*{dq} se_pat_ok Env }}}.
+Proof.
+  intros Hwf. iIntros (Φ) "(#Hinit & Hstruct & Hvars & Hpats & Hpok & #Hot) HΦ".
+  iPoseProof (sortOfEnv_spec_holds dq lenv Env svs sps sks Hwf) as "#Hspec".
+  rewrite /sortOfEnv_spec /env_pts.
+  wp_apply ("Hspec" $! lterm oty with "[$Hstruct $Hvars $Hpats $Hpok $Hot]").
+  iIntros "(Hstruct & Hvars & Hpats & Hpok)". iApply "HΦ". iFrame.
+Qed.
+
 (** The packaged form: [is_sortenv] hides the three slices. *)
 Lemma wp_sortOfEnv (dq : dfrac) (lenv lterm : loc) (Env : sort_env) (oty : option term) :
-  {{{ is_pkg_init checker ∗ is_sortenv dq lenv Env ∗ is_oterm lterm oty ∗
-      ⌜sort_env_wf Env⌝ }}}
+  sort_env_wf Env →
+  {{{ is_pkg_init checker ∗ is_sortenv dq lenv Env ∗ is_oterm lterm oty }}}
     @! checker.sortOfEnv #lenv #lterm
   {{{ RET (#(osort_code (osort_of Env oty)), #(osort_ok (osort_of Env oty)));
       is_sortenv dq lenv Env }}}.
 Proof.
-  iIntros (Φ) "(#Hinit & Henv & #Hot & %Hwf) HΦ".
+  intros Hwf. iIntros (Φ) "(#Hinit & Henv & #Hot) HΦ".
   iDestruct "Henv" as (svs sps sks) "(Hstruct & Hvars & Hpats & Hpok)".
-  iPoseProof (sortOfEnv_spec_holds dq lenv Env svs sps sks Hwf) as "#Hspec".
-  rewrite /sortOfEnv_spec /env_pts.
-  wp_apply ("Hspec" $! lterm oty with "[$Hstruct $Hvars $Hpats $Hpok $Hot]").
+  wp_apply (wp_sortOfEnv_pts dq lenv Env svs sps sks lterm oty Hwf
+              with "[$Hstruct $Hvars $Hpats $Hpok $Hot]").
   iIntros "(Hstruct & Hvars & Hpats & Hpok)". iApply "HΦ".
   rewrite /is_sortenv. iFrame.
 Qed.
@@ -413,8 +417,8 @@ Corollary wp_sortOfEnv' (dq : dfrac) (lenv lterm : loc) (Env : sort_env)
       ⌜ok = true ↔ ∃ ty s, oty = Some ty ∧ sort_of Env ty = Some s⌝ ∗
       ⌜∀ ty s, oty = Some ty → sort_of Env ty = Some s → scode = sort_code s⌝ }}}.
 Proof.
-  iIntros (Φ) "Hpre HΦ".
-  wp_apply (wp_sortOfEnv with "Hpre").
+  iIntros (Φ) "(#Hinit & Henv & #Hot & %Hwf) HΦ".
+  wp_apply (wp_sortOfEnv dq lenv lterm Env oty Hwf with "[$Henv $Hot]").
   iIntros "Henv". iApply ("HΦ" $! _ _). iFrame "Henv". iPureIntro.
   destruct oty as [ty|]; simpl.
   - destruct (sort_of Env ty) as [s|] eqn:Hs; simpl; split.

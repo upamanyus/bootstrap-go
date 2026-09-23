@@ -11,6 +11,7 @@
     Naming: the Go locals are [se], [a], [s], [ok] and [ok2], so no Rocq
     variable here may be called any of those (see NOTES.md). *)
 From New.checker Require Import prelude nodes.
+From New.checker.fn Require Import sortOfEnv.
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
@@ -29,39 +30,6 @@ Definition atom_well_sorted (E : sort_env) (oa : option cassn) : bool :=
       end
   | _ => false
   end.
-
-(** The specification of [checker.sortOfEnv], as a section hypothesis.
-
-    [new/checker/fn/sortOfEnv.v] proves [wp_sortOfEnv_aux] -- the same
-    statement, but with the [sortEnv] struct and its three slices opened up
-    rather than packaged behind [is_sortenv] -- and that file was written in
-    parallel with this one and had not been compiled to a [.vo] when this
-    proof was finished, so it could not be [Require]d. Discharging this
-    hypothesis is one [wp_apply] after [iDestruct]ing [is_sortenv]:
-
-      intros Hwf. wp_start as "(Henv & #Hot)".
-      iDestruct "Henv" as (sv sp sk) "(Hl & Hv & Hp & Hk)".
-      wp_apply (wp_sortOfEnv_aux dq lenv Env sv sp sk lterm oty
-                 with "[$Hl $Hv $Hp $Hk $Hot]") as "(Hl & Hv & Hp & Hk)".
-      { done. }
-      iApply "HΦ". iFrame.
-
-    The three [osort_*] definitions are copies of sortOfEnv.v's, for the same
-    reason. *)
-Definition osort_of (E : sort_env) (ot : option term) : option sort :=
-  match ot with None => None | Some ty => sort_of E ty end.
-Definition osort_code (os : option sort) : w64 :=
-  match os with Some s => sort_code s | None => W64 0 end.
-Definition osort_ok (os : option sort) : bool :=
-  match os with Some _ => true | None => false end.
-
-Context (wp_sortOfEnv : ∀ (dq : dfrac) (lenv lterm : loc) (Env : sort_env)
-      (oty : option term),
-  sort_env_wf Env →
-  {{{ is_pkg_init checker ∗ is_sortenv dq lenv Env ∗ is_oterm lterm oty }}}
-    @! checker.sortOfEnv #lenv #lterm
-  {{{ RET (#(osort_code (osort_of Env oty)), #(osort_ok (osort_of Env oty)));
-      is_sortenv dq lenv Env }}}).
 
 Local Ltac reject :=
   try wp_auto;

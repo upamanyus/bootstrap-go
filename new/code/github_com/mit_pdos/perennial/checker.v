@@ -334,6 +334,8 @@ Definition Analyze {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string :=
 
 Definition Verify {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.Verify"%go.
 
+Definition anyDisjunct {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.anyDisjunct"%go.
+
 Definition Explain {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.Explain"%go.
 
 Definition Check {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.Check"%go.
@@ -351,6 +353,46 @@ Definition heapUpdate {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string
 Definition negate {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.negate"%go.
 
 Definition exec {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.exec"%go.
+
+Definition execInt {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execInt"%go.
+
+Definition execBool {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execBool"%go.
+
+Definition execUnit {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execUnit"%go.
+
+Definition execVar {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execVar"%go.
+
+Definition execLet {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execLet"%go.
+
+Definition execSeq {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execSeq"%go.
+
+Definition execIfs {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execIfs"%go.
+
+Definition execLoad {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execLoad"%go.
+
+Definition execStore {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execStore"%go.
+
+Definition storeAll {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.storeAll"%go.
+
+Definition execAlloc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execAlloc"%go.
+
+Definition execZero {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execZero"%go.
+
+Definition execBinOp {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execBinOp"%go.
+
+Definition binOpAll {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.binOpAll"%go.
+
+Definition execUnOp {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execUnOp"%go.
+
+Definition execConvert {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execConvert"%go.
+
+Definition execDo {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execDo"%go.
+
+Definition execReturn {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execReturn"%go.
+
+Definition execExcSeq {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execExcSeq"%go.
+
+Definition execExcDo {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execExcDo"%go.
 
 Definition execIf {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.execIf"%go.
 
@@ -379,6 +421,18 @@ Definition condHolds {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string 
 Definition firstUnresolved {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.firstUnresolved"%go.
 
 Definition checkDisjunct {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.checkDisjunct"%go.
+
+Definition checkSorts {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.checkSorts"%go.
+
+Definition countPointsTo {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.countPointsTo"%go.
+
+Definition matchHeap {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.matchHeap"%go.
+
+Definition matchPass {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.matchPass"%go.
+
+Definition matchAtom {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.matchAtom"%go.
+
+Definition checkPure {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.checkPure"%go.
 
 Definition TypeSort {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/mit-pdos/perennial/checker.TypeSort"%go.
 
@@ -630,9 +684,9 @@ Definition Analyzeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
     return: ("$ret0", "$ret1")).
 
 (* Verify checks that every path satisfies at least one disjunct of post.
-   Heap cells that no disjunct mentions are permitted to leak. vars is
-   accepted for symmetry with Analyze; the sorts that matter are the ones
-   recorded in each path's state, which allocation may have extended.
+   Heap cells that no disjunct mentions are permitted to leak. vars are the
+   declared logical variables, the same as Analyze's: post may name only
+   those, not the ones allocation added to a path (see checkSorts).
 
    go: check.go:169:6 *)
 Definition Verifyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -652,23 +706,10 @@ Definition Verifyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : va
     slice.for_range Path "$range" (λ: "$key" "$value",
       do:  ("p" <-[Path] "$value");;;
       do:  "$key";;;
-      let: "pass" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-      let: "$r0" := #false in
-      do:  ("pass" <-[go.bool] "$r0");;;
-      let: "$range" := (![go.SliceType (go.PointerType disjunct)] "ds") in
-      (let: "d" := (GoAlloc (go.PointerType disjunct) (GoZeroVal (go.PointerType disjunct) #())) in
-      slice.for_range (go.PointerType disjunct) "$range" (λ: "$key" "$value",
-        do:  ("d" <-[go.PointerType disjunct] "$value");;;
-        do:  "$key";;;
-        (if: Convert go.untyped_bool go.bool ((let: "$a0" := (![Path] "p") in
-        let: "$a1" := (![go.PointerType disjunct] "d") in
-        (FuncResolve checkDisjunct [] #()) "$a0" "$a1") =⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-        then
-          let: "$r0" := #true in
-          do:  ("pass" <-[go.bool] "$r0");;;
-          break: #()
-        else do:  #())));;;
-      (if: (⟨go.bool⟩! (![go.bool] "pass"))
+      (if: (⟨go.bool⟩! (let: "$a0" := (![Path] "p") in
+      let: "$a1" := (![go.SliceType (go.PointerType disjunct)] "ds") in
+      let: "$a2" := (![go.SliceType Sort] "vars") in
+      (FuncResolve anyDisjunct [] #()) "$a0" "$a1" "$a2"))
       then
         return: (GoAlloc Failure (let: "$v0" := RPostNoDisjunct in
          let: "$v1" := (![go.uint64] "pi") in
@@ -678,11 +719,32 @@ Definition Verifyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : va
       do:  ("pi" <-[go.uint64] "$r0")));;;
     return: (Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
 
+(* anyDisjunct reports whether path p satisfies some disjunct of ds.
+
+   go: check.go:182:6 *)
+Definition anyDisjunctⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "p" "ds" "vars",
+    exception_do (let: "vars" := (GoAlloc (go.SliceType Sort) "vars") in
+    let: "ds" := (GoAlloc (go.SliceType (go.PointerType disjunct)) "ds") in
+    let: "p" := (GoAlloc Path "p") in
+    let: "$range" := (![go.SliceType (go.PointerType disjunct)] "ds") in
+    (let: "d" := (GoAlloc (go.PointerType disjunct) (GoZeroVal (go.PointerType disjunct) #())) in
+    slice.for_range (go.PointerType disjunct) "$range" (λ: "$key" "$value",
+      do:  ("d" <-[go.PointerType disjunct] "$value");;;
+      do:  "$key";;;
+      (if: Convert go.untyped_bool go.bool ((let: "$a0" := (![Path] "p") in
+      let: "$a1" := (![go.PointerType disjunct] "d") in
+      let: "$a2" := (![go.SliceType Sort] "vars") in
+      (FuncResolve checkDisjunct [] #()) "$a0" "$a1" "$a2") =⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+      then return: (#true)
+      else do:  #())));;;
+    return: (#false)).
+
 (* Explain returns, for the first path that satisfies no disjunct of post, the
    reason each disjunct failed. It returns nil when every path passes, so that
    a caller can print a diagnosis exactly when Verify rejects.
 
-   go: check.go:199:6 *)
+   go: check.go:202:6 *)
 Definition Explainⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "paths" "vars" "post",
     exception_do (let: "post" := (GoAlloc (go.PointerType Assn) "post") in
@@ -715,7 +777,8 @@ Definition Explainⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
         let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
         let: "$r0" := (let: "$a0" := (![Path] "p") in
         let: "$a1" := (![go.PointerType disjunct] "d") in
-        (FuncResolve checkDisjunct [] #()) "$a0" "$a1") in
+        let: "$a2" := (![go.SliceType Sort] "vars") in
+        (FuncResolve checkDisjunct [] #()) "$a0" "$a1" "$a2") in
         do:  ("fl" <-[go.PointerType Failure] "$r0");;;
         (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") =⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
         then
@@ -741,7 +804,7 @@ Definition Explainⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
 
 (* Check reports whether f, run under pre, is safe and establishes post.
 
-   go: check.go:224:6 *)
+   go: check.go:227:6 *)
 Definition Checkⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "f" "vars" "pre" "post",
     exception_do (let: "post" := (GoAlloc (go.PointerType Assn) "post") in
@@ -893,7 +956,11 @@ Definition negateⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : va
    paths precede the `else` paths), or a Failure if some path could not be
    shown safe.
 
-   go: exec.go:87:6 *)
+   Each case lives in its own function, all with exec's signature, so that the
+   soundness proof can treat each separately (see new/checker/): exec itself
+   only dispatches on the kind.
+
+   go: exec.go:91:6 *)
 Definition execⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "e" "en" "st",
     exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
@@ -907,765 +974,1041 @@ Definition execⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
     let: "$sw" := (![ExprKind] (StructFieldRef Expr "Kind"%go (![go.PointerType Expr] "e"))) in
     (if: "$sw" =⟨ExprKind⟩ EInt
     then
-      return: (let: "$a0" := (GoAlloc Term (let: "$v0" := TInt in
-       let: "$v1" := (![go.uint64] (StructFieldRef Expr "Num"%go (![go.PointerType Expr] "e"))) in
-       CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0"); KeyedElement (Some (KeyField "Num"%go)) (ElementExpression go.uint64 "$v1")]))) in
-       let: "$a1" := (![go.PointerType State] "st") in
-       (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+      let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
+      let: "$a1" := (![go.PointerType env] "en") in
+      let: "$a2" := (![go.PointerType State] "st") in
+      (FuncResolve execInt [] #()) "$a0" "$a1" "$a2")) in
+      return: ("$ret0", "$ret1")
     else
       (if: "$sw" =⟨ExprKind⟩ EBool
       then
-        return: (let: "$a0" := (GoAlloc Term (let: "$v0" := TBool in
-         let: "$v1" := (![go.uint64] (StructFieldRef Expr "Num"%go (![go.PointerType Expr] "e"))) in
-         CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0"); KeyedElement (Some (KeyField "Num"%go)) (ElementExpression go.uint64 "$v1")]))) in
-         let: "$a1" := (![go.PointerType State] "st") in
-         (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+        let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
+        let: "$a1" := (![go.PointerType env] "en") in
+        let: "$a2" := (![go.PointerType State] "st") in
+        (FuncResolve execBool [] #()) "$a0" "$a1" "$a2")) in
+        return: ("$ret0", "$ret1")
       else
         (if: "$sw" =⟨ExprKind⟩ EUnit
         then
-          return: (let: "$a0" := (GoAlloc Term (let: "$v0" := TUnit in
-           CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0")]))) in
-           let: "$a1" := (![go.PointerType State] "st") in
-           (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+          let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
+          let: "$a1" := (![go.PointerType env] "en") in
+          let: "$a2" := (![go.PointerType State] "st") in
+          (FuncResolve execUnit [] #()) "$a0" "$a1" "$a2")) in
+          return: ("$ret0", "$ret1")
         else
           (if: "$sw" =⟨ExprKind⟩ EVar
           then
-            let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-            let: "t" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
-            let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType env] "en") in
-            let: "$a1" := (![go.string] (StructFieldRef Expr "Name"%go (![go.PointerType Expr] "e"))) in
-            (FuncResolve envLookup [] #()) "$a0" "$a1") in
-            let: "$r0" := "$ret0" in
-            let: "$r1" := "$ret1" in
-            do:  ("t" <-[go.PointerType Term] "$r0");;;
-            do:  ("ok" <-[go.bool] "$r1");;;
-            (if: (⟨go.bool⟩! (![go.bool] "ok"))
-            then
-              return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RUnboundVar in
-               let: "$v1" := (![go.string] (StructFieldRef Expr "Name"%go (![go.PointerType Expr] "e"))) in
-               let: "$v2" := (![go.PointerType Expr] "e") in
-               CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Name"%go)) (ElementExpression go.string "$v1"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v2")])))
-            else do:  #());;;
-            return: (let: "$a0" := (![go.PointerType Term] "t") in
-             let: "$a1" := (![go.PointerType State] "st") in
-             (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+            let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
+            let: "$a1" := (![go.PointerType env] "en") in
+            let: "$a2" := (![go.PointerType State] "st") in
+            (FuncResolve execVar [] #()) "$a0" "$a1" "$a2")) in
+            return: ("$ret0", "$ret1")
           else
             (if: "$sw" =⟨ExprKind⟩ ELet
             then
-              let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-              let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-              let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+              let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
               let: "$a1" := (![go.PointerType env] "en") in
               let: "$a2" := (![go.PointerType State] "st") in
-              (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-              let: "$r0" := "$ret0" in
-              let: "$r1" := "$ret1" in
-              do:  ("ps" <-[go.SliceType Path] "$r0");;;
-              do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-              (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-              then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-              else do:  #());;;
-              let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-              let: "$range" := (![go.SliceType Path] "ps") in
-              (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-              slice.for_range Path "$range" (λ: "$key" "$value",
-                do:  ("p" <-[Path] "$value");;;
-                do:  "$key";;;
-                let: "en2" := (GoAlloc (go.PointerType env) (GoZeroVal (go.PointerType env) #())) in
-                let: "$r0" := (let: "$a0" := (![go.PointerType env] "en") in
-                let: "$a1" := (![go.string] (StructFieldRef Expr "Name"%go (![go.PointerType Expr] "e"))) in
-                let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                (FuncResolve envBind [] #()) "$a0" "$a1" "$a2") in
-                do:  ("en2" <-[go.PointerType env] "$r0");;;
-                let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
-                let: "$a1" := (![go.PointerType env] "en2") in
-                let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                let: "$r0" := "$ret0" in
-                let: "$r1" := "$ret1" in
-                do:  ("ps2" <-[go.SliceType Path] "$r0");;;
-                do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
-                (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
-                else do:  #());;;
-                let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                let: "$a1" := (![go.SliceType Path] "ps2") in
-                (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                do:  ("out" <-[go.SliceType Path] "$r0")));;;
-              return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+              (FuncResolve execLet [] #()) "$a0" "$a1" "$a2")) in
+              return: ("$ret0", "$ret1")
             else
               (if: "$sw" =⟨ExprKind⟩ ESeq
               then
-                let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                 let: "$a1" := (![go.PointerType env] "en") in
                 let: "$a2" := (![go.PointerType State] "st") in
-                (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                let: "$r0" := "$ret0" in
-                let: "$r1" := "$ret1" in
-                do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                else do:  #());;;
-                let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                let: "$range" := (![go.SliceType Path] "ps") in
-                (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                slice.for_range Path "$range" (λ: "$key" "$value",
-                  do:  ("p" <-[Path] "$value");;;
-                  do:  "$key";;;
-                  let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                  let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                  let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
-                  let: "$a1" := (![go.PointerType env] "en") in
-                  let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                  (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                  let: "$r0" := "$ret0" in
-                  let: "$r1" := "$ret1" in
-                  do:  ("ps2" <-[go.SliceType Path] "$r0");;;
-                  do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
-                  (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                  then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
-                  else do:  #());;;
-                  let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                  let: "$a1" := (![go.SliceType Path] "ps2") in
-                  (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                  do:  ("out" <-[go.SliceType Path] "$r0")));;;
-                return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                (FuncResolve execSeq [] #()) "$a0" "$a1" "$a2")) in
+                return: ("$ret0", "$ret1")
               else
                 (if: "$sw" =⟨ExprKind⟩ EIf
                 then
-                  let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                  let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                  let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                  let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                   let: "$a1" := (![go.PointerType env] "en") in
                   let: "$a2" := (![go.PointerType State] "st") in
-                  (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                  let: "$r0" := "$ret0" in
-                  let: "$r1" := "$ret1" in
-                  do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                  do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                  (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                  then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                  else do:  #());;;
-                  let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                  let: "$range" := (![go.SliceType Path] "ps") in
-                  (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                  slice.for_range Path "$range" (λ: "$key" "$value",
-                    do:  ("p" <-[Path] "$value");;;
-                    do:  "$key";;;
-                    let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                    let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] "e") in
-                    let: "$a1" := (![go.PointerType env] "en") in
-                    let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                    let: "$a3" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                    (FuncResolve execIf [] #()) "$a0" "$a1" "$a2" "$a3") in
-                    let: "$r0" := "$ret0" in
-                    let: "$r1" := "$ret1" in
-                    do:  ("ps2" <-[go.SliceType Path] "$r0");;;
-                    do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
-                    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
-                    else do:  #());;;
-                    let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                    let: "$a1" := (![go.SliceType Path] "ps2") in
-                    (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                    do:  ("out" <-[go.SliceType Path] "$r0")));;;
-                  return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                  (FuncResolve execIfs [] #()) "$a0" "$a1" "$a2")) in
+                  return: ("$ret0", "$ret1")
                 else
                   (if: "$sw" =⟨ExprKind⟩ ELoad
                   then
-                    let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                    (FuncResolve TypeSort [] #()) "$a0") in
-                    let: "$r0" := "$ret0" in
-                    let: "$r1" := "$ret1" in
-                    do:  "$r0";;;
-                    do:  ("tok" <-[go.bool] "$r1");;;
-                    (if: (⟨go.bool⟩! (![go.bool] "tok"))
-                    then
-                      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
-                       let: "$v1" := (![go.PointerType Expr] "e") in
-                       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                    else do:  #());;;
-                    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                    let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                     let: "$a1" := (![go.PointerType env] "en") in
                     let: "$a2" := (![go.PointerType State] "st") in
-                    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                    let: "$r0" := "$ret0" in
-                    let: "$r1" := "$ret1" in
-                    do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                    else do:  #());;;
-                    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                    let: "$range" := (![go.SliceType Path] "ps") in
-                    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                    slice.for_range Path "$range" (λ: "$key" "$value",
-                      do:  ("p" <-[Path] "$value");;;
-                      do:  "$key";;;
-                      let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                      let: "v" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
-                      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
-                      let: "$a1" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                      (FuncResolve heapLookup [] #()) "$a0" "$a1") in
-                      let: "$r0" := "$ret0" in
-                      let: "$r1" := "$ret1" in
-                      do:  ("v" <-[go.PointerType Term] "$r0");;;
-                      do:  ("ok" <-[go.bool] "$r1");;;
-                      (if: (⟨go.bool⟩! (![go.bool] "ok"))
-                      then
-                        return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RNoPointsTo in
-                         let: "$v1" := (![go.PointerType Expr] "e") in
-                         let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                         CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))
-                      else do:  #());;;
-                      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "v") in
-                      let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                      CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
-                      CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                      do:  ("out" <-[go.SliceType Path] "$r0")));;;
-                    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                    (FuncResolve execLoad [] #()) "$a0" "$a1" "$a2")) in
+                    return: ("$ret0", "$ret1")
                   else
                     (if: "$sw" =⟨ExprKind⟩ EStore
                     then
-                      let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                      (FuncResolve TypeSort [] #()) "$a0") in
-                      let: "$r0" := "$ret0" in
-                      let: "$r1" := "$ret1" in
-                      do:  "$r0";;;
-                      do:  ("tok" <-[go.bool] "$r1");;;
-                      (if: (⟨go.bool⟩! (![go.bool] "tok"))
-                      then
-                        return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
-                         let: "$v1" := (![go.PointerType Expr] "e") in
-                         CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                      else do:  #());;;
-                      let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                      let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                      let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                       let: "$a1" := (![go.PointerType env] "en") in
                       let: "$a2" := (![go.PointerType State] "st") in
-                      (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                      let: "$r0" := "$ret0" in
-                      let: "$r1" := "$ret1" in
-                      do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                      do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                      then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                      else do:  #());;;
-                      let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                      let: "$range" := (![go.SliceType Path] "ps") in
-                      (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                      slice.for_range Path "$range" (λ: "$key" "$value",
-                        do:  ("p" <-[Path] "$value");;;
-                        do:  "$key";;;
-                        let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                        let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                        let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
-                        let: "$a1" := (![go.PointerType env] "en") in
-                        let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                        (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                        let: "$r0" := "$ret0" in
-                        let: "$r1" := "$ret1" in
-                        do:  ("ps2" <-[go.SliceType Path] "$r0");;;
-                        do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
-                        (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                        then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
-                        else do:  #());;;
-                        let: "$range" := (![go.SliceType Path] "ps2") in
-                        (let: "q" := (GoAlloc Path (GoZeroVal Path #())) in
-                        slice.for_range Path "$range" (λ: "$key" "$value",
-                          do:  ("q" <-[Path] "$value");;;
-                          do:  "$key";;;
-                          let: "st2" := (GoAlloc (go.PointerType State) (GoZeroVal (go.PointerType State) #())) in
-                          let: "$r0" := ((MethodResolve (go.PointerType State) "clone"%go (![go.PointerType State] (StructFieldRef Path "St"%go "q"))) #()) in
-                          do:  ("st2" <-[go.PointerType State] "$r0");;;
-                          let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                          let: "h" := (GoAlloc (go.SliceType Cell) (GoZeroVal (go.SliceType Cell) #())) in
-                          let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] "st2"))) in
-                          let: "$a1" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                          let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "q")) in
-                          (FuncResolve heapUpdate [] #()) "$a0" "$a1" "$a2") in
-                          let: "$r0" := "$ret0" in
-                          let: "$r1" := "$ret1" in
-                          do:  ("h" <-[go.SliceType Cell] "$r0");;;
-                          do:  ("ok" <-[go.bool] "$r1");;;
-                          (if: (⟨go.bool⟩! (![go.bool] "ok"))
-                          then
-                            return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RNoPointsTo in
-                             let: "$v1" := (![go.PointerType Expr] "e") in
-                             let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                             CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))
-                          else do:  #());;;
-                          let: "$r0" := (![go.SliceType Cell] "h") in
-                          do:  ((StructFieldRef State "Heap"%go (![go.PointerType State] "st2")) <-[go.SliceType Cell] "$r0");;;
-                          let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                          let: "$a1" := ((let: "$sl0" := (let: "$v0" := (GoAlloc Term (let: "$v0" := TUnit in
-                          CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0")]))) in
-                          let: "$v1" := (![go.PointerType State] "st2") in
-                          CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
-                          CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                          (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                          do:  ("out" <-[go.SliceType Path] "$r0")))));;;
-                      return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                      (FuncResolve execStore [] #()) "$a0" "$a1" "$a2")) in
+                      return: ("$ret0", "$ret1")
                     else
                       (if: "$sw" =⟨ExprKind⟩ EAlloc
                       then
-                        let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                        let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                        (FuncResolve TypeSort [] #()) "$a0") in
-                        let: "$r0" := "$ret0" in
-                        let: "$r1" := "$ret1" in
-                        do:  "$r0";;;
-                        do:  ("tok" <-[go.bool] "$r1");;;
-                        (if: (⟨go.bool⟩! (![go.bool] "tok"))
-                        then
-                          return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
-                           let: "$v1" := (![go.PointerType Expr] "e") in
-                           CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                        else do:  #());;;
-                        let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                        let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                        let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                        let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                         let: "$a1" := (![go.PointerType env] "en") in
                         let: "$a2" := (![go.PointerType State] "st") in
-                        (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                        let: "$r0" := "$ret0" in
-                        let: "$r1" := "$ret1" in
-                        do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                        do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                        (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                        then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                        else do:  #());;;
-                        let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                        let: "$range" := (![go.SliceType Path] "ps") in
-                        (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                        slice.for_range Path "$range" (λ: "$key" "$value",
-                          do:  ("p" <-[Path] "$value");;;
-                          do:  "$key";;;
-                          let: "st2" := (GoAlloc (go.PointerType State) (GoZeroVal (go.PointerType State) #())) in
-                          let: "$r0" := ((MethodResolve (go.PointerType State) "clone"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p"))) #()) in
-                          do:  ("st2" <-[go.PointerType State] "$r0");;;
-                          let: "n" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
-                          let: "$r0" := (Convert go.int go.uint64 (let: "$a0" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] "st2"))) in
-                          (FuncResolve go.len [go.SliceType Sort] #()) "$a0")) in
-                          do:  ("n" <-[go.uint64] "$r0");;;
-                          let: "$r0" := (let: "$a0" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] "st2"))) in
-                          let: "$a1" := ((let: "$sl0" := SortLoc in
-                          CompositeLiteral (go.SliceType Sort) (LiteralValue [KeyedElement None (ElementExpression Sort "$sl0")]))) in
-                          (FuncResolve go.append [go.SliceType Sort] #()) "$a0" "$a1") in
-                          do:  ((StructFieldRef State "Vars"%go (![go.PointerType State] "st2")) <-[go.SliceType Sort] "$r0");;;
-                          let: "l" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
-                          let: "$r0" := (GoAlloc Term (let: "$v0" := TVar in
-                          let: "$v1" := (![go.uint64] "n") in
-                          CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0"); KeyedElement (Some (KeyField "Num"%go)) (ElementExpression go.uint64 "$v1")]))) in
-                          do:  ("l" <-[go.PointerType Term] "$r0");;;
-                          let: "$r0" := (let: "$a0" := (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] "st2"))) in
-                          let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "l") in
-                          let: "$v1" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                          CompositeLiteral Cell (LiteralValue [KeyedElement (Some (KeyField "Loc"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "Val"%go)) (ElementExpression (go.PointerType Term) "$v1")])) in
-                          CompositeLiteral (go.SliceType Cell) (LiteralValue [KeyedElement None (ElementExpression Cell "$sl0")]))) in
-                          (FuncResolve go.append [go.SliceType Cell] #()) "$a0" "$a1") in
-                          do:  ((StructFieldRef State "Heap"%go (![go.PointerType State] "st2")) <-[go.SliceType Cell] "$r0");;;
-                          let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                          let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "l") in
-                          let: "$v1" := (![go.PointerType State] "st2") in
-                          CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
-                          CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                          (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                          do:  ("out" <-[go.SliceType Path] "$r0")));;;
-                        return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                        (FuncResolve execAlloc [] #()) "$a0" "$a1" "$a2")) in
+                        return: ("$ret0", "$ret1")
                       else
                         (if: "$sw" =⟨ExprKind⟩ EZero
                         then
-                          let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                          let: "z" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
-                          let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                          (FuncResolve typeZero [] #()) "$a0") in
-                          let: "$r0" := "$ret0" in
-                          let: "$r1" := "$ret1" in
-                          do:  ("z" <-[go.PointerType Term] "$r0");;;
-                          do:  ("ok" <-[go.bool] "$r1");;;
-                          (if: (⟨go.bool⟩! (![go.bool] "ok"))
-                          then
-                            return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
-                             let: "$v1" := (![go.PointerType Expr] "e") in
-                             CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                          else do:  #());;;
-                          return: (let: "$a0" := (![go.PointerType Term] "z") in
-                           let: "$a1" := (![go.PointerType State] "st") in
-                           (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                          let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
+                          let: "$a1" := (![go.PointerType env] "en") in
+                          let: "$a2" := (![go.PointerType State] "st") in
+                          (FuncResolve execZero [] #()) "$a0" "$a1" "$a2")) in
+                          return: ("$ret0", "$ret1")
                         else
                           (if: "$sw" =⟨ExprKind⟩ EBinOp
                           then
-                            let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                            let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                            (FuncResolve TypeSort [] #()) "$a0") in
-                            let: "$r0" := "$ret0" in
-                            let: "$r1" := "$ret1" in
-                            do:  "$r0";;;
-                            do:  ("tok" <-[go.bool] "$r1");;;
-                            (if: (⟨go.bool⟩! (![go.bool] "tok"))
-                            then
-                              return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
-                               let: "$v1" := (![go.PointerType Expr] "e") in
-                               CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                            else do:  #());;;
-                            let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                            let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                            let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                            let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                             let: "$a1" := (![go.PointerType env] "en") in
                             let: "$a2" := (![go.PointerType State] "st") in
-                            (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                            let: "$r0" := "$ret0" in
-                            let: "$r1" := "$ret1" in
-                            do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                            do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                            (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                            then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                            else do:  #());;;
-                            let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                            let: "$range" := (![go.SliceType Path] "ps") in
-                            (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                            slice.for_range Path "$range" (λ: "$key" "$value",
-                              do:  ("p" <-[Path] "$value");;;
-                              do:  "$key";;;
-                              let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                              let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                              let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
-                              let: "$a1" := (![go.PointerType env] "en") in
-                              let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                              (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                              let: "$r0" := "$ret0" in
-                              let: "$r1" := "$ret1" in
-                              do:  ("ps2" <-[go.SliceType Path] "$r0");;;
-                              do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
-                              (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                              then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
-                              else do:  #());;;
-                              let: "$range" := (![go.SliceType Path] "ps2") in
-                              (let: "q" := (GoAlloc Path (GoZeroVal Path #())) in
-                              slice.for_range Path "$range" (λ: "$key" "$value",
-                                do:  ("q" <-[Path] "$value");;;
-                                do:  "$key";;;
-                                let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                                let: "v" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
-                                let: ("$ret0", "$ret1") := (let: "$a0" := (![Op] (StructFieldRef Expr "Op"%go (![go.PointerType Expr] "e"))) in
-                                let: "$a1" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                                let: "$a2" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] (StructFieldRef Path "St"%go "q")))) in
-                                let: "$a3" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                                let: "$a4" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "q")) in
-                                (FuncResolve applyBinOp [] #()) "$a0" "$a1" "$a2" "$a3" "$a4") in
-                                let: "$r0" := "$ret0" in
-                                let: "$r1" := "$ret1" in
-                                do:  ("v" <-[go.PointerType Term] "$r0");;;
-                                do:  ("ok" <-[go.bool] "$r1");;;
-                                (if: (⟨go.bool⟩! (![go.bool] "ok"))
-                                then
-                                  return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RIllSorted in
-                                   let: "$v1" := (![go.PointerType Expr] "e") in
-                                   let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                                   let: "$v3" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "q")) in
-                                   CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Want"%go)) (ElementExpression (go.PointerType Term) "$v2"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v3")])))
-                                else do:  #());;;
-                                let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                                let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "v") in
-                                let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "q")) in
-                                CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
-                                CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                                (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                                do:  ("out" <-[go.SliceType Path] "$r0")))));;;
-                            return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                            (FuncResolve execBinOp [] #()) "$a0" "$a1" "$a2")) in
+                            return: ("$ret0", "$ret1")
                           else
                             (if: "$sw" =⟨ExprKind⟩ EUnOp
                             then
-                              let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                              let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                              (FuncResolve TypeSort [] #()) "$a0") in
-                              let: "$r0" := "$ret0" in
-                              let: "$r1" := "$ret1" in
-                              do:  "$r0";;;
-                              do:  ("tok" <-[go.bool] "$r1");;;
-                              (if: (⟨go.bool⟩! (![go.bool] "tok"))
-                              then
-                                return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
-                                 let: "$v1" := (![go.PointerType Expr] "e") in
-                                 CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                              else do:  #());;;
-                              let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                              let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                              let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                              let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                               let: "$a1" := (![go.PointerType env] "en") in
                               let: "$a2" := (![go.PointerType State] "st") in
-                              (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                              let: "$r0" := "$ret0" in
-                              let: "$r1" := "$ret1" in
-                              do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                              do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                              (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                              then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                              else do:  #());;;
-                              let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                              let: "$range" := (![go.SliceType Path] "ps") in
-                              (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                              slice.for_range Path "$range" (λ: "$key" "$value",
-                                do:  ("p" <-[Path] "$value");;;
-                                do:  "$key";;;
-                                let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                                let: "v" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
-                                let: ("$ret0", "$ret1") := (let: "$a0" := (![Op] (StructFieldRef Expr "Op"%go (![go.PointerType Expr] "e"))) in
-                                let: "$a1" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                                let: "$a2" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
-                                let: "$a3" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                                (FuncResolve applyUnOp [] #()) "$a0" "$a1" "$a2" "$a3") in
-                                let: "$r0" := "$ret0" in
-                                let: "$r1" := "$ret1" in
-                                do:  ("v" <-[go.PointerType Term] "$r0");;;
-                                do:  ("ok" <-[go.bool] "$r1");;;
-                                (if: (⟨go.bool⟩! (![go.bool] "ok"))
-                                then
-                                  return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RIllSorted in
-                                   let: "$v1" := (![go.PointerType Expr] "e") in
-                                   let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                                   CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))
-                                else do:  #());;;
-                                let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                                let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "v") in
-                                let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                                CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
-                                CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                                (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                                do:  ("out" <-[go.SliceType Path] "$r0")));;;
-                              return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                              (FuncResolve execUnOp [] #()) "$a0" "$a1" "$a2")) in
+                              return: ("$ret0", "$ret1")
                             else
                               (if: "$sw" =⟨ExprKind⟩ EConvert
                               then
-                                let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-                                let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                                (FuncResolve TypeSort [] #()) "$a0") in
-                                let: "$r0" := "$ret0" in
-                                let: "$r1" := "$ret1" in
-                                do:  "$r0";;;
-                                do:  ("tok" <-[go.bool] "$r1");;;
-                                (if: (⟨go.bool⟩! (![go.bool] "tok"))
-                                then
-                                  return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
-                                   let: "$v1" := (![go.PointerType Expr] "e") in
-                                   CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                                else do:  #());;;
-                                (if: (⟨go.bool⟩! (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
-                                let: "$a1" := (![go.PointerType Type'] (StructFieldRef Expr "Ty2"%go (![go.PointerType Expr] "e"))) in
-                                (FuncResolve TypeEq [] #()) "$a0" "$a1"))
-                                then
-                                  return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadConvert in
-                                   let: "$v1" := (![go.PointerType Expr] "e") in
-                                   CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                                else do:  #());;;
-                                let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                                let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                                 let: "$a1" := (![go.PointerType env] "en") in
                                 let: "$a2" := (![go.PointerType State] "st") in
-                                (FuncResolve exec [] #()) "$a0" "$a1" "$a2")) in
+                                (FuncResolve execConvert [] #()) "$a0" "$a1" "$a2")) in
                                 return: ("$ret0", "$ret1")
                               else
                                 (if: "$sw" =⟨ExprKind⟩ EDo
                                 then
-                                  let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                                  let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                                  let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                                  let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                                   let: "$a1" := (![go.PointerType env] "en") in
                                   let: "$a2" := (![go.PointerType State] "st") in
-                                  (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                                  let: "$r0" := "$ret0" in
-                                  let: "$r1" := "$ret1" in
-                                  do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                                  do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                                  (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                                  then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                                  else do:  #());;;
-                                  let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                                  let: "$range" := (![go.SliceType Path] "ps") in
-                                  (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                                  slice.for_range Path "$range" (λ: "$key" "$value",
-                                    do:  ("p" <-[Path] "$value");;;
-                                    do:  "$key";;;
-                                    let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                                    let: "$a1" := ((let: "$sl0" := (let: "$v0" := (GoAlloc Term (let: "$v0" := TExec in
-                                    CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0")]))) in
-                                    let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                                    CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
-                                    CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                                    (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                                    do:  ("out" <-[go.SliceType Path] "$r0")));;;
-                                  return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                                  (FuncResolve execDo [] #()) "$a0" "$a1" "$a2")) in
+                                  return: ("$ret0", "$ret1")
                                 else
                                   (if: "$sw" =⟨ExprKind⟩ EReturn
                                   then
-                                    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                                    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                                    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                                    let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                                     let: "$a1" := (![go.PointerType env] "en") in
                                     let: "$a2" := (![go.PointerType State] "st") in
-                                    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                                    let: "$r0" := "$ret0" in
-                                    let: "$r1" := "$ret1" in
-                                    do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                                    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                                    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                                    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                                    else do:  #());;;
-                                    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                                    let: "$range" := (![go.SliceType Path] "ps") in
-                                    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                                    slice.for_range Path "$range" (λ: "$key" "$value",
-                                      do:  ("p" <-[Path] "$value");;;
-                                      do:  "$key";;;
-                                      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                                      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (GoAlloc Term (let: "$v0" := TRet in
-                                      let: "$v1" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                                      CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0"); KeyedElement (Some (KeyField "A"%go)) (ElementExpression (go.PointerType Term) "$v1")]))) in
-                                      let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                                      CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
-                                      CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                                      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                                      do:  ("out" <-[go.SliceType Path] "$r0")));;;
-                                    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                                    (FuncResolve execReturn [] #()) "$a0" "$a1" "$a2")) in
+                                    return: ("$ret0", "$ret1")
                                   else
                                     (if: "$sw" =⟨ExprKind⟩ EExcSeq
                                     then
-                                      let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                                      let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                                      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                                      let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                                       let: "$a1" := (![go.PointerType env] "en") in
                                       let: "$a2" := (![go.PointerType State] "st") in
-                                      (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                                      let: "$r0" := "$ret0" in
-                                      let: "$r1" := "$ret1" in
-                                      do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                                      do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                                      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                                      then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                                      else do:  #());;;
-                                      let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                                      let: "$range" := (![go.SliceType Path] "ps") in
-                                      (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                                      slice.for_range Path "$range" (λ: "$key" "$value",
-                                        do:  ("p" <-[Path] "$value");;;
-                                        do:  "$key";;;
-                                        (if: Convert go.untyped_bool go.bool ((![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) =⟨go.PointerType Term⟩ (Convert go.untyped_nil (go.PointerType Term) UntypedNil))
-                                        then
-                                          return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadMonad in
-                                           let: "$v1" := (![go.PointerType Expr] "e") in
-                                           CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                                        else do:  #());;;
-                                        (if: Convert go.untyped_bool go.bool ((![TermKind] (StructFieldRef Term "Kind"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) =⟨TermKind⟩ TExec)
-                                        then
-                                          let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                                          let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                                          let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
-                                          let: "$a1" := (![go.PointerType env] "en") in
-                                          let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                                          (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                                          let: "$r0" := "$ret0" in
-                                          let: "$r1" := "$ret1" in
-                                          do:  ("ps2" <-[go.SliceType Path] "$r0");;;
-                                          do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
-                                          (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                                          then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
-                                          else do:  #());;;
-                                          let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                                          let: "$a1" := (![go.SliceType Path] "ps2") in
-                                          (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                                          do:  ("out" <-[go.SliceType Path] "$r0")
-                                        else
-                                          (if: Convert go.untyped_bool go.bool ((![TermKind] (StructFieldRef Term "Kind"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) =⟨TermKind⟩ TRet)
-                                          then
-                                            let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                                            let: "$a1" := ((let: "$sl0" := (![Path] "p") in
-                                            CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                                            (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                                            do:  ("out" <-[go.SliceType Path] "$r0")
-                                          else
-                                            return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadMonad in
-                                             let: "$v1" := (![go.PointerType Expr] "e") in
-                                             let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                                             CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))))));;;
-                                      return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                                      (FuncResolve execExcSeq [] #()) "$a0" "$a1" "$a2")) in
+                                      return: ("$ret0", "$ret1")
                                     else
                                       (if: "$sw" =⟨ExprKind⟩ EExcDo
                                       then
-                                        let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-                                        let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                                        let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+                                        let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] "e") in
                                         let: "$a1" := (![go.PointerType env] "en") in
                                         let: "$a2" := (![go.PointerType State] "st") in
-                                        (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
-                                        let: "$r0" := "$ret0" in
-                                        let: "$r1" := "$ret1" in
-                                        do:  ("ps" <-[go.SliceType Path] "$r0");;;
-                                        do:  ("fl" <-[go.PointerType Failure] "$r1");;;
-                                        (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-                                        then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
-                                        else do:  #());;;
-                                        let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
-                                        let: "$range" := (![go.SliceType Path] "ps") in
-                                        (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
-                                        slice.for_range Path "$range" (λ: "$key" "$value",
-                                          do:  ("p" <-[Path] "$value");;;
-                                          do:  "$key";;;
-                                          (if: Convert go.untyped_bool go.bool ((![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) =⟨go.PointerType Term⟩ (Convert go.untyped_nil (go.PointerType Term) UntypedNil))
-                                          then
-                                            return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadMonad in
-                                             let: "$v1" := (![go.PointerType Expr] "e") in
-                                             CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
-                                          else do:  #());;;
-                                          (if: Convert go.untyped_bool go.bool ((![TermKind] (StructFieldRef Term "Kind"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) =⟨TermKind⟩ TExec)
-                                          then
-                                            let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                                            let: "$a1" := ((let: "$sl0" := (let: "$v0" := (GoAlloc Term (let: "$v0" := TUnit in
-                                            CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0")]))) in
-                                            let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                                            CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
-                                            CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                                            (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                                            do:  ("out" <-[go.SliceType Path] "$r0")
-                                          else
-                                            (if: Convert go.untyped_bool go.bool ((![TermKind] (StructFieldRef Term "Kind"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) =⟨TermKind⟩ TRet)
-                                            then
-                                              let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
-                                              let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] (StructFieldRef Term "A"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) in
-                                              let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
-                                              CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
-                                              CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
-                                              (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
-                                              do:  ("out" <-[go.SliceType Path] "$r0")
-                                            else
-                                              return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadMonad in
-                                               let: "$v1" := (![go.PointerType Expr] "e") in
-                                               let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-                                               CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))))));;;
-                                        return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+                                        (FuncResolve execExcDo [] #()) "$a0" "$a1" "$a2")) in
+                                        return: ("$ret0", "$ret1")
                                       else do:  #()))))))))))))))))));;;
     return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RUnsupported in
      let: "$v1" := (![go.PointerType Expr] "e") in
      CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))).
+
+(* go: exec.go:136:6 *)
+Definition execIntⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    return: (let: "$a0" := (GoAlloc Term (let: "$v0" := TInt in
+     let: "$v1" := (![go.uint64] (StructFieldRef Expr "Num"%go (![go.PointerType Expr] "e"))) in
+     CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0"); KeyedElement (Some (KeyField "Num"%go)) (ElementExpression go.uint64 "$v1")]))) in
+     let: "$a1" := (![go.PointerType State] "st") in
+     (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:140:6 *)
+Definition execBoolⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    return: (let: "$a0" := (GoAlloc Term (let: "$v0" := TBool in
+     let: "$v1" := (![go.uint64] (StructFieldRef Expr "Num"%go (![go.PointerType Expr] "e"))) in
+     CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0"); KeyedElement (Some (KeyField "Num"%go)) (ElementExpression go.uint64 "$v1")]))) in
+     let: "$a1" := (![go.PointerType State] "st") in
+     (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:144:6 *)
+Definition execUnitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    return: (let: "$a0" := (GoAlloc Term (let: "$v0" := TUnit in
+     CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0")]))) in
+     let: "$a1" := (![go.PointerType State] "st") in
+     (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:148:6 *)
+Definition execVarⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+    let: "t" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType env] "en") in
+    let: "$a1" := (![go.string] (StructFieldRef Expr "Name"%go (![go.PointerType Expr] "e"))) in
+    (FuncResolve envLookup [] #()) "$a0" "$a1") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("t" <-[go.PointerType Term] "$r0");;;
+    do:  ("ok" <-[go.bool] "$r1");;;
+    (if: (⟨go.bool⟩! (![go.bool] "ok"))
+    then
+      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RUnboundVar in
+       let: "$v1" := (![go.string] (StructFieldRef Expr "Name"%go (![go.PointerType Expr] "e"))) in
+       let: "$v2" := (![go.PointerType Expr] "e") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Name"%go)) (ElementExpression go.string "$v1"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v2")])))
+    else do:  #());;;
+    return: (let: "$a0" := (![go.PointerType Term] "t") in
+     let: "$a1" := (![go.PointerType State] "st") in
+     (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:156:6 *)
+Definition execLetⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "en2" := (GoAlloc (go.PointerType env) (GoZeroVal (go.PointerType env) #())) in
+      let: "$r0" := (let: "$a0" := (![go.PointerType env] "en") in
+      let: "$a1" := (![go.string] (StructFieldRef Expr "Name"%go (![go.PointerType Expr] "e"))) in
+      let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+      (FuncResolve envBind [] #()) "$a0" "$a1" "$a2") in
+      do:  ("en2" <-[go.PointerType env] "$r0");;;
+      let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+      let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
+      let: "$a1" := (![go.PointerType env] "en2") in
+      let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+      (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("ps2" <-[go.SliceType Path] "$r0");;;
+      do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+      then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
+      else do:  #());;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := (![go.SliceType Path] "ps2") in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:177:6 *)
+Definition execSeqⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+      let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
+      let: "$a1" := (![go.PointerType env] "en") in
+      let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+      (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("ps2" <-[go.SliceType Path] "$r0");;;
+      do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+      then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
+      else do:  #());;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := (![go.SliceType Path] "ps2") in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* execIfs runs the condition of an `if` and then execIf on each of its paths.
+
+   go: exec.go:194:6 *)
+Definition execIfsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+      let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] "e") in
+      let: "$a1" := (![go.PointerType env] "en") in
+      let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+      let: "$a3" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+      (FuncResolve execIf [] #()) "$a0" "$a1" "$a2" "$a3") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("ps2" <-[go.SliceType Path] "$r0");;;
+      do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+      then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
+      else do:  #());;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := (![go.SliceType Path] "ps2") in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:210:6 *)
+Definition execLoadⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+    (FuncResolve TypeSort [] #()) "$a0") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  "$r0";;;
+    do:  ("tok" <-[go.bool] "$r1");;;
+    (if: (⟨go.bool⟩! (![go.bool] "tok"))
+    then
+      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
+       let: "$v1" := (![go.PointerType Expr] "e") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+    else do:  #());;;
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+      let: "v" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
+      let: "$a1" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+      (FuncResolve heapLookup [] #()) "$a0" "$a1") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("v" <-[go.PointerType Term] "$r0");;;
+      do:  ("ok" <-[go.bool] "$r1");;;
+      (if: (⟨go.bool⟩! (![go.bool] "ok"))
+      then
+        return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RNoPointsTo in
+         let: "$v1" := (![go.PointerType Expr] "e") in
+         let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+         CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))
+      else do:  #());;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "v") in
+      let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+      CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
+      CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:230:6 *)
+Definition execStoreⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+    (FuncResolve TypeSort [] #()) "$a0") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  "$r0";;;
+    do:  ("tok" <-[go.bool] "$r1");;;
+    (if: (⟨go.bool⟩! (![go.bool] "tok"))
+    then
+      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
+       let: "$v1" := (![go.PointerType Expr] "e") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+    else do:  #());;;
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+      let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
+      let: "$a1" := (![go.PointerType env] "en") in
+      let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+      (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("ps2" <-[go.SliceType Path] "$r0");;;
+      do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+      then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
+      else do:  #());;;
+      let: "fl3" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+      let: "qs" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] "e") in
+      let: "$a1" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+      let: "$a2" := (![go.SliceType Path] "ps2") in
+      (FuncResolve storeAll [] #()) "$a0" "$a1" "$a2") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("qs" <-[go.SliceType Path] "$r0");;;
+      do:  ("fl3" <-[go.PointerType Failure] "$r1");;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl3") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+      then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl3")
+      else do:  #());;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := (![go.SliceType Path] "qs") in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* storeAll performs the store of an EStore at location term l on each of the
+   paths the stored value reached.
+
+   go: exec.go:256:6 *)
+Definition storeAllⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "l" "ps",
+    exception_do (let: "ps" := (GoAlloc (go.SliceType Path) "ps") in
+    let: "l" := (GoAlloc (go.PointerType Term) "l") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "q" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("q" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "st2" := (GoAlloc (go.PointerType State) (GoZeroVal (go.PointerType State) #())) in
+      let: "$r0" := ((MethodResolve (go.PointerType State) "clone"%go (![go.PointerType State] (StructFieldRef Path "St"%go "q"))) #()) in
+      do:  ("st2" <-[go.PointerType State] "$r0");;;
+      let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+      let: "h" := (GoAlloc (go.SliceType Cell) (GoZeroVal (go.SliceType Cell) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] "st2"))) in
+      let: "$a1" := (![go.PointerType Term] "l") in
+      let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "q")) in
+      (FuncResolve heapUpdate [] #()) "$a0" "$a1" "$a2") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("h" <-[go.SliceType Cell] "$r0");;;
+      do:  ("ok" <-[go.bool] "$r1");;;
+      (if: (⟨go.bool⟩! (![go.bool] "ok"))
+      then
+        return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RNoPointsTo in
+         let: "$v1" := (![go.PointerType Expr] "e") in
+         let: "$v2" := (![go.PointerType Term] "l") in
+         CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))
+      else do:  #());;;
+      let: "$r0" := (![go.SliceType Cell] "h") in
+      do:  ((StructFieldRef State "Heap"%go (![go.PointerType State] "st2")) <-[go.SliceType Cell] "$r0");;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (GoAlloc Term (let: "$v0" := TUnit in
+      CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0")]))) in
+      let: "$v1" := (![go.PointerType State] "st2") in
+      CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
+      CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:270:6 *)
+Definition execAllocⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+    (FuncResolve TypeSort [] #()) "$a0") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  "$r0";;;
+    do:  ("tok" <-[go.bool] "$r1");;;
+    (if: (⟨go.bool⟩! (![go.bool] "tok"))
+    then
+      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
+       let: "$v1" := (![go.PointerType Expr] "e") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+    else do:  #());;;
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "st2" := (GoAlloc (go.PointerType State) (GoZeroVal (go.PointerType State) #())) in
+      let: "$r0" := ((MethodResolve (go.PointerType State) "clone"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p"))) #()) in
+      do:  ("st2" <-[go.PointerType State] "$r0");;;
+      let: "n" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+      let: "$r0" := (Convert go.int go.uint64 (let: "$a0" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] "st2"))) in
+      (FuncResolve go.len [go.SliceType Sort] #()) "$a0")) in
+      do:  ("n" <-[go.uint64] "$r0");;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] "st2"))) in
+      let: "$a1" := ((let: "$sl0" := SortLoc in
+      CompositeLiteral (go.SliceType Sort) (LiteralValue [KeyedElement None (ElementExpression Sort "$sl0")]))) in
+      (FuncResolve go.append [go.SliceType Sort] #()) "$a0" "$a1") in
+      do:  ((StructFieldRef State "Vars"%go (![go.PointerType State] "st2")) <-[go.SliceType Sort] "$r0");;;
+      let: "l" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
+      let: "$r0" := (GoAlloc Term (let: "$v0" := TVar in
+      let: "$v1" := (![go.uint64] "n") in
+      CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0"); KeyedElement (Some (KeyField "Num"%go)) (ElementExpression go.uint64 "$v1")]))) in
+      do:  ("l" <-[go.PointerType Term] "$r0");;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] "st2"))) in
+      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "l") in
+      let: "$v1" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+      CompositeLiteral Cell (LiteralValue [KeyedElement (Some (KeyField "Loc"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "Val"%go)) (ElementExpression (go.PointerType Term) "$v1")])) in
+      CompositeLiteral (go.SliceType Cell) (LiteralValue [KeyedElement None (ElementExpression Cell "$sl0")]))) in
+      (FuncResolve go.append [go.SliceType Cell] #()) "$a0" "$a1") in
+      do:  ((StructFieldRef State "Heap"%go (![go.PointerType State] "st2")) <-[go.SliceType Cell] "$r0");;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "l") in
+      let: "$v1" := (![go.PointerType State] "st2") in
+      CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
+      CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:291:6 *)
+Definition execZeroⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+    let: "z" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+    (FuncResolve typeZero [] #()) "$a0") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("z" <-[go.PointerType Term] "$r0");;;
+    do:  ("ok" <-[go.bool] "$r1");;;
+    (if: (⟨go.bool⟩! (![go.bool] "ok"))
+    then
+      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
+       let: "$v1" := (![go.PointerType Expr] "e") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+    else do:  #());;;
+    return: (let: "$a0" := (![go.PointerType Term] "z") in
+     let: "$a1" := (![go.PointerType State] "st") in
+     (FuncResolve onePath [] #()) "$a0" "$a1", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:299:6 *)
+Definition execBinOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+    (FuncResolve TypeSort [] #()) "$a0") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  "$r0";;;
+    do:  ("tok" <-[go.bool] "$r1");;;
+    (if: (⟨go.bool⟩! (![go.bool] "tok"))
+    then
+      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
+       let: "$v1" := (![go.PointerType Expr] "e") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+    else do:  #());;;
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+      let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
+      let: "$a1" := (![go.PointerType env] "en") in
+      let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+      (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("ps2" <-[go.SliceType Path] "$r0");;;
+      do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+      then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
+      else do:  #());;;
+      let: "fl3" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+      let: "qs" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] "e") in
+      let: "$a1" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+      let: "$a2" := (![go.SliceType Path] "ps2") in
+      (FuncResolve binOpAll [] #()) "$a0" "$a1" "$a2") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("qs" <-[go.SliceType Path] "$r0");;;
+      do:  ("fl3" <-[go.PointerType Failure] "$r1");;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl3") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+      then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl3")
+      else do:  #());;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := (![go.SliceType Path] "qs") in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* binOpAll applies the operator of an EBinOp with left operand a to each of
+   the paths the right operand reached.
+
+   go: exec.go:325:6 *)
+Definition binOpAllⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "a" "ps",
+    exception_do (let: "ps" := (GoAlloc (go.SliceType Path) "ps") in
+    let: "a" := (GoAlloc (go.PointerType Term) "a") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "q" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("q" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+      let: "v" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![Op] (StructFieldRef Expr "Op"%go (![go.PointerType Expr] "e"))) in
+      let: "$a1" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+      let: "$a2" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] (StructFieldRef Path "St"%go "q")))) in
+      let: "$a3" := (![go.PointerType Term] "a") in
+      let: "$a4" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "q")) in
+      (FuncResolve applyBinOp [] #()) "$a0" "$a1" "$a2" "$a3" "$a4") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("v" <-[go.PointerType Term] "$r0");;;
+      do:  ("ok" <-[go.bool] "$r1");;;
+      (if: (⟨go.bool⟩! (![go.bool] "ok"))
+      then
+        return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RIllSorted in
+         let: "$v1" := (![go.PointerType Expr] "e") in
+         let: "$v2" := (![go.PointerType Term] "a") in
+         let: "$v3" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "q")) in
+         CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Want"%go)) (ElementExpression (go.PointerType Term) "$v2"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v3")])))
+      else do:  #());;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "v") in
+      let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "q")) in
+      CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
+      CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:337:6 *)
+Definition execUnOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+    (FuncResolve TypeSort [] #()) "$a0") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  "$r0";;;
+    do:  ("tok" <-[go.bool] "$r1");;;
+    (if: (⟨go.bool⟩! (![go.bool] "tok"))
+    then
+      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
+       let: "$v1" := (![go.PointerType Expr] "e") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+    else do:  #());;;
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+      let: "v" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![Op] (StructFieldRef Expr "Op"%go (![go.PointerType Expr] "e"))) in
+      let: "$a1" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+      let: "$a2" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
+      let: "$a3" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+      (FuncResolve applyUnOp [] #()) "$a0" "$a1" "$a2" "$a3") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("v" <-[go.PointerType Term] "$r0");;;
+      do:  ("ok" <-[go.bool] "$r1");;;
+      (if: (⟨go.bool⟩! (![go.bool] "ok"))
+      then
+        return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RIllSorted in
+         let: "$v1" := (![go.PointerType Expr] "e") in
+         let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+         CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))
+      else do:  #());;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] "v") in
+      let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+      CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
+      CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:357:6 *)
+Definition execConvertⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "tok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+    (FuncResolve TypeSort [] #()) "$a0") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  "$r0";;;
+    do:  ("tok" <-[go.bool] "$r1");;;
+    (if: (⟨go.bool⟩! (![go.bool] "tok"))
+    then
+      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadType in
+       let: "$v1" := (![go.PointerType Expr] "e") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+    else do:  #());;;
+    (if: (⟨go.bool⟩! (let: "$a0" := (![go.PointerType Type'] (StructFieldRef Expr "Ty"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType Type'] (StructFieldRef Expr "Ty2"%go (![go.PointerType Expr] "e"))) in
+    (FuncResolve TypeEq [] #()) "$a0" "$a1"))
+    then
+      return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadConvert in
+       let: "$v1" := (![go.PointerType Expr] "e") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+    else do:  #());;;
+    let: ("$ret0", "$ret1") := ((let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2")) in
+    return: ("$ret0", "$ret1")).
+
+(* go: exec.go:368:6 *)
+Definition execDoⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (GoAlloc Term (let: "$v0" := TExec in
+      CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0")]))) in
+      let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+      CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
+      CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:380:6 *)
+Definition execReturnⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+      let: "$a1" := ((let: "$sl0" := (let: "$v0" := (GoAlloc Term (let: "$v0" := TRet in
+      let: "$v1" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+      CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0"); KeyedElement (Some (KeyField "A"%go)) (ElementExpression (go.PointerType Term) "$v1")]))) in
+      let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+      CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
+      CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+      (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+      do:  ("out" <-[go.SliceType Path] "$r0")));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:392:6 *)
+Definition execExcSeqⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) =⟨go.PointerType Term⟩ (Convert go.untyped_nil (go.PointerType Term) UntypedNil))
+      then
+        return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadMonad in
+         let: "$v1" := (![go.PointerType Expr] "e") in
+         CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+      else do:  #());;;
+      (if: Convert go.untyped_bool go.bool ((![TermKind] (StructFieldRef Term "Kind"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) =⟨TermKind⟩ TExec)
+      then
+        let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+        let: "ps2" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+        let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "B"%go (![go.PointerType Expr] "e"))) in
+        let: "$a1" := (![go.PointerType env] "en") in
+        let: "$a2" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+        (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+        let: "$r0" := "$ret0" in
+        let: "$r1" := "$ret1" in
+        do:  ("ps2" <-[go.SliceType Path] "$r0");;;
+        do:  ("fl2" <-[go.PointerType Failure] "$r1");;;
+        (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+        then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl2")
+        else do:  #());;;
+        let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+        let: "$a1" := (![go.SliceType Path] "ps2") in
+        (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+        do:  ("out" <-[go.SliceType Path] "$r0")
+      else
+        (if: Convert go.untyped_bool go.bool ((![TermKind] (StructFieldRef Term "Kind"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) =⟨TermKind⟩ TRet)
+        then
+          let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+          let: "$a1" := ((let: "$sl0" := (![Path] "p") in
+          CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+          (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+          do:  ("out" <-[go.SliceType Path] "$r0")
+        else
+          return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadMonad in
+           let: "$v1" := (![go.PointerType Expr] "e") in
+           let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+           CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))))));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* go: exec.go:417:6 *)
+Definition execExcDoⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "e" "en" "st",
+    exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
+    let: "en" := (GoAlloc (go.PointerType env) "en") in
+    let: "e" := (GoAlloc (go.PointerType Expr) "e") in
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "ps" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.PointerType Expr] (StructFieldRef Expr "A"%go (![go.PointerType Expr] "e"))) in
+    let: "$a1" := (![go.PointerType env] "en") in
+    let: "$a2" := (![go.PointerType State] "st") in
+    (FuncResolve exec [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ps" <-[go.SliceType Path] "$r0");;;
+    do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "out" := (GoAlloc (go.SliceType Path) (GoZeroVal (go.SliceType Path) #())) in
+    let: "$range" := (![go.SliceType Path] "ps") in
+    (let: "p" := (GoAlloc Path (GoZeroVal Path #())) in
+    slice.for_range Path "$range" (λ: "$key" "$value",
+      do:  ("p" <-[Path] "$value");;;
+      do:  "$key";;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) =⟨go.PointerType Term⟩ (Convert go.untyped_nil (go.PointerType Term) UntypedNil))
+      then
+        return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadMonad in
+         let: "$v1" := (![go.PointerType Expr] "e") in
+         CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1")])))
+      else do:  #());;;
+      (if: Convert go.untyped_bool go.bool ((![TermKind] (StructFieldRef Term "Kind"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) =⟨TermKind⟩ TExec)
+      then
+        let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+        let: "$a1" := ((let: "$sl0" := (let: "$v0" := (GoAlloc Term (let: "$v0" := TUnit in
+        CompositeLiteral Term (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression TermKind "$v0")]))) in
+        let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+        CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
+        CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+        (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+        do:  ("out" <-[go.SliceType Path] "$r0")
+      else
+        (if: Convert go.untyped_bool go.bool ((![TermKind] (StructFieldRef Term "Kind"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) =⟨TermKind⟩ TRet)
+        then
+          let: "$r0" := (let: "$a0" := (![go.SliceType Path] "out") in
+          let: "$a1" := ((let: "$sl0" := (let: "$v0" := (![go.PointerType Term] (StructFieldRef Term "A"%go (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")))) in
+          let: "$v1" := (![go.PointerType State] (StructFieldRef Path "St"%go "p")) in
+          CompositeLiteral Path (LiteralValue [KeyedElement (Some (KeyField "Ret"%go)) (ElementExpression (go.PointerType Term) "$v0"); KeyedElement (Some (KeyField "St"%go)) (ElementExpression (go.PointerType State) "$v1")])) in
+          CompositeLiteral (go.SliceType Path) (LiteralValue [KeyedElement None (ElementExpression Path "$sl0")]))) in
+          (FuncResolve go.append [go.SliceType Path] #()) "$a0" "$a1") in
+          do:  ("out" <-[go.SliceType Path] "$r0")
+        else
+          return: (Convert go.untyped_nil (go.SliceType Path) UntypedNil, GoAlloc Failure (let: "$v0" := RBadMonad in
+           let: "$v1" := (![go.PointerType Expr] "e") in
+           let: "$v2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+           CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Expr"%go)) (ElementExpression (go.PointerType Expr) "$v1"); KeyedElement (Some (KeyField "Got"%go)) (ElementExpression (go.PointerType Term) "$v2")])))))));;;
+    return: (![go.SliceType Path] "out", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
 
 (* execIf runs one path of an `if`: c is the condition term reached on that
    path and st its state. A literal condition takes the corresponding branch
    without forking; otherwise the state forks, with c added to the path
    condition of the `then` state and its negation to that of the `else` state.
 
-   go: exec.go:341:6 *)
+   go: exec.go:442:6 *)
 Definition execIfⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "e" "en" "c" "st",
     exception_do (let: "st" := (GoAlloc (go.PointerType State) "st") in
@@ -1761,7 +2104,7 @@ Definition execIfⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : va
 (* applyBinOp builds the term for a binary Go operator at type t, checking
    that both operands have the sort of t.
 
-   go: exec.go:372:6 *)
+   go: exec.go:473:6 *)
 Definition applyBinOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" "t" "vars" "a" "b",
     exception_do (let: "b" := (GoAlloc (go.PointerType Term) "b") in
@@ -1899,7 +2242,7 @@ Definition applyBinOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
 
 (* applyUnOp builds the term for a unary Go operator at type t.
 
-   go: exec.go:429:6 *)
+   go: exec.go:530:6 *)
 Definition applyUnOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" "t" "vars" "a",
     exception_do (let: "a" := (GoAlloc (go.PointerType Term) "a") in
@@ -2436,12 +2779,14 @@ Definition firstUnresolvedⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
     return: (Convert go.untyped_nil (go.PointerType Assn) UntypedNil)).
 
 (* checkDisjunct reports whether path p satisfies disjunct d, returning the
-   reason it does not.
+   reason it does not. vars are the declared logical variables: the only ones
+   the postcondition may name (see checkSorts).
 
-   go: match.go:278:6 *)
+   go: match.go:279:6 *)
 Definition checkDisjunctⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: "p" "d",
-    exception_do (let: "d" := (GoAlloc (go.PointerType disjunct) "d") in
+  λ: "p" "d" "vars",
+    exception_do (let: "vars" := (GoAlloc (go.SliceType Sort) "vars") in
+    let: "d" := (GoAlloc (go.PointerType disjunct) "d") in
     let: "p" := (GoAlloc Path "p") in
     (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] (StructFieldRef disjunct "fail"%go (![go.PointerType disjunct] "d"))) ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
     then return: (![go.PointerType Failure] (StructFieldRef disjunct "fail"%go (![go.PointerType disjunct] "d")))
@@ -2451,6 +2796,51 @@ Definition checkDisjunctⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
       return: (GoAlloc Failure (let: "$v0" := RUnsupported in
        CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0")])))
     else do:  #());;;
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "$r0" := (let: "$a0" := (![Path] "p") in
+    let: "$a1" := (![go.PointerType disjunct] "d") in
+    let: "$a2" := (![go.SliceType Sort] "vars") in
+    (FuncResolve checkSorts [] #()) "$a0" "$a1" "$a2") in
+    do:  ("fl" <-[go.PointerType Failure] "$r0");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "subst" := (GoAlloc (go.SliceType (go.PointerType Term)) (GoZeroVal (go.SliceType (go.PointerType Term)) #())) in
+    let: "$r0" := ((FuncResolve go.make2 [go.SliceType (go.PointerType Term)] #()) (let: "$a0" := (![go.SliceType Sort] (StructFieldRef disjunct "pats"%go (![go.PointerType disjunct] "d"))) in
+    (FuncResolve go.len [go.SliceType Sort] #()) "$a0")) in
+    do:  ("subst" <-[go.SliceType (go.PointerType Term)] "$r0");;;
+    let: "fl2" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "$r0" := (let: "$a0" := (![Path] "p") in
+    let: "$a1" := (![go.PointerType disjunct] "d") in
+    let: "$a2" := (![go.SliceType (go.PointerType Term)] "subst") in
+    (FuncResolve matchHeap [] #()) "$a0" "$a1" "$a2") in
+    do:  ("fl2" <-[go.PointerType Failure] "$r0");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl2") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then return: (![go.PointerType Failure] "fl2")
+    else do:  #());;;
+    return: (let: "$a0" := (![Path] "p") in
+     let: "$a1" := (![go.PointerType disjunct] "d") in
+     let: "$a2" := (![go.SliceType (go.PointerType Term)] "subst") in
+     (FuncResolve checkPure [] #()) "$a0" "$a1" "$a2")).
+
+(* checkSorts is phase 0 of checkDisjunct: the disjunct must be well-sorted
+   under the declared logical variables vars, its own pattern variables, and
+   the sort of the path's return value.
+
+   It must be vars and not the path's variables p.St.Vars: allocation extends
+   the latter with variables that stand for fresh locations, and those have no
+   meaning to the caller -- a postcondition that named one would be claiming
+   the fresh cell sits at whatever location the caller's valuation gives that
+   index. A fresh location is described through ret or a pattern variable
+   instead. (The return term and the terms a pattern variable is bound to are
+   path terms, so their sorts are still computed under p.St.Vars.)
+
+   go: match.go:309:6 *)
+Definition checkSortsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "p" "d" "vars",
+    exception_do (let: "vars" := (GoAlloc (go.SliceType Sort) "vars") in
+    let: "d" := (GoAlloc (go.PointerType disjunct) "d") in
+    let: "p" := (GoAlloc Path "p") in
     let: "rok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
     let: "rs" := (GoAlloc Sort (GoZeroVal Sort #())) in
     let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
@@ -2461,7 +2851,7 @@ Definition checkDisjunctⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
     do:  ("rs" <-[Sort] "$r0");;;
     do:  ("rok" <-[go.bool] "$r1");;;
     let: "se" := (GoAlloc (go.PointerType sortEnv) (GoZeroVal (go.PointerType sortEnv) #())) in
-    let: "$r0" := (GoAlloc sortEnv (let: "$v0" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
+    let: "$r0" := (GoAlloc sortEnv (let: "$v0" := (![go.SliceType Sort] "vars") in
     let: "$v1" := (![go.SliceType Sort] (StructFieldRef disjunct "pats"%go (![go.PointerType disjunct] "d"))) in
     let: "$v2" := (![go.SliceType go.bool] (StructFieldRef disjunct "patOk"%go (![go.PointerType disjunct] "d"))) in
     let: "$v3" := (![Sort] "rs") in
@@ -2481,10 +2871,39 @@ Definition checkDisjunctⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
       (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
       then return: (![go.PointerType Failure] "fl")
       else do:  #())));;;
-    let: "subst" := (GoAlloc (go.SliceType (go.PointerType Term)) (GoZeroVal (go.SliceType (go.PointerType Term)) #())) in
-    let: "$r0" := ((FuncResolve go.make2 [go.SliceType (go.PointerType Term)] #()) (let: "$a0" := (![go.SliceType Sort] (StructFieldRef disjunct "pats"%go (![go.PointerType disjunct] "d"))) in
-    (FuncResolve go.len [go.SliceType Sort] #()) "$a0")) in
-    do:  ("subst" <-[go.SliceType (go.PointerType Term)] "$r0");;;
+    return: (Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* countPointsTo counts the points-to atoms of a disjunct.
+
+   go: match.go:322:6 *)
+Definition countPointsToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "atoms",
+    exception_do (let: "atoms" := (GoAlloc (go.SliceType (go.PointerType Assn)) "atoms") in
+    let: "n" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: "$r0" := #(W64 0) in
+    do:  ("n" <-[go.uint64] "$r0");;;
+    let: "$range" := (![go.SliceType (go.PointerType Assn)] "atoms") in
+    (let: "at" := (GoAlloc (go.PointerType Assn) (GoZeroVal (go.PointerType Assn) #())) in
+    slice.for_range (go.PointerType Assn) "$range" (λ: "$key" "$value",
+      do:  ("at" <-[go.PointerType Assn] "$value");;;
+      do:  "$key";;;
+      (if: Convert go.untyped_bool go.bool ((![AssnKind] (StructFieldRef Assn "Kind"%go (![go.PointerType Assn] "at"))) =⟨AssnKind⟩ APointsTo)
+      then
+        let: "$r0" := ((![go.uint64] "n") +⟨go.uint64⟩ #(W64 1)) in
+        do:  ("n" <-[go.uint64] "$r0")
+      else do:  #())));;;
+    return: (![go.uint64] "n")).
+
+(* matchHeap is phase 1 of checkDisjunct: match the points-to atoms against
+   distinct heap cells, binding pattern variables into subst, until no further
+   atom can be resolved.
+
+   go: match.go:335:6 *)
+Definition matchHeapⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "p" "d" "subst",
+    exception_do (let: "subst" := (GoAlloc (go.SliceType (go.PointerType Term)) "subst") in
+    let: "d" := (GoAlloc (go.PointerType disjunct) "d") in
+    let: "p" := (GoAlloc Path "p") in
     let: "used" := (GoAlloc (go.SliceType go.bool) (GoZeroVal (go.SliceType go.bool) #())) in
     let: "$r0" := ((FuncResolve go.make2 [go.SliceType go.bool] #()) (let: "$a0" := (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
     (FuncResolve go.len [go.SliceType Cell] #()) "$a0")) in
@@ -2493,94 +2912,157 @@ Definition checkDisjunctⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
     let: "$r0" := ((FuncResolve go.make2 [go.SliceType go.bool] #()) (let: "$a0" := (![go.SliceType (go.PointerType Assn)] (StructFieldRef disjunct "atoms"%go (![go.PointerType disjunct] "d"))) in
     (FuncResolve go.len [go.SliceType (go.PointerType Assn)] #()) "$a0")) in
     do:  ("done" <-[go.SliceType go.bool] "$r0");;;
-    let: "remaining" := (GoAlloc go.int (GoZeroVal go.int #())) in
-    let: "$r0" := #(W64 0) in
-    do:  ("remaining" <-[go.int] "$r0");;;
-    let: "$range" := (![go.SliceType (go.PointerType Assn)] (StructFieldRef disjunct "atoms"%go (![go.PointerType disjunct] "d"))) in
-    (let: "at" := (GoAlloc (go.PointerType Assn) (GoZeroVal (go.PointerType Assn) #())) in
-    slice.for_range (go.PointerType Assn) "$range" (λ: "$key" "$value",
-      do:  ("at" <-[go.PointerType Assn] "$value");;;
-      do:  "$key";;;
-      (if: Convert go.untyped_bool go.bool ((![AssnKind] (StructFieldRef Assn "Kind"%go (![go.PointerType Assn] "at"))) =⟨AssnKind⟩ APointsTo)
-      then
-        let: "$r0" := ((![go.int] "remaining") +⟨go.int⟩ #(W64 1)) in
-        do:  ("remaining" <-[go.int] "$r0")
-      else do:  #())));;;
-    (for: (λ: <>, (![go.int] "remaining") >⟨go.int⟩ #(W64 0)); (λ: <>, #()) := λ: <>,
-      let: "progress" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-      let: "$r0" := #false in
-      do:  ("progress" <-[go.bool] "$r0");;;
-      let: "i" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
-      let: "$r0" := #(W64 0) in
-      do:  ("i" <-[go.uint64] "$r0");;;
-      let: "$range" := (![go.SliceType (go.PointerType Assn)] (StructFieldRef disjunct "atoms"%go (![go.PointerType disjunct] "d"))) in
-      (let: "at" := (GoAlloc (go.PointerType Assn) (GoZeroVal (go.PointerType Assn) #())) in
-      slice.for_range (go.PointerType Assn) "$range" (λ: "$key" "$value",
-        do:  ("at" <-[go.PointerType Assn] "$value");;;
-        do:  "$key";;;
-        (if: ((![AssnKind] (StructFieldRef Assn "Kind"%go (![go.PointerType Assn] "at"))) =⟨AssnKind⟩ APointsTo) && (⟨go.bool⟩! (![go.bool] (IndexRef (go.SliceType go.bool) (![go.SliceType go.bool] "done", Convert go.uint64 go.int (![go.uint64] "i")))))
-        then
-          let: "l" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
-          let: "$r0" := (let: "$a0" := (![go.PointerType Term] (StructFieldRef Assn "X"%go (![go.PointerType Assn] "at"))) in
-          let: "$a1" := (![go.SliceType (go.PointerType Term)] "subst") in
-          let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-          (FuncResolve instantiate [] #()) "$a0" "$a1" "$a2") in
-          do:  ("l" <-[go.PointerType Term] "$r0");;;
-          (if: (⟨go.bool⟩! (let: "$a0" := (![go.PointerType Term] "l") in
-          (FuncResolve hasPat [] #()) "$a0"))
-          then
-            let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
-            let: "j" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
-            let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
-            let: "$a1" := (![go.SliceType go.bool] "used") in
-            let: "$a2" := (![go.PointerType Term] "l") in
-            (FuncResolve findCell [] #()) "$a0" "$a1" "$a2") in
-            let: "$r0" := "$ret0" in
-            let: "$r1" := "$ret1" in
-            do:  ("j" <-[go.uint64] "$r0");;;
-            do:  ("ok" <-[go.bool] "$r1");;;
-            (if: (⟨go.bool⟩! (![go.bool] "ok"))
-            then
-              return: (GoAlloc Failure (let: "$v0" := RPostCellMissing in
-               let: "$v1" := (![go.PointerType Assn] "at") in
-               let: "$v2" := (![go.PointerType Term] "l") in
-               CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Atom"%go)) (ElementExpression (go.PointerType Assn) "$v1"); KeyedElement (Some (KeyField "Want"%go)) (ElementExpression (go.PointerType Term) "$v2")])))
-            else do:  #());;;
-            let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
-            let: "$r0" := (let: "$a0" := (![go.PointerType Term] (StructFieldRef Assn "Y"%go (![go.PointerType Assn] "at"))) in
-            let: "$a1" := (![go.PointerType Term] (StructFieldRef Cell "Val"%go (IndexRef (go.SliceType Cell) (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p"))), Convert go.uint64 go.int (![go.uint64] "j"))))) in
-            let: "$a2" := (![go.SliceType (go.PointerType Term)] "subst") in
-            let: "$a3" := (![go.PointerType disjunct] "d") in
-            let: "$a4" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
-            let: "$a5" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
-            (FuncResolve matchTerm [] #()) "$a0" "$a1" "$a2" "$a3" "$a4" "$a5") in
-            do:  ("fl" <-[go.PointerType Failure] "$r0");;;
-            (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
-            then
-              let: "$r0" := (![go.PointerType Assn] "at") in
-              do:  ((StructFieldRef Failure "Atom"%go (![go.PointerType Failure] "fl")) <-[go.PointerType Assn] "$r0");;;
-              return: (![go.PointerType Failure] "fl")
-            else do:  #());;;
-            let: "$r0" := #true in
-            do:  ((IndexRef (go.SliceType go.bool) (![go.SliceType go.bool] "used", Convert go.uint64 go.int (![go.uint64] "j"))) <-[go.bool] "$r0");;;
-            let: "$r0" := #true in
-            do:  ((IndexRef (go.SliceType go.bool) (![go.SliceType go.bool] "done", Convert go.uint64 go.int (![go.uint64] "i"))) <-[go.bool] "$r0");;;
-            let: "$r0" := ((![go.int] "remaining") -⟨go.int⟩ #(W64 1)) in
-            do:  ("remaining" <-[go.int] "$r0");;;
-            let: "$r0" := #true in
-            do:  ("progress" <-[go.bool] "$r0")
-          else do:  #())
-        else do:  #());;;
-        let: "$r0" := ((![go.uint64] "i") +⟨go.uint64⟩ #(W64 1)) in
-        do:  ("i" <-[go.uint64] "$r0")));;;
-      (if: (⟨go.bool⟩! (![go.bool] "progress"))
+    let: "remaining" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: "$r0" := (let: "$a0" := (![go.SliceType (go.PointerType Assn)] (StructFieldRef disjunct "atoms"%go (![go.PointerType disjunct] "d"))) in
+    (FuncResolve countPointsTo [] #()) "$a0") in
+    do:  ("remaining" <-[go.uint64] "$r0");;;
+    (for: (λ: <>, (![go.uint64] "remaining") >⟨go.uint64⟩ #(W64 0)); (λ: <>, #()) := λ: <>,
+      let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+      let: "n" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![Path] "p") in
+      let: "$a1" := (![go.PointerType disjunct] "d") in
+      let: "$a2" := (![go.SliceType (go.PointerType Term)] "subst") in
+      let: "$a3" := (![go.SliceType go.bool] "used") in
+      let: "$a4" := (![go.SliceType go.bool] "done") in
+      (FuncResolve matchPass [] #()) "$a0" "$a1" "$a2" "$a3" "$a4") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("n" <-[go.uint64] "$r0");;;
+      do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+      (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+      then return: (![go.PointerType Failure] "fl")
+      else do:  #());;;
+      (if: Convert go.untyped_bool go.bool ((![go.uint64] "n") =⟨go.uint64⟩ #(W64 0))
       then
         return: (GoAlloc Failure (let: "$v0" := RPatUnbound in
          let: "$v1" := (let: "$a0" := (![go.PointerType disjunct] "d") in
          let: "$a1" := (![go.SliceType go.bool] "done") in
          (FuncResolve firstUnresolved [] #()) "$a0" "$a1") in
          CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Atom"%go)) (ElementExpression (go.PointerType Assn) "$v1")])))
-      else do:  #()));;;
+      else do:  #());;;
+      let: "$r0" := ((![go.uint64] "remaining") -⟨go.uint64⟩ (![go.uint64] "n")) in
+      do:  ("remaining" <-[go.uint64] "$r0"));;;
+    return: (Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* matchPass makes one pass of phase 1 over the atoms not yet done, returning
+   how many it resolved.
+
+   go: match.go:354:6 *)
+Definition matchPassⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "p" "d" "subst" "used" "done",
+    exception_do (let: "done" := (GoAlloc (go.SliceType go.bool) "done") in
+    let: "used" := (GoAlloc (go.SliceType go.bool) "used") in
+    let: "subst" := (GoAlloc (go.SliceType (go.PointerType Term)) "subst") in
+    let: "d" := (GoAlloc (go.PointerType disjunct) "d") in
+    let: "p" := (GoAlloc Path "p") in
+    let: "n" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: "$r0" := #(W64 0) in
+    do:  ("n" <-[go.uint64] "$r0");;;
+    let: "i" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: "$r0" := #(W64 0) in
+    do:  ("i" <-[go.uint64] "$r0");;;
+    let: "$range" := (![go.SliceType (go.PointerType Assn)] (StructFieldRef disjunct "atoms"%go (![go.PointerType disjunct] "d"))) in
+    (let: "at" := (GoAlloc (go.PointerType Assn) (GoZeroVal (go.PointerType Assn) #())) in
+    slice.for_range (go.PointerType Assn) "$range" (λ: "$key" "$value",
+      do:  ("at" <-[go.PointerType Assn] "$value");;;
+      do:  "$key";;;
+      (if: ((![AssnKind] (StructFieldRef Assn "Kind"%go (![go.PointerType Assn] "at"))) =⟨AssnKind⟩ APointsTo) && (⟨go.bool⟩! (![go.bool] (IndexRef (go.SliceType go.bool) (![go.SliceType go.bool] "done", Convert go.uint64 go.int (![go.uint64] "i")))))
+      then
+        let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+        let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+        let: ("$ret0", "$ret1") := (let: "$a0" := (![Path] "p") in
+        let: "$a1" := (![go.PointerType disjunct] "d") in
+        let: "$a2" := (![go.PointerType Assn] "at") in
+        let: "$a3" := (![go.SliceType (go.PointerType Term)] "subst") in
+        let: "$a4" := (![go.SliceType go.bool] "used") in
+        (FuncResolve matchAtom [] #()) "$a0" "$a1" "$a2" "$a3" "$a4") in
+        let: "$r0" := "$ret0" in
+        let: "$r1" := "$ret1" in
+        do:  ("ok" <-[go.bool] "$r0");;;
+        do:  ("fl" <-[go.PointerType Failure] "$r1");;;
+        (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+        then return: (#(W64 0), ![go.PointerType Failure] "fl")
+        else do:  #());;;
+        (if: ![go.bool] "ok"
+        then
+          let: "$r0" := #true in
+          do:  ((IndexRef (go.SliceType go.bool) (![go.SliceType go.bool] "done", Convert go.uint64 go.int (![go.uint64] "i"))) <-[go.bool] "$r0");;;
+          let: "$r0" := ((![go.uint64] "n") +⟨go.uint64⟩ #(W64 1)) in
+          do:  ("n" <-[go.uint64] "$r0")
+        else do:  #())
+      else do:  #());;;
+      let: "$r0" := ((![go.uint64] "i") +⟨go.uint64⟩ #(W64 1)) in
+      do:  ("i" <-[go.uint64] "$r0")));;;
+    return: (![go.uint64] "n", Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* matchAtom tries to resolve one points-to atom: once its location mentions
+   no unbound pattern variable, it must match an unused heap cell, whose value
+   then binds pattern variables. It reports false, with no failure, when the
+   location cannot be resolved yet.
+
+   go: match.go:377:6 *)
+Definition matchAtomⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "p" "d" "at" "subst" "used",
+    exception_do (let: "used" := (GoAlloc (go.SliceType go.bool) "used") in
+    let: "subst" := (GoAlloc (go.SliceType (go.PointerType Term)) "subst") in
+    let: "at" := (GoAlloc (go.PointerType Assn) "at") in
+    let: "d" := (GoAlloc (go.PointerType disjunct) "d") in
+    let: "p" := (GoAlloc Path "p") in
+    let: "l" := (GoAlloc (go.PointerType Term) (GoZeroVal (go.PointerType Term) #())) in
+    let: "$r0" := (let: "$a0" := (![go.PointerType Term] (StructFieldRef Assn "X"%go (![go.PointerType Assn] "at"))) in
+    let: "$a1" := (![go.SliceType (go.PointerType Term)] "subst") in
+    let: "$a2" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+    (FuncResolve instantiate [] #()) "$a0" "$a1" "$a2") in
+    do:  ("l" <-[go.PointerType Term] "$r0");;;
+    (if: let: "$a0" := (![go.PointerType Term] "l") in
+    (FuncResolve hasPat [] #()) "$a0"
+    then return: (#false, Convert go.untyped_nil (go.PointerType Failure) UntypedNil)
+    else do:  #());;;
+    let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+    let: "j" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
+    let: "$a1" := (![go.SliceType go.bool] "used") in
+    let: "$a2" := (![go.PointerType Term] "l") in
+    (FuncResolve findCell [] #()) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("j" <-[go.uint64] "$r0");;;
+    do:  ("ok" <-[go.bool] "$r1");;;
+    (if: (⟨go.bool⟩! (![go.bool] "ok"))
+    then
+      return: (#false, GoAlloc Failure (let: "$v0" := RPostCellMissing in
+       let: "$v1" := (![go.PointerType Assn] "at") in
+       let: "$v2" := (![go.PointerType Term] "l") in
+       CompositeLiteral Failure (LiteralValue [KeyedElement (Some (KeyField "Reason"%go)) (ElementExpression Reason "$v0"); KeyedElement (Some (KeyField "Atom"%go)) (ElementExpression (go.PointerType Assn) "$v1"); KeyedElement (Some (KeyField "Want"%go)) (ElementExpression (go.PointerType Term) "$v2")])))
+    else do:  #());;;
+    let: "fl" := (GoAlloc (go.PointerType Failure) (GoZeroVal (go.PointerType Failure) #())) in
+    let: "$r0" := (let: "$a0" := (![go.PointerType Term] (StructFieldRef Assn "Y"%go (![go.PointerType Assn] "at"))) in
+    let: "$a1" := (![go.PointerType Term] (StructFieldRef Cell "Val"%go (IndexRef (go.SliceType Cell) (![go.SliceType Cell] (StructFieldRef State "Heap"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p"))), Convert go.uint64 go.int (![go.uint64] "j"))))) in
+    let: "$a2" := (![go.SliceType (go.PointerType Term)] "subst") in
+    let: "$a3" := (![go.PointerType disjunct] "d") in
+    let: "$a4" := (![go.SliceType Sort] (StructFieldRef State "Vars"%go (![go.PointerType State] (StructFieldRef Path "St"%go "p")))) in
+    let: "$a5" := (![go.PointerType Term] (StructFieldRef Path "Ret"%go "p")) in
+    (FuncResolve matchTerm [] #()) "$a0" "$a1" "$a2" "$a3" "$a4" "$a5") in
+    do:  ("fl" <-[go.PointerType Failure] "$r0");;;
+    (if: Convert go.untyped_bool go.bool ((![go.PointerType Failure] "fl") ≠⟨go.PointerType Failure⟩ (Convert go.untyped_nil (go.PointerType Failure) UntypedNil))
+    then
+      let: "$r0" := (![go.PointerType Assn] "at") in
+      do:  ((StructFieldRef Failure "Atom"%go (![go.PointerType Failure] "fl")) <-[go.PointerType Assn] "$r0");;;
+      return: (#false, ![go.PointerType Failure] "fl")
+    else do:  #());;;
+    let: "$r0" := #true in
+    do:  ((IndexRef (go.SliceType go.bool) (![go.SliceType go.bool] "used", Convert go.uint64 go.int (![go.uint64] "j"))) <-[go.bool] "$r0");;;
+    return: (#true, Convert go.untyped_nil (go.PointerType Failure) UntypedNil)).
+
+(* checkPure is phase 2 of checkDisjunct: every pure atom must be justified by
+   the path condition.
+
+   go: match.go:397:6 *)
+Definition checkPureⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "p" "d" "subst",
+    exception_do (let: "subst" := (GoAlloc (go.SliceType (go.PointerType Term)) "subst") in
+    let: "d" := (GoAlloc (go.PointerType disjunct) "d") in
+    let: "p" := (GoAlloc Path "p") in
     let: "$range" := (![go.SliceType (go.PointerType Assn)] (StructFieldRef disjunct "atoms"%go (![go.PointerType disjunct] "d"))) in
     (let: "at" := (GoAlloc (go.PointerType Assn) (GoZeroVal (go.PointerType Assn) #())) in
     slice.for_range (go.PointerType Assn) "$range" (λ: "$key" "$value",
@@ -3721,6 +4203,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] assnPure_unfold :: FuncUnfold assnPure [] (assnPureⁱᵐᵖˡ);
   #[global] Analyze_unfold :: FuncUnfold Analyze [] (Analyzeⁱᵐᵖˡ);
   #[global] Verify_unfold :: FuncUnfold Verify [] (Verifyⁱᵐᵖˡ);
+  #[global] anyDisjunct_unfold :: FuncUnfold anyDisjunct [] (anyDisjunctⁱᵐᵖˡ);
   #[global] Explain_unfold :: FuncUnfold Explain [] (Explainⁱᵐᵖˡ);
   #[global] Check_unfold :: FuncUnfold Check [] (Checkⁱᵐᵖˡ);
   #[global] envLookup_unfold :: FuncUnfold envLookup [] (envLookupⁱᵐᵖˡ);
@@ -3730,6 +4213,26 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] heapUpdate_unfold :: FuncUnfold heapUpdate [] (heapUpdateⁱᵐᵖˡ);
   #[global] negate_unfold :: FuncUnfold negate [] (negateⁱᵐᵖˡ);
   #[global] exec_unfold :: FuncUnfold exec [] (execⁱᵐᵖˡ);
+  #[global] execInt_unfold :: FuncUnfold execInt [] (execIntⁱᵐᵖˡ);
+  #[global] execBool_unfold :: FuncUnfold execBool [] (execBoolⁱᵐᵖˡ);
+  #[global] execUnit_unfold :: FuncUnfold execUnit [] (execUnitⁱᵐᵖˡ);
+  #[global] execVar_unfold :: FuncUnfold execVar [] (execVarⁱᵐᵖˡ);
+  #[global] execLet_unfold :: FuncUnfold execLet [] (execLetⁱᵐᵖˡ);
+  #[global] execSeq_unfold :: FuncUnfold execSeq [] (execSeqⁱᵐᵖˡ);
+  #[global] execIfs_unfold :: FuncUnfold execIfs [] (execIfsⁱᵐᵖˡ);
+  #[global] execLoad_unfold :: FuncUnfold execLoad [] (execLoadⁱᵐᵖˡ);
+  #[global] execStore_unfold :: FuncUnfold execStore [] (execStoreⁱᵐᵖˡ);
+  #[global] storeAll_unfold :: FuncUnfold storeAll [] (storeAllⁱᵐᵖˡ);
+  #[global] execAlloc_unfold :: FuncUnfold execAlloc [] (execAllocⁱᵐᵖˡ);
+  #[global] execZero_unfold :: FuncUnfold execZero [] (execZeroⁱᵐᵖˡ);
+  #[global] execBinOp_unfold :: FuncUnfold execBinOp [] (execBinOpⁱᵐᵖˡ);
+  #[global] binOpAll_unfold :: FuncUnfold binOpAll [] (binOpAllⁱᵐᵖˡ);
+  #[global] execUnOp_unfold :: FuncUnfold execUnOp [] (execUnOpⁱᵐᵖˡ);
+  #[global] execConvert_unfold :: FuncUnfold execConvert [] (execConvertⁱᵐᵖˡ);
+  #[global] execDo_unfold :: FuncUnfold execDo [] (execDoⁱᵐᵖˡ);
+  #[global] execReturn_unfold :: FuncUnfold execReturn [] (execReturnⁱᵐᵖˡ);
+  #[global] execExcSeq_unfold :: FuncUnfold execExcSeq [] (execExcSeqⁱᵐᵖˡ);
+  #[global] execExcDo_unfold :: FuncUnfold execExcDo [] (execExcDoⁱᵐᵖˡ);
   #[global] execIf_unfold :: FuncUnfold execIf [] (execIfⁱᵐᵖˡ);
   #[global] applyBinOp_unfold :: FuncUnfold applyBinOp [] (applyBinOpⁱᵐᵖˡ);
   #[global] applyUnOp_unfold :: FuncUnfold applyUnOp [] (applyUnOpⁱᵐᵖˡ);
@@ -3744,6 +4247,12 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] condHolds_unfold :: FuncUnfold condHolds [] (condHoldsⁱᵐᵖˡ);
   #[global] firstUnresolved_unfold :: FuncUnfold firstUnresolved [] (firstUnresolvedⁱᵐᵖˡ);
   #[global] checkDisjunct_unfold :: FuncUnfold checkDisjunct [] (checkDisjunctⁱᵐᵖˡ);
+  #[global] checkSorts_unfold :: FuncUnfold checkSorts [] (checkSortsⁱᵐᵖˡ);
+  #[global] countPointsTo_unfold :: FuncUnfold countPointsTo [] (countPointsToⁱᵐᵖˡ);
+  #[global] matchHeap_unfold :: FuncUnfold matchHeap [] (matchHeapⁱᵐᵖˡ);
+  #[global] matchPass_unfold :: FuncUnfold matchPass [] (matchPassⁱᵐᵖˡ);
+  #[global] matchAtom_unfold :: FuncUnfold matchAtom [] (matchAtomⁱᵐᵖˡ);
+  #[global] checkPure_unfold :: FuncUnfold checkPure [] (checkPureⁱᵐᵖˡ);
   #[global] TypeSort_unfold :: FuncUnfold TypeSort [] (TypeSortⁱᵐᵖˡ);
   #[global] typeSigned_unfold :: FuncUnfold typeSigned [] (typeSignedⁱᵐᵖˡ);
   #[global] TypeEq_unfold :: FuncUnfold TypeEq [] (TypeEqⁱᵐᵖˡ);

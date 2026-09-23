@@ -274,68 +274,127 @@ func firstUnresolved(d *disjunct, done []bool) *Assn {
 }
 
 // checkDisjunct reports whether path p satisfies disjunct d, returning the
-// reason it does not.
-func checkDisjunct(p Path, d *disjunct) *Failure {
+// reason it does not. vars are the declared logical variables: the only ones
+// the postcondition may name (see checkSorts).
+func checkDisjunct(p Path, d *disjunct, vars []Sort) *Failure {
 	if d.fail != nil {
 		return d.fail
 	}
 	if p.St == nil {
 		return &Failure{Reason: RUnsupported}
 	}
+	fl := checkSorts(p, d, vars)
+	if fl != nil {
+		return fl
+	}
+	subst := make([]*Term, len(d.pats))
+	fl2 := matchHeap(p, d, subst)
+	if fl2 != nil {
+		return fl2
+	}
+	return checkPure(p, d, subst)
+}
 
-	// Phase 0: the disjunct must be well-sorted under this path's variables,
-	// its own pattern variables, and the sort of its return value.
+// checkSorts is phase 0 of checkDisjunct: the disjunct must be well-sorted
+// under the declared logical variables vars, its own pattern variables, and
+// the sort of the path's return value.
+//
+// It must be vars and not the path's variables p.St.Vars: allocation extends
+// the latter with variables that stand for fresh locations, and those have no
+// meaning to the caller -- a postcondition that named one would be claiming
+// the fresh cell sits at whatever location the caller's valuation gives that
+// index. A fresh location is described through ret or a pattern variable
+// instead. (The return term and the terms a pattern variable is bound to are
+// path terms, so their sorts are still computed under p.St.Vars.)
+func checkSorts(p Path, d *disjunct, vars []Sort) *Failure {
 	rs, rok := SortOf(p.St.Vars, p.Ret)
-	se := &sortEnv{vars: p.St.Vars, pats: d.pats, patOk: d.patOk, ret: rs, retOk: rok}
+	se := &sortEnv{vars: vars, pats: d.pats, patOk: d.patOk, ret: rs, retOk: rok}
 	for _, at := range d.atoms {
 		fl := atomWellSorted(se, at)
 		if fl != nil {
 			return fl
 		}
 	}
+	return nil
+}
 
-	subst := make([]*Term, len(d.pats))
+// countPointsTo counts the points-to atoms of a disjunct.
+func countPointsTo(atoms []*Assn) uint64 {
+	var n uint64 = 0
+	for _, at := range atoms {
+		if at.Kind == APointsTo {
+			n = n + 1
+		}
+	}
+	return n
+}
+
+// matchHeap is phase 1 of checkDisjunct: match the points-to atoms against
+// distinct heap cells, binding pattern variables into subst, until no further
+// atom can be resolved.
+func matchHeap(p Path, d *disjunct, subst []*Term) *Failure {
 	used := make([]bool, len(p.St.Heap))
 	done := make([]bool, len(d.atoms))
-
-	// Phase 1: match the points-to atoms against distinct heap cells,
-	// binding pattern variables, until no further atom can be resolved.
-	remaining := 0
-	for _, at := range d.atoms {
-		if at.Kind == APointsTo {
-			remaining = remaining + 1
-		}
-	}
+	remaining := countPointsTo(d.atoms)
 	for remaining > 0 {
-		progress := false
-		var i uint64 = 0
-		for _, at := range d.atoms {
-			if at.Kind == APointsTo && !done[i] {
-				l := instantiate(at.X, subst, p.Ret)
-				if !hasPat(l) {
-					j, ok := findCell(p.St.Heap, used, l)
-					if !ok {
-						return &Failure{Reason: RPostCellMissing, Atom: at, Want: l}
-					}
-					fl := matchTerm(at.Y, p.St.Heap[j].Val, subst, d, p.St.Vars, p.Ret)
-					if fl != nil {
-						fl.Atom = at
-						return fl
-					}
-					used[j] = true
-					done[i] = true
-					remaining = remaining - 1
-					progress = true
-				}
-			}
-			i = i + 1
+		n, fl := matchPass(p, d, subst, used, done)
+		if fl != nil {
+			return fl
 		}
-		if !progress {
+		if n == 0 {
 			return &Failure{Reason: RPatUnbound, Atom: firstUnresolved(d, done)}
 		}
+		remaining = remaining - n
 	}
+	return nil
+}
 
-	// Phase 2: every pure atom must be justified by the path condition.
+// matchPass makes one pass of phase 1 over the atoms not yet done, returning
+// how many it resolved.
+func matchPass(p Path, d *disjunct, subst []*Term, used []bool, done []bool) (uint64, *Failure) {
+	var n uint64 = 0
+	var i uint64 = 0
+	for _, at := range d.atoms {
+		if at.Kind == APointsTo && !done[i] {
+			ok, fl := matchAtom(p, d, at, subst, used)
+			if fl != nil {
+				return 0, fl
+			}
+			if ok {
+				done[i] = true
+				n = n + 1
+			}
+		}
+		i = i + 1
+	}
+	return n, nil
+}
+
+// matchAtom tries to resolve one points-to atom: once its location mentions
+// no unbound pattern variable, it must match an unused heap cell, whose value
+// then binds pattern variables. It reports false, with no failure, when the
+// location cannot be resolved yet.
+func matchAtom(p Path, d *disjunct, at *Assn, subst []*Term, used []bool) (bool, *Failure) {
+	l := instantiate(at.X, subst, p.Ret)
+	if hasPat(l) {
+		return false, nil
+	}
+	j, ok := findCell(p.St.Heap, used, l)
+	if !ok {
+		return false, &Failure{Reason: RPostCellMissing, Atom: at, Want: l}
+	}
+	fl := matchTerm(at.Y, p.St.Heap[j].Val, subst, d, p.St.Vars, p.Ret)
+	if fl != nil {
+		fl.Atom = at
+		return false, fl
+	}
+	used[j] = true
+	return true, nil
+}
+
+// checkPure is phase 2 of checkDisjunct: every pure atom must be justified by
+// the path condition.
+func checkPure(p Path, d *disjunct, subst []*Term) *Failure {
 	for _, at := range d.atoms {
 		if at.Kind == APure {
 			t := instantiate(at.X, subst, p.Ret)

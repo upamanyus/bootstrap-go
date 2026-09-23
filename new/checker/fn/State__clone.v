@@ -1,6 +1,8 @@
 (** the [clone] method of [checker.State] (checker/state.go): the deep-enough copy a state gets
     before it is modified, so that forking at an [if:] or appending to a heap
-    on one path can never be observed on another.
+    on one path can never be observed on another. The copy comes back as
+    [is_state_fresh] -- owned slices with their capacities, ready to be
+    appended to -- and [is_state_fresh_publish] turns it into a state.
 
     Naming: the Go locals are [s], [h], [c], [v], so no Rocq variable here is
     called any of those (see NOTES.md). *)
@@ -14,7 +16,7 @@ Set Default Proof Using "All".
 Lemma wp_State__clone (lst : loc) (sst : sstate) :
   {{{ is_pkg_init checker ∗ is_state lst sst }}}
     lst @! (go.PointerType checker.State) @! "clone" #()
-  {{{ (lst' : loc), RET #lst'; is_state lst sst ∗ is_state lst' sst }}}.
+  {{{ (lst' : loc), RET #lst'; is_state lst sst ∗ is_state_fresh lst' sst }}}.
 Proof.
   wp_start as "Hst".
   iDestruct "Hst" as (sh sc sv) "(Hl & Hheap & Hcond & Hvars)".

@@ -7,36 +7,11 @@
     the Go names (see NOTES.md).  The operator is therefore [o], the type
     [cty], the slice of variable sorts [sv] and the operands [u] and [w]. *)
 From New.checker Require Import prelude nodes.
-From New.checker.fn Require Import TypeSort typeSigned.
+From New.checker.fn Require Import TypeSort typeSigned sortOfEnv SortOf.
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-
-(** * The specification of [SortOf]
-
-    [new/checker/fn/SortOf.vo] had not been built when this file was written,
-    so [wp_SortOf] is assumed here.  The statement, and the three definitions
-    it is phrased over, are character-identical to the ones proved in
-    [new/checker/fn/sortOfEnv.v] and [new/checker/fn/SortOf.v]: deleting this
-    block and adding [SortOf] to the [Require Import] above is the only change
-    needed once those files are compiled. *)
-
-Definition osort_of (E : sort_env) (ot : option term) : option sort :=
-  match ot with None => None | Some ty => sort_of E ty end.
-
-Definition osort_code (os : option sort) : w64 :=
-  match os with Some s => sort_code s | None => W64 0 end.
-Definition osort_ok (os : option sort) : bool :=
-  match os with Some _ => true | None => false end.
-
-Context (wp_SortOf :
-  forall (sv : slice.t) (lterm : loc) (vl : list sort) (oty : option term),
-  {{{ is_pkg_init checker ∗ sv ↦*□ (sort_code <$> vl) ∗ is_oterm lterm oty }}}
-    @! checker.SortOf #sv #lterm
-  {{{ RET (#(osort_code (osort_of (vars_env vl) oty)),
-           #(osort_ok (osort_of (vars_env vl) oty)));
-      True }}}).
 
 Set Default Proof Using "All".
 
