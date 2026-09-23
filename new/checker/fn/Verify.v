@@ -21,7 +21,7 @@ Set Default Proof Using "All".
 
 (** What a path needs from the postcondition. *)
 Definition path_ok (vs : list sort) (P : cassn) (sp : spath) : Prop :=
-  ∃ dj, d_fail dj = false ∧ path_sat_dj vs sp dj ∧ ∀ V, dj_interp V dj ⊢ assn_interp V P.
+  ∃ dj, d_fail dj = false ∧ path_sat_dj vs sp dj ∧ dj_entails dj P.
 
 Lemma big_disjunct_freeze (lds : list loc) (djs : list cdisjunct) :
   ([∗ list] ld;dj ∈ lds; djs, is_disjunct ld dj) ==∗
@@ -109,8 +109,7 @@ Lemma wp_Verify (s : slice.t) (ps : list spath) (sv : slice.t) (vars : list sort
   {{{ is_pkg_init checker ∗ is_paths s ps ∗ is_sorts sv vars ∗ is_assn lpost post }}}
     @! checker.Verify #s #sv #lpost
   {{{ (lf : loc), RET #lf;
-      ⌜lf = null → ∀ sp, sp ∈ ps → ∃ dj, d_fail dj = false ∧ path_sat_dj vars sp dj ∧
-                                         ∀ V, dj_interp V dj ⊢ assn_interp V post⌝ }}}.
+      ⌜lf = null → ∀ sp, sp ∈ ps → path_ok vars post sp⌝ }}}.
 Proof. apply wp_Verify_aux. Qed.
 
 End proof.

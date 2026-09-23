@@ -52,7 +52,7 @@ Lemma wp_parseDisjunct (lx : loc) (x : option cassn) :
     @! checker.parseDisjunct #lx
   {{{ (ld : loc) (dj : cdisjunct), RET #ld;
       is_disjunct ld dj ∗
-      ⌜d_fail dj = false → ∃ y, x = Some y ∧ ∀ V, dj_interp V dj ⊢ assn_interp V y⌝ }}}.
+      ⌜d_fail dj = false → ∃ y, x = Some y ∧ dj_entails dj y⌝ }}}.
 Proof.
   wp_start as "#Hx".
   wp_auto.
@@ -74,13 +74,12 @@ Proof.
       "#Hb" ∷ is_oassn lb ob ∗
       "%Hfl" ∷ ⌜d_fail dj = false⌝ ∗
       "%Hat" ∷ ⌜d_atoms dj = []⌝ ∗
-      "%Hsem" ∷ ⌜∀ b, ob = Some b → ∃ y, x = Some y ∧
-                  ∀ V, binders_interp V dj b ⊢ assn_interp V y⌝)%I
+      "%Hsem" ∷ ⌜∀ b, ob = Some b → ∃ y, x = Some y ∧ binders_entails dj b y⌝)%I
     with "[body Hdj]" as "HI".
   { iExists _, lx, x. iFrame "body Hdj Hx". iPureIntro.
     split; first done. split; first done.
     intros b ->. exists b. split; first done.
-    intros V. by apply binders_interp_init. }
+    intros Σ' hG' sem' package_sem' V. by apply binders_interp_init. }
   wp_for "HI".
   iApply (wp_wand_r _ _ _ (λ v, ⌜v = #(oassn_is_exists ob)⌝ ∗ body_ptr ↦ lb)%I).
   iSplitL "body".
@@ -160,7 +159,8 @@ Proof.
         intros b [= <-].
         destruct (Hsem (CAExists k s p) eq_refl) as (y & Hy & Hent).
         exists y. split; first done.
-        intros V. etrans; last apply Hent. by apply binders_interp_step.
+        intros Σ' hG' sem' package_sem' V.
+        etrans; last apply (Hent _ _ _ _). by apply binders_interp_step.
   - (* the binders are done: flatten the body *)
     rewrite decide_False; last done. rewrite decide_True; last done. wp_auto.
     wp_apply (wp_disjunct__flatten with "[$Hdj $Hb]") as (lres) "Hres".
@@ -171,7 +171,8 @@ Proof.
       destruct ob as [b|]; last done. simpl in Hof.
       destruct (Hsem b eq_refl) as (y & Hy & Hent).
       exists y. split; first done.
-      intros V. etrans; last apply Hent. by apply dj_interp_flatten.
+      intros Σ' hG' sem' package_sem' V.
+      etrans; last apply (Hent _ _ _ _). by apply dj_interp_flatten.
     + iDestruct "Hres" as "[%Hnn Hdj]".
       iDestruct "Hdj" as (ats sp sok sa lf las)
         "(Hs & Hp & Hpc & Hok & Hokc & Ha & Hac & #Hats & %Hlen & %Hf)".

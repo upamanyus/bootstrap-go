@@ -166,3 +166,10 @@ Proof.
 Qed.
 
 End parse_sound.
+
+(** [binders_interp] entails an assertion, in any ghost state: the invariant of
+    [parseDisjunct]'s loop, which ends in [dj_entails] (verify_def.v). *)
+Definition binders_entails {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+    {ffi_sem : ffi_semantics ext ffi} (dj : cdisjunct) (b y : cassn) : Prop :=
+  ∀ Σ (hG : heapGS Σ) (sem : go.Semantics) (package_sem : checker.Assumptions),
+    ∀ V, binders_interp V dj b ⊢ assn_interp V y.

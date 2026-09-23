@@ -1,10 +1,14 @@
 (** [checker.Check] (checker/check.go): the entry point. [Analyze], and if it
     succeeds, [Verify] of its paths against the postcondition.
 
-    The specification is exactly [check_sound] (soundness.v); the composition
-    is [check_triple]: [Analyze]'s WP ends in one of the paths
-    ([paths_post]), [Verify] gives that path a disjunct it satisfies
-    ([path_sat_dj]), and the disjunct entails the postcondition.
+    The specification promises [triple_holds] (defs.v), the Hoare triple of
+    [check_sound] (soundness.v) in every ghost state; [check_sound] is its
+    instance at the ambient one. The composition, in one ghost state, is
+    [check_triple]: [Analyze]'s WP ends in one of the paths ([paths_post]),
+    [Verify] gives that path a disjunct it satisfies ([path_sat_dj]), and the
+    disjunct entails the postcondition. [triple_holds_intro] does it in every
+    ghost state, from the ghost-state-independent answers of [Analyze]
+    ([analyze_ok]) and [Verify] ([path_ok]).
 
     Naming: the Go locals are [f], [vars], [pre], [post], [fail] and [paths],
     so no Rocq variable in [wp_Check] may be called any of those (see
@@ -47,7 +51,7 @@ Lemma check_triple (cf : cfunc) (vs : list sort) (P Q : cassn) (ps : list spath)
   (∀ θ, vars_sat θ vs → ⊢ pre_interp θ P -∗
      WP apply_vals (func_val cf) (arg_vals cf θ)
        {{ paths_post (length vs) (mkVal θ (λ _, uval) uval) ps }}) →
-  (∀ sp, sp ∈ ps → ∃ dj, d_fail dj = false ∧ path_sat_dj vs sp dj ∧
+  (∀ sp, sp ∈ ps → ∃ dj, d_fail dj = false ∧ path_sat_dj_at vs sp dj ∧
                          ∀ V, dj_interp V dj ⊢ assn_interp V Q) →
   vars_sat θ vs →
   {{{ pre_interp θ P }}}
@@ -70,18 +74,35 @@ Proof.
   - by apply (paths_wf_ret _ _ Hwf).
 Qed.
 
+End proof.
+
+(** The composition in every ghost state. *)
+Lemma triple_holds_intro {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+    {ffi_sem : ffi_semantics ext ffi}
+    (cf : cfunc) (vs : list sort) (P Q : cassn) (ps : list spath) :
+  paths_wf (length vs) ps →
+  analyze_ok cf vs P ps →
+  (∀ sp, sp ∈ ps → path_ok vs Q sp) →
+  triple_holds cf vs P Q.
+Proof.
+  intros Hwf (Hlen & Hws & Hsnd) Hver Σ hG sem package_sem θ Hθ.
+  apply (check_triple cf vs P Q ps θ Hwf); [|intros sp Hsp|done].
+  - intros θ' Hθ'. by apply analyze_sound.
+  - destruct (Hver sp Hsp) as (dj & Hf & Hsat & Hent).
+    exists dj. split_and!; [done|exact (Hsat _ _ _ _)|exact (Hent _ _ _ _)].
+Qed.
+
+Section proof_Check.
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Set Default Proof Using "All".
+
 Lemma wp_Check (cf : cfunc) (vs : list sort) (P Q : cassn)
     (lf : loc) (sv : slice.t) (lpre lpost : loc) :
   {{{ is_pkg_init checker ∗
       is_func lf cf ∗ is_sorts sv vs ∗ is_assn lpre P ∗ is_assn lpost Q }}}
     @! checker.Check #lf #sv #lpre #lpost
-  {{{ (b : bool), RET #b;
-      ⌜ b = true →
-        ∀ θ : nat → val,
-          vars_sat θ vs →
-          {{{ pre_interp θ P }}}
-            apply_vals (func_val cf) (arg_vals cf θ)
-          {{{ (v : val), RET v; post_interp θ v Q }}} ⌝ }}}.
+  {{{ (b : bool), RET #b; ⌜ b = true → triple_holds cf vs P Q ⌝ }}}.
 Proof.
   wp_start as "(#Hf & #Hsv & #Hpre & #Hpost)".
   wp_auto.
@@ -93,14 +114,14 @@ Proof.
     rewrite bool_decide_eq_false_2 //. wp_auto.
     iApply "HΦ". iPureIntro. done. }
   rewrite bool_decide_eq_true_2 //.
-  iDestruct "Hres" as (ps) "(Hps & %Hwf & %Hwp)".
+  iDestruct "Hres" as (ps) "(Hps & %Hwf & %Hok)".
   wp_auto.
   wp_apply (wp_Verify s ps sv vs lpost Q with "[$Hps $Hsv $Hpost]")
     as (lv) "%Hver".
   try wp_auto.
-  iApply "HΦ". iPureIntro. intros Hb θ Hθ.
+  iApply "HΦ". iPureIntro. intros Hb.
   apply bool_decide_eq_true in Hb.
-  by apply (check_triple cf vs P Q ps θ Hwf Hwp (Hver Hb)).
+  by apply (triple_holds_intro cf vs P Q ps Hwf Hok (Hver Hb)).
 Qed.
 
-End proof.
+End proof_Check.

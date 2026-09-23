@@ -5,7 +5,18 @@
     says that precisely ([exec_sound]) and proves the structural facts about
     it that every case of the exec proof needs -- above all that soundness is
     closed under concatenating result lists, which is what the loops in
-    checker/exec.go build. *)
+    checker/exec.go build.
+
+    The statement comes in two layers. [exec_sound_at] is about the ambient
+    [heapGS Σ], that is, about one particular choice of ghost state; the
+    lemmas of the section are proved about it. [exec_sound], at the end,
+    quantifies it over every [heapGS Σ] (and every Go semantics satisfying the
+    checker's assumptions), and the lemmas are lifted to it under their plain
+    names; it is what the specifications of the checker's functions promise.
+    The quantification is what lets a [true] answer survive adequacy
+    (new/checker/adequacy.v): adequacy runs the checker in ghost state it
+    allocates itself, and what it hands back must be a fact about the
+    function under analysis in any ghost state. *)
 From New.checker Require Import prelude nodes.
 From New.checker.fn Require Import heapLookup heapUpdate.
 
@@ -16,7 +27,7 @@ Set Default Proof Using "All".
 
 (** The environment the checker carries stands for a substitution; [csubst]
     applies it, so the analysed program is [csubst (env_interp V ρ) ce]. *)
-Definition exec_sound (ce : cexpr) (ρ : list (go_string * term))
+Definition exec_sound_at (ce : cexpr) (ρ : list (go_string * term))
                       (sst : sstate) (ps : list spath) : Prop :=
   wf_state sst →
   env_below (length (svars sst)) ρ →
@@ -29,8 +40,8 @@ Definition exec_sound (ce : cexpr) (ρ : list (go_string * term))
     A result list is a disjunction, so more paths is a weaker claim: this is
     what lets a case of [exec] concatenate the results of its subcases. *)
 
-Lemma exec_sound_mono ce ρ sst ps ps' :
-  ps ⊆ ps' → exec_sound ce ρ sst ps → exec_sound ce ρ sst ps'.
+Lemma exec_sound_at_mono ce ρ sst ps ps' :
+  ps ⊆ ps' → exec_sound_at ce ρ sst ps → exec_sound_at ce ρ sst ps'.
 Proof.
   intros Hsub Hs Hwf Hρ V Hsat.
   iIntros "Hheap".
@@ -43,22 +54,22 @@ Qed.
 (** The loops in checker/exec.go build their answer by appending the results
     of the subcases; each contributes its own paths and the caller's choice
     is the union. *)
-Lemma exec_sound_app_l ce ρ sst ps ps' :
-  exec_sound ce ρ sst ps → exec_sound ce ρ sst (ps ++ ps').
-Proof. apply exec_sound_mono. set_solver. Qed.
+Lemma exec_sound_at_app_l ce ρ sst ps ps' :
+  exec_sound_at ce ρ sst ps → exec_sound_at ce ρ sst (ps ++ ps').
+Proof. apply exec_sound_at_mono. set_solver. Qed.
 
-Lemma exec_sound_app_r ce ρ sst ps ps' :
-  exec_sound ce ρ sst ps' → exec_sound ce ρ sst (ps ++ ps').
-Proof. apply exec_sound_mono. set_solver. Qed.
+Lemma exec_sound_at_app_r ce ρ sst ps ps' :
+  exec_sound_at ce ρ sst ps' → exec_sound_at ce ρ sst (ps ++ ps').
+Proof. apply exec_sound_at_mono. set_solver. Qed.
 
 (** * The value cases
 
     An expression that neither forks nor touches the heap produces the single
     path [onePath] builds. *)
-Lemma exec_sound_value ce ρ sst (x : term) :
+Lemma exec_sound_at_value ce ρ sst (x : term) :
   (∀ V, csubst (env_interp V ρ) ce = Val (teval V x)) →
   vars_below (length (svars sst)) x →
-  exec_sound ce ρ sst [mkPath x sst].
+  exec_sound_at ce ρ sst [mkPath x sst].
 Proof.
   intros Hval Hb Hwf Hρ V Hsat. iIntros "Hheap".
   rewrite Hval. iApply wp_value'.
@@ -78,28 +89,28 @@ Proof.
 Qed.
 
 (** The cases of [exec] that neither fork nor touch the heap. *)
-Lemma exec_sound_int ρ sst w : exec_sound (CEInt w) ρ sst [mkPath (TInt w) sst].
-Proof. apply exec_sound_value; [intros V; simpl; by rewrite ival_eq|done]. Qed.
+Lemma exec_sound_at_int ρ sst w : exec_sound_at (CEInt w) ρ sst [mkPath (TInt w) sst].
+Proof. apply exec_sound_at_value; [intros V; simpl; by rewrite ival_eq|done]. Qed.
 
-Lemma exec_sound_bool ρ sst b : exec_sound (CEBool b) ρ sst [mkPath (TBool b) sst].
-Proof. apply exec_sound_value; [intros V; simpl; by rewrite bval_eq|done]. Qed.
+Lemma exec_sound_at_bool ρ sst b : exec_sound_at (CEBool b) ρ sst [mkPath (TBool b) sst].
+Proof. apply exec_sound_at_value; [intros V; simpl; by rewrite bval_eq|done]. Qed.
 
-Lemma exec_sound_unit ρ sst : exec_sound CEUnit ρ sst [mkPath TUnit sst].
-Proof. apply exec_sound_value; [intros V; simpl; by rewrite uval_eq|done]. Qed.
+Lemma exec_sound_at_unit ρ sst : exec_sound_at CEUnit ρ sst [mkPath TUnit sst].
+Proof. apply exec_sound_at_value; [intros V; simpl; by rewrite uval_eq|done]. Qed.
 
-Lemma exec_sound_var ρ sst (gx : go_string) (x : term) :
+Lemma exec_sound_at_var ρ sst (gx : go_string) (x : term) :
   env_lookup ρ gx = Some x →
   vars_below (length (svars sst)) x →
-  exec_sound (CEVar gx) ρ sst [mkPath x sst].
+  exec_sound_at (CEVar gx) ρ sst [mkPath x sst].
 Proof.
-  intros Hlk Hb. apply exec_sound_value; last done.
+  intros Hlk Hb. apply exec_sound_at_value; last done.
   intros V. simpl. by rewrite env_interp_lookup Hlk.
 Qed.
 
 (** [GoZeroVal] does not touch the heap either, but its value depends on the
     type rather than on the environment. *)
-Lemma exec_sound_zero ρ sst (cty : ctype) :
-  exec_sound (CEZero cty) ρ sst [mkPath (ctype_zero cty) sst].
+Lemma exec_sound_at_zero ρ sst (cty : ctype) :
+  exec_sound_at (CEZero cty) ρ sst [mkPath (ctype_zero cty) sst].
 Proof.
   intros Hwf Hρ V Hsat. iIntros "Hheap".
   simpl. iApply (wp_ctype_zero cty V).
@@ -160,12 +171,12 @@ Proof.
   iIntros (w) "Hw". by iApply wp_beta_rec_expr.
 Qed.
 
-Lemma exec_sound_let (gx : go_string) (ce1 ce2 : cexpr) ρ sst ps out :
-  exec_sound ce1 ρ sst ps →
+Lemma exec_sound_at_let (gx : go_string) (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound_at ce1 ρ sst ps →
   paths_wf (length (svars sst)) ps →
   (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧
-        exec_sound ce2 ((gx, pret p) :: ρ) (pst p) qs) →
-  exec_sound (CELet gx ce1 ce2) ρ sst out.
+        exec_sound_at ce2 ((gx, pret p) :: ρ) (pst p) qs) →
+  exec_sound_at (CELet gx ce1 ce2) ρ sst out.
 Proof.
   intros He1 Hwfps Hcont Hwf Hρ V Hsat.
   iIntros "Hheap". simpl.
@@ -214,11 +225,11 @@ Proof.
   iIntros (w) "Hw". by iApply wp_beta_anon_expr.
 Qed.
 
-Lemma exec_sound_seq (ce1 ce2 : cexpr) ρ sst ps out :
-  exec_sound ce1 ρ sst ps →
+Lemma exec_sound_at_seq (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound_at ce1 ρ sst ps →
   paths_wf (length (svars sst)) ps →
-  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧ exec_sound ce2 ρ (pst p) qs) →
-  exec_sound (CESeq ce1 ce2) ρ sst out.
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧ exec_sound_at ce2 ρ (pst p) qs) →
+  exec_sound_at (CESeq ce1 ce2) ρ sst out.
 Proof.
   intros He1 Hwfps Hcont Hwf Hρ V Hsat.
   iIntros "Hheap". simpl.
@@ -249,10 +260,10 @@ Qed.
     [teval] of [TExec]/[TRet] is exactly [execute_val]/[return_val], so these
     cases are pure steps once the subexpression's path is in hand. *)
 
-Lemma exec_sound_do (ce : cexpr) ρ sst ps out :
-  exec_sound ce ρ sst ps →
+Lemma exec_sound_at_do (ce : cexpr) ρ sst ps out :
+  exec_sound_at ce ρ sst ps →
   (∀ p, p ∈ ps → mkPath TExec (pst p) ∈ out) →
-  exec_sound (CEDo ce) ρ sst out.
+  exec_sound_at (CEDo ce) ρ sst out.
 Proof.
   intros He Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
   iApply (wp_bind (fill [AppRCtx (Val do_execute)])).
@@ -265,10 +276,10 @@ Proof.
   iPureIntro. split_and!; [by apply Hcont|done|done|done].
 Qed.
 
-Lemma exec_sound_return (ce : cexpr) ρ sst ps out :
-  exec_sound ce ρ sst ps →
+Lemma exec_sound_at_return (ce : cexpr) ρ sst ps out :
+  exec_sound_at ce ρ sst ps →
   (∀ p, p ∈ ps → mkPath (TRet (pret p)) (pst p) ∈ out) →
-  exec_sound (CEReturn ce) ρ sst out.
+  exec_sound_at (CEReturn ce) ρ sst out.
 Proof.
   intros He Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
   iApply (wp_bind (fill [AppRCtx (Val do_return)])).
@@ -285,12 +296,12 @@ Qed.
 (** [exception_do] strips the label: an [execute] becomes [()] and a
     [return v] becomes [v]. The checker case-splits on the *term*, which is
     exactly what [teval] turns into the two monad values. *)
-Lemma exec_sound_exc_do (ce : cexpr) ρ sst ps out :
-  exec_sound ce ρ sst ps →
+Lemma exec_sound_at_exc_do (ce : cexpr) ρ sst ps out :
+  exec_sound_at ce ρ sst ps →
   (∀ p, p ∈ ps →
      (pret p = TExec ∧ mkPath TUnit (pst p) ∈ out) ∨
      (∃ x, pret p = TRet x ∧ mkPath x (pst p) ∈ out)) →
-  exec_sound (CEExcDo ce) ρ sst out.
+  exec_sound_at (CEExcDo ce) ρ sst out.
 Proof.
   intros He Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
   iApply (wp_bind (fill [AppRCtx (Val exception_do)])).
@@ -340,17 +351,17 @@ Lemma wp_if_bval (b : bool) (A B : expr) (Ψ : val → iProp Σ) :
   WP (if b then A else B) {{ Ψ }} -∗ WP If (Val (bval b)) A B {{ Ψ }}.
 Proof. iIntros "H". rewrite -bval_eq. destruct b; by wp_pures. Qed.
 
-Lemma exec_sound_if (cc ct cf : cexpr) ρ sst ps out :
-  exec_sound cc ρ sst ps →
+Lemma exec_sound_at_if (cc ct cf : cexpr) ρ sst ps out :
+  exec_sound_at cc ρ sst ps →
   paths_wf (length (svars sst)) ps →
   (* the condition is boolean-sorted on every path *)
   (∀ p, p ∈ ps → sort_of_vars (svars (pst p)) (pret p) = Some SBool) →
   (* and each branch is analysed under the corresponding assumption *)
   (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧
-        exec_sound ct ρ (st_assume (pst p) (pret p)) qs) →
+        exec_sound_at ct ρ (st_assume (pst p) (pret p)) qs) →
   (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧
-        exec_sound cf ρ (st_assume (pst p) (negate (pret p))) qs) →
-  exec_sound (CEIf cc ct cf) ρ sst out.
+        exec_sound_at cf ρ (st_assume (pst p) (negate (pret p))) qs) →
+  exec_sound_at (CEIf cc ct cf) ρ sst out.
 Proof.
   intros Hc Hwfps Hsort Hthen Helse Hwf Hρ V Hsat.
   iIntros "Hheap". simpl.
@@ -499,12 +510,12 @@ Qed.
     [exec] requires a cell whose location term is *syntactically* the
     address, which is what [heapLookup] finds; the value it holds is the
     result. *)
-Lemma exec_sound_load (cty : ctype) (ce : cexpr) ρ sst ps out :
-  exec_sound ce ρ sst ps →
+Lemma exec_sound_at_load (cty : ctype) (ce : cexpr) ρ sst ps out :
+  exec_sound_at ce ρ sst ps →
   paths_wf (length (svars sst)) ps →
   (∀ p, p ∈ ps → ∃ y, heap_lookup (sheap (pst p)) (pret p) = Some y ∧
                       mkPath y (pst p) ∈ out) →
-  exec_sound (CELoad cty ce) ρ sst out.
+  exec_sound_at (CELoad cty ce) ρ sst out.
 Proof.
   intros He Hwfps Hcell Hwf Hρ V Hsat. iIntros "Hheap". simpl.
   iApply (wp_bind (fill [AppRCtx (Val (GoInstruction (GoLoad (type_of cty))))])).
@@ -596,12 +607,12 @@ Proof.
     by apply (wf_pc _ Hwf).
 Qed.
 
-Lemma exec_sound_alloc (cty : ctype) (ce : cexpr) ρ sst ps out :
-  exec_sound ce ρ sst ps →
+Lemma exec_sound_at_alloc (cty : ctype) (ce : cexpr) ρ sst ps out :
+  exec_sound_at ce ρ sst ps →
   paths_wf (length (svars sst)) ps →
   (∀ p, p ∈ ps →
      mkPath (TVar (length (svars (pst p)))) (st_alloc (pst p) (pret p)) ∈ out) →
-  exec_sound (CEAlloc cty ce) ρ sst out.
+  exec_sound_at (CEAlloc cty ce) ρ sst out.
 Proof.
   intros He Hwfps Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
   iApply (wp_bind (fill [AppRCtx (Val (GoInstruction (GoAlloc (type_of cty))))])).
@@ -644,3 +655,122 @@ Proof.
 Qed.
 
 End exec_spec.
+
+(** * The ghost-state-independent layer *)
+Section exec_uniform.
+Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+        {ffi_sem : ffi_semantics ext ffi}.
+
+Definition exec_sound (ce : cexpr) (ρ : list (go_string * term))
+                      (sst : sstate) (ps : list spath) : Prop :=
+  ∀ Σ (hG : heapGS Σ) (sem : go.Semantics) (package_sem : checker.Assumptions),
+    exec_sound_at ce ρ sst ps.
+
+End exec_uniform.
+
+(** Lifting a lemma about [exec_sound_at]: fix the ghost state, apply it, and
+    specialise the (positively occurring) [exec_sound] premises. *)
+Tactic Notation "exec_lift" uconstr(L) :=
+  rewrite /exec_sound; intros;
+  let Σ := fresh "Σ" in let hG := fresh "hG" in
+  let sem := fresh "sem" in let psem := fresh "package_sem" in
+  intros Σ hG sem psem; eapply L; eauto; naive_solver.
+
+Section exec_uniform_lemmas.
+Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+        {ffi_sem : ffi_semantics ext ffi}.
+
+Lemma exec_sound_mono ce ρ sst ps ps' :
+  ps ⊆ ps' → exec_sound ce ρ sst ps → exec_sound ce ρ sst ps'.
+Proof. exec_lift exec_sound_at_mono. Qed.
+
+Lemma exec_sound_app_l ce ρ sst ps ps' :
+  exec_sound ce ρ sst ps → exec_sound ce ρ sst (ps ++ ps').
+Proof. exec_lift exec_sound_at_app_l. Qed.
+
+Lemma exec_sound_app_r ce ρ sst ps ps' :
+  exec_sound ce ρ sst ps' → exec_sound ce ρ sst (ps ++ ps').
+Proof. exec_lift exec_sound_at_app_r. Qed.
+
+Lemma exec_sound_int ρ sst w : exec_sound (CEInt w) ρ sst [mkPath (TInt w) sst].
+Proof. exec_lift exec_sound_at_int. Qed.
+
+Lemma exec_sound_bool ρ sst b : exec_sound (CEBool b) ρ sst [mkPath (TBool b) sst].
+Proof. exec_lift exec_sound_at_bool. Qed.
+
+Lemma exec_sound_unit ρ sst : exec_sound CEUnit ρ sst [mkPath TUnit sst].
+Proof. exec_lift exec_sound_at_unit. Qed.
+
+Lemma exec_sound_var ρ sst (gx : go_string) (x : term) :
+  env_lookup ρ gx = Some x →
+  vars_below (length (svars sst)) x →
+  exec_sound (CEVar gx) ρ sst [mkPath x sst].
+Proof. exec_lift exec_sound_at_var. Qed.
+
+Lemma exec_sound_zero ρ sst (cty : ctype) :
+  exec_sound (CEZero cty) ρ sst [mkPath (ctype_zero cty) sst].
+Proof. exec_lift exec_sound_at_zero. Qed.
+
+Lemma exec_sound_let (gx : go_string) (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound ce1 ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧
+        exec_sound ce2 ((gx, pret p) :: ρ) (pst p) qs) →
+  exec_sound (CELet gx ce1 ce2) ρ sst out.
+Proof. exec_lift exec_sound_at_let. Qed.
+
+Lemma exec_sound_seq (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound ce1 ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧ exec_sound ce2 ρ (pst p) qs) →
+  exec_sound (CESeq ce1 ce2) ρ sst out.
+Proof. exec_lift exec_sound_at_seq. Qed.
+
+Lemma exec_sound_do (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  (∀ p, p ∈ ps → mkPath TExec (pst p) ∈ out) →
+  exec_sound (CEDo ce) ρ sst out.
+Proof. exec_lift exec_sound_at_do. Qed.
+
+Lemma exec_sound_return (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  (∀ p, p ∈ ps → mkPath (TRet (pret p)) (pst p) ∈ out) →
+  exec_sound (CEReturn ce) ρ sst out.
+Proof. exec_lift exec_sound_at_return. Qed.
+
+Lemma exec_sound_exc_do (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  (∀ p, p ∈ ps →
+     (pret p = TExec ∧ mkPath TUnit (pst p) ∈ out) ∨
+     (∃ x, pret p = TRet x ∧ mkPath x (pst p) ∈ out)) →
+  exec_sound (CEExcDo ce) ρ sst out.
+Proof. exec_lift exec_sound_at_exc_do. Qed.
+
+Lemma exec_sound_if (cc ct cf : cexpr) ρ sst ps out :
+  exec_sound cc ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → sort_of_vars (svars (pst p)) (pret p) = Some SBool) →
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧
+        exec_sound ct ρ (st_assume (pst p) (pret p)) qs) →
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧
+        exec_sound cf ρ (st_assume (pst p) (negate (pret p))) qs) →
+  exec_sound (CEIf cc ct cf) ρ sst out.
+Proof. exec_lift exec_sound_at_if. Qed.
+
+Lemma exec_sound_load (cty : ctype) (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → ∃ y, heap_lookup (sheap (pst p)) (pret p) = Some y ∧
+                      mkPath y (pst p) ∈ out) →
+  exec_sound (CELoad cty ce) ρ sst out.
+Proof. exec_lift exec_sound_at_load. Qed.
+
+Lemma exec_sound_alloc (cty : ctype) (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps →
+     mkPath (TVar (length (svars (pst p)))) (st_alloc (pst p) (pret p)) ∈ out) →
+  exec_sound (CEAlloc cty ce) ρ sst out.
+Proof. exec_lift exec_sound_at_alloc. Qed.
+
+End exec_uniform_lemmas.

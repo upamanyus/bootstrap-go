@@ -5,8 +5,9 @@
     no [∃] in the precondition, the precondition well-sorted), parameter [i]
     is bound to [TVar i] by a loop over [f.Params] ([penv], pre_sound.v), the
     entry state is built from [assnHeap], [assnPure] and a copy of the sort
-    table ([pre_state]), and [exec] runs the body. [analyze_sound] turns
-    [exec]'s answer into the WP of the actual function application.
+    table ([pre_state]), and [exec] runs the body. The answer is
+    [analyze_ok], which [analyze_sound] turns into the WP of the actual
+    function application in any ghost state.
 
     Naming: the Go locals are [f], [vars], [pre], [se], [fl], [en], [i], [x]
     and [st] (and the range loop's own index is also called [i]), so no Rocq
@@ -33,10 +34,7 @@ Lemma wp_Analyze (lf : loc) (cf : cfunc) (sv : slice.t) (vs : list sort)
     @! checker.Analyze #lf #sv #lpre
   {{{ (s : slice.t) (lfail : loc), RET (#s, #lfail);
       if decide (lfail = null) then
-        ∃ ps, is_paths s ps ∗ ⌜paths_wf (length vs) ps⌝ ∗
-          ⌜∀ θ, vars_sat θ vs → ⊢ pre_interp θ P -∗
-               WP apply_vals (func_val cf) (arg_vals cf θ)
-                 {{ paths_post (length vs) (mkVal θ (λ _, uval) uval) ps }}⌝
+        ∃ ps, is_paths s ps ∗ ⌜paths_wf (length vs) ps⌝ ∗ ⌜analyze_ok cf vs P ps⌝
       else True }}}.
 Proof.
   wp_start as "(#Hf & #Hsv & #Hpre)".
@@ -112,7 +110,7 @@ Proof.
     rewrite /exec_post. destruct (decide (lfl = null)); last done.
     iDestruct "Hpost" as (ps) "(Hps & %Hwf & %Hsnd)".
     iExists ps. iFrame "Hps". iPureIntro. split; first done.
-    intros θ Hθ. apply analyze_sound; [word|done|done|done]. }
+    split_and!; [word|done|done]. }
   wp_auto.
   list_elem (fparams cf) (sint.nat k) as xn.
   rewrite decide_True; last word.

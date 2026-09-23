@@ -8,6 +8,11 @@
     (new/checker/check_sound.v), about the Goose translation of the checker;
     new/checker/NOTES.md and checker/SOUNDNESS_PLAN.md describe it.
 
+    [check_adequate] (new/checker/adequacy.v) closes the program logic: a
+    crash-free run of [checker.Check] from a state whose heap holds the input
+    ([inputs_in], new/checker/layout.v) that returns [#true] establishes
+    [triple_holds] (defs.v), the same triple in every ghost state.
+
     Trust boundary of the whole pipeline: the GooseLang semantics, the Goose
     translation of the checker, and the unverified frontend (gocheck/) that
     produces the checker's input from Go source. *)

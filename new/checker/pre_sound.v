@@ -164,7 +164,7 @@ Proof.
   intros Hlen Hws Hsnd Hθ.
   iIntros "Hpre".
   iDestruct (pre_interp_state with "Hpre") as "[%Hsat Hh]"; [done|done|].
-  pose proof (Hsnd (pre_state_wf vars pre Hws) (penv_below _ _ Hlen) _ Hsat) as Hwp.
+  pose proof (Hsnd _ hG sem package_sem (pre_state_wf vars pre Hws) (penv_below _ _ Hlen) _ Hsat) as Hwp.
   iPoseProof (Hwp with "Hh") as "Hwp". clear Hwp.
   rewrite env_interp_penv. cbn [vvar svars pre_state].
   destruct (fparams f) as [|x xs] eqn:Hps.
@@ -177,3 +177,12 @@ Proof.
 Qed.
 
 End pre_sound.
+
+(** What [Analyze] establishes, independent of the ghost state: the premises
+    of [analyze_sound]. *)
+Definition analyze_ok {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+    {ffi_sem : ffi_semantics ext ffi}
+    (f : cfunc) (vars : list sort) (pre : cassn) (ps : list spath) : Prop :=
+  (length (fparams f) ≤ length vars)%nat ∧
+  cassn_ws (vars_env vars) pre = true ∧
+  exec_sound (fbody f) (penv (fparams f)) (pre_state vars pre) ps.

@@ -1,7 +1,7 @@
 (** Helpers for the per-case proofs of [exec] (fn/execLet.v, fn/execSeq.v,
     fn/execLoad.v, fn/execUnOp.v, fn/execBinOp.v), and the semantic
-    composition lemmas for the operator cases, [exec_sound_unop] and
-    [exec_sound_binop], in the style of exec_spec.v. *)
+    composition lemmas for the operator cases, [exec_sound_at_unop] and
+    [exec_sound_at_binop], in the style of exec_spec.v. *)
 From New.checker Require Import prelude nodes exec_spec exec_def.
 From New.checker.fn Require Import heapLookup.
 
@@ -53,12 +53,12 @@ Proof. rewrite /exec_post. by destruct (decide (null = null)). Qed.
     the sort of the operator's type; that makes the GooseLang step
     ([wp_unop]) go through, and the result term is what [apply_unop]
     built. *)
-Lemma exec_sound_unop (op : cop) (cty : ctype) (ce : cexpr) ρ sst ps out :
-  exec_sound ce ρ sst ps →
+Lemma exec_sound_at_unop (op : cop) (cty : ctype) (ce : cexpr) ρ sst ps out :
+  exec_sound_at ce ρ sst ps →
   (∀ p, p ∈ ps → ∃ r,
      sort_of_vars (svars (pst p)) (pret p) = Some (ctype_sort cty) ∧
      apply_unop op cty (pret p) = Some r ∧ mkPath r (pst p) ∈ out) →
-  exec_sound (CEUnOp op cty ce) ρ sst out.
+  exec_sound_at (CEUnOp op cty ce) ρ sst out.
 Proof.
   intros He Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
   iApply (wp_bind (fill [AppRCtx (Val (GoInstruction (GoUnOp (unop_of op) (type_of cty))))])).
@@ -83,15 +83,15 @@ Qed.
     operand's term is scoped by the state [ce1] ended in, so it keeps its
     value under the valuation [ce2] ended with; the sort checks are made at
     the final state, whose valuation is the one the operator step sees. *)
-Lemma exec_sound_binop (op : cop) (cty : ctype) (ce1 ce2 : cexpr) ρ sst ps out :
-  exec_sound ce1 ρ sst ps →
+Lemma exec_sound_at_binop (op : cop) (cty : ctype) (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound_at ce1 ρ sst ps →
   paths_wf (length (svars sst)) ps →
-  (∀ p, p ∈ ps → ∃ qs, exec_sound ce2 ρ (pst p) qs ∧
+  (∀ p, p ∈ ps → ∃ qs, exec_sound_at ce2 ρ (pst p) qs ∧
      ∀ q, q ∈ qs → ∃ r,
        sort_of_vars (svars (pst q)) (pret p) = Some (ctype_sort cty) ∧
        sort_of_vars (svars (pst q)) (pret q) = Some (ctype_sort cty) ∧
        apply_binop op cty (pret p) (pret q) = Some r ∧ mkPath r (pst q) ∈ out) →
-  exec_sound (CEBinOp op cty ce1 ce2) ρ sst out.
+  exec_sound_at (CEBinOp op cty ce1 ce2) ρ sst out.
 Proof.
   intros He1 Hwfps Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
   set (f := Val (GoInstruction (GoOp (binop_of op) (type_of cty)))).
@@ -133,3 +133,29 @@ Proof.
 Qed.
 
 End exec_sound_b.
+
+(** * The ghost-state-independent layer (see exec_spec.v) *)
+Section exec_uniform_b.
+Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+        {ffi_sem : ffi_semantics ext ffi}.
+
+Lemma exec_sound_unop (op : cop) (cty : ctype) (ce : cexpr) ρ sst ps out :
+  exec_sound ce ρ sst ps →
+  (∀ p, p ∈ ps → ∃ r,
+     sort_of_vars (svars (pst p)) (pret p) = Some (ctype_sort cty) ∧
+     apply_unop op cty (pret p) = Some r ∧ mkPath r (pst p) ∈ out) →
+  exec_sound (CEUnOp op cty ce) ρ sst out.
+Proof. exec_lift exec_sound_at_unop. Qed.
+
+Lemma exec_sound_binop (op : cop) (cty : ctype) (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound ce1 ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → ∃ qs, exec_sound ce2 ρ (pst p) qs ∧
+     ∀ q, q ∈ qs → ∃ r,
+       sort_of_vars (svars (pst q)) (pret p) = Some (ctype_sort cty) ∧
+       sort_of_vars (svars (pst q)) (pret q) = Some (ctype_sort cty) ∧
+       apply_binop op cty (pret p) (pret q) = Some r ∧ mkPath r (pst q) ∈ out) →
+  exec_sound (CEBinOp op cty ce1 ce2) ρ sst out.
+Proof. exec_lift exec_sound_at_binop. Qed.
+
+End exec_uniform_b.

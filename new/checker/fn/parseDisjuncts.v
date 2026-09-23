@@ -31,8 +31,7 @@ Lemma wp_parseDisjuncts (lP : loc) (P : cassn) :
     @! checker.parseDisjuncts #lP
   {{{ (s : slice.t) (djs : list cdisjunct), RET #s;
       is_disjuncts s djs ∗
-      ⌜∀ dj, dj ∈ djs → d_fail dj = false →
-             ∀ V, dj_interp V dj ⊢ assn_interp V P⌝ }}}.
+      ⌜∀ dj, dj ∈ djs → d_fail dj = false → dj_entails dj P⌝ }}}.
 Proof.
   wp_start as "#HP".
   wp_auto.
@@ -49,8 +48,7 @@ Proof.
       "Hsoc" ∷ own_slice_cap loc so (DfracOwn 1) ∗
       "Hds" ∷ ([∗ list] ld;dj ∈ lds; djs, is_disjunct ld dj) ∗
       "%Hn" ∷ ⌜0 ≤ sint.Z n ≤ length las⌝ ∗
-      "%Hsnd" ∷ ⌜∀ dj, dj ∈ djs → d_fail dj = false →
-                  ∀ V, dj_interp V dj ⊢ assn_interp V P⌝)%I
+      "%Hsnd" ∷ ⌜∀ dj, dj ∈ djs → d_fail dj = false → dj_entails dj P⌝)%I
     with "[i a out]" as "HI".
   { iExists _, _, slice.nil, [], []. iFrame "i a out".
     iDestruct (own_slice_nil (V:=loc) (DfracOwn 1)) as "$".
@@ -82,11 +80,12 @@ Proof.
     iSplitL.
     { iApply (big_sepL2_app with "Hds"). by iFrame "Hdj". }
     iPureIntro. split; first word.
-    intros dj' Hin Hf V.
+    intros dj' Hin Hf.
     apply elem_of_app in Hin as [Hin|Hin]; first by apply Hsnd.
     apply list_elem_of_singleton in Hin as ->.
     destruct (Hdj Hf) as (y & -> & Hent).
-    etrans; first apply Hent.
+    intros Σ' hG' sem' package_sem' V.
+    etrans; first apply (Hent _ _ _ _).
     apply assn_disjuncts_sound.
     by eapply list_elem_of_lookup_2.
   - try wp_auto.

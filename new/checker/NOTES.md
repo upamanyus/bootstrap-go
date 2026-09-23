@@ -11,6 +11,10 @@ Running log of the proof of `check_sound` (see `SOUNDNESS_PLAN.md` in
                                the statement file)
     new/checker/soundness.v    `Axiom check_sound`, unchanged text, now
                                `Export`ing defs.v
+    new/checker/layout.v       the input trees as a proposition about a
+                               concrete heap (`inputs_in`)
+    new/checker/adequacy.v     `check_adequate`: a closed run of `Check`
+                               returning `true` gives `triple_holds`
 
 ## Build
 
@@ -491,3 +495,45 @@ libraries themselves (see the commit that discharged the axiom).
   `"[$H]"` does not consume it and reusing the name later is "not fresh".
 - `Print Assumptions` of a top-level spec exceeds rocq-warm's default 4.2 GB.
 - fn/exec.v (18 dispatch lemmas, 7.5 min) is the second most expensive file.
+
+### 2026-09-23: adequacy
+
+`check_adequate` (adequacy.v): take a crash-free run of `checker.Check` from a
+state whose heap holds the input trees (`inputs_in`, layout.v, a plain
+proposition about `σ.(heap)`). If the run ends with `#true` in the main
+thread, then `triple_holds f vars pre post` (defs.v) holds. That is the triple
+of `check_sound`, in every `heapGS Σ` and under every Go semantics satisfying
+`go.Semantics` and `checker.Assumptions`.
+
+- **Ghost-state uniformity.** Adequacy runs the checker in ghost state it
+  allocates itself, and the fact it hands back must not mention that ghost
+  state. So the checker's specifications now promise their semantic facts in
+  every ghost state. The ambient-Σ forms are renamed `_at` (`exec_sound_at`,
+  `path_sat_dj_at`, `if_ok_at`); the plain names (`exec_sound`,
+  `path_sat_dj`, `if_ok`, and the new `dj_entails`, `binders_entails`,
+  `analyze_ok`) quantify them over `Σ`, `hG : heapGS Σ`, `go.Semantics` and
+  `checker.Assumptions`. The lemmas the `fn` files use are lifted under their
+  old names (`exec_lift`, exec_spec.v), so the exec case files are unchanged.
+  `wp_Analyze` returns `analyze_ok`. `wp_Verify` returns `path_ok`, now
+  uniform. `wp_Check` returns `⌜b = true → triple_holds …⌝`, and
+  `check_sound_proof` is its instance at the ambient ghost state (the
+  statement of `check_sound` is unchanged).
+- `expr_of`, `func_val` and `csubst` take a `heapGS` argument (through the
+  `GoGlobalContext` that `#` needs), so a premise mentioning them cannot be
+  lifted as is; `exec_sound_value` is therefore not lifted (no `fn` file uses
+  it).
+- **Adequacy with the initial heap.** `goose_recv_adequacy` handed the program
+  no heap cells and did not relate the ghost state's Go local context to
+  `σ`'s. `goose_recv_adequacy_heap` (src/goose_lang/recovery_adequacy.v) does
+  both; the old theorem is now its corollary, with the same statement.
+  `goose_recv_adequacy_failstop_heap` is the fail-stop form.
+  `na_heap_name_init_pointsto` lives there too, not in na_heap.v: editing
+  na_heap.v rebuilds nearly all of Perennial.
+- **Layout.** layout.v mirrors `is_type`/`is_term`/`is_expr`/`is_assn`
+  (generated from defs.v's text: `l ↦□ v` ↦ `node_in h l v`, `∗` ↦ `∧`,
+  `⌜P⌝` ↦ `P`), plus `func_in`, `sorts_in` and `slice_in`. The cells must be
+  non-null and `Free`. `heap_ro_init` makes all unlocked non-null initial
+  cells read-only, and `inputs_in_sound` reads the trees back out.
+- The old goose_lang adequacy stack (`src/goose_lang/adequacy.v`,
+  `recovery_adequacy.v`, ...) was not in the default build; build it with
+  `make src/goose_lang/recovery_adequacy.vo`.

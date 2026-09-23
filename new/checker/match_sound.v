@@ -524,7 +524,7 @@ Lemma match_path_sat (vars : list sort) (sp : spath) (dj : cdisjunct)
     (svars (pst sp)) (pret sp) σ used done →
   undone (d_atoms dj) done = 0%nat →
   pure_ok (spc (pst sp)) (d_atoms dj) σ (pret sp) →
-  path_sat_dj vars sp dj.
+  path_sat_dj_at vars sp dj.
 Proof.
   intros Hlpats Hscoped [Hlσ Hlu Hld Hswf (f & Hf & Hinj)] Hundone Hpure.
   intros θ V' Hθ Hag Hst Hwf Hlen Hr.

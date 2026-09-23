@@ -1,6 +1,6 @@
 (** Semantic lemmas for the value, conversion and exception-monad cases of
     [exec] (fn/execInt.v, ..., fn/execExcSeq.v), in the style of
-    exec_spec.v: [exec_sound_convert], [exec_sound_exc_seq], and the
+    exec_spec.v: [exec_sound_at_convert], [exec_sound_at_exc_seq], and the
     well-formedness of the singleton path list [onePath] returns. *)
 From New.checker Require Import prelude nodes exec_spec.
 
@@ -38,8 +38,8 @@ Proof. by destruct cty. Qed.
 
     The checker only accepts a conversion between equal types, which is the
     identity. *)
-Lemma exec_sound_convert (cty : ctype) (ce : cexpr) ρ sst ps :
-  exec_sound ce ρ sst ps → exec_sound (CEConvert cty cty ce) ρ sst ps.
+Lemma exec_sound_at_convert (cty : ctype) (ce : cexpr) ρ sst ps :
+  exec_sound_at ce ρ sst ps → exec_sound_at (CEConvert cty cty ce) ρ sst ps.
 Proof.
   intros He Hwf Hρ V Hsat. iIntros "Hheap". simpl.
   iApply (wp_bind (fill [AppRCtx (Val (GoInstruction (Convert (type_of cty) (type_of cty))))])).
@@ -54,13 +54,13 @@ Qed.
     On a path that ended in [execute], the second statement runs from that
     path's state; on a path that ended in a [return], the second statement is
     skipped and the path itself is a result. *)
-Lemma exec_sound_exc_seq (ce1 ce2 : cexpr) ρ sst ps out :
-  exec_sound ce1 ρ sst ps →
+Lemma exec_sound_at_exc_seq (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound_at ce1 ρ sst ps →
   paths_wf (length (svars sst)) ps →
   (∀ p, p ∈ ps →
-     (pret p = TExec ∧ ∃ qs, qs ⊆ out ∧ exec_sound ce2 ρ (pst p) qs) ∨
+     (pret p = TExec ∧ ∃ qs, qs ⊆ out ∧ exec_sound_at ce2 ρ (pst p) qs) ∨
      ((∃ x, pret p = TRet x) ∧ p ∈ out)) →
-  exec_sound (CEExcSeq ce1 ce2) ρ sst out.
+  exec_sound_at (CEExcSeq ce1 ce2) ρ sst out.
 Proof.
   intros He1 Hwfps Hcont Hwf Hρ V Hsat.
   iIntros "Hheap". simpl.
@@ -96,3 +96,23 @@ Proof.
 Qed.
 
 End exec_sound_a.
+
+(** * The ghost-state-independent layer (see exec_spec.v) *)
+Section exec_uniform_a.
+Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+        {ffi_sem : ffi_semantics ext ffi}.
+
+Lemma exec_sound_convert (cty : ctype) (ce : cexpr) ρ sst ps :
+  exec_sound ce ρ sst ps → exec_sound (CEConvert cty cty ce) ρ sst ps.
+Proof. exec_lift exec_sound_at_convert. Qed.
+
+Lemma exec_sound_exc_seq (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound ce1 ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps →
+     (pret p = TExec ∧ ∃ qs, qs ⊆ out ∧ exec_sound ce2 ρ (pst p) qs) ∨
+     ((∃ x, pret p = TRet x) ∧ p ∈ out)) →
+  exec_sound (CEExcSeq ce1 ce2) ρ sst out.
+Proof. exec_lift exec_sound_at_exc_seq. Qed.
+
+End exec_uniform_a.

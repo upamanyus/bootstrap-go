@@ -417,3 +417,24 @@ Definition is_func (l : loc) (f : cfunc) : iProp Σ :=
 Definition is_sorts (s : slice.t) (vars : list sort) : iProp Σ :=
   (s ↦*□ (sort_code <$> vars))%I.
 End semantics.
+
+(** * The meaning of a verified function, independent of the ghost state
+
+    [triple_holds f vars pre post] is the Hoare triple of [check_sound]
+    (soundness.v) for every valuation respecting [vars], in every ghost state
+    [heapGS Σ] and under every Go semantics satisfying [go.Semantics] and the
+    checker's [checker.Assumptions]. Unlike the triple itself, which is a
+    statement about one particular [heapGS Σ], this is a plain proposition,
+    and it is what adequacy (new/checker/adequacy.v) delivers from a closed
+    execution of [checker.Check] that returns [true]. ([checker.Assumptions]
+    concern only the checker's own code, not [f]'s; they are quantified here
+    because the proof of the triple goes through lemmas stated under them.) *)
+Definition triple_holds {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+    {ffi_sem : ffi_semantics ext ffi}
+    (f : cfunc) (vars : list sort) (pre post : cassn) : Prop :=
+  ∀ Σ (hG : heapGS Σ) (sem : go.Semantics) (package_sem : checker.Assumptions)
+    (θ : nat → val),
+    vars_sat θ vars →
+    {{{ pre_interp θ pre }}}
+      apply_vals (func_val f) (arg_vals f θ)
+    {{{ (v : val), RET v; post_interp θ v post }}}.

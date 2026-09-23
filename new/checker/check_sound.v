@@ -1,9 +1,10 @@
 (** The statement of [check_sound] (soundness.v), proved.
 
     The text of [check_sound_proof] is character-identical to the axiom's. It
-    is [wp_Check] (fn/Check.v) with the variables renamed back: [wp_Check]
-    cannot use the names [f], [vars], [pre] and [post] because they are Go
-    locals of [Check] (see NOTES.md). *)
+    is [wp_Check] (fn/Check.v), whose postcondition [triple_holds] is the
+    triple in every ghost state, instantiated at the ambient one, and with the
+    variables renamed back: [wp_Check] cannot use the names [f], [vars], [pre]
+    and [post] because they are Go locals of [Check] (see NOTES.md). *)
 From New.proof Require Import proof_prelude.
 From New.golang Require Import theory.
 From New.generatedproof.github_com.mit_pdos.perennial Require Import checker.
@@ -30,8 +31,10 @@ Lemma check_sound_proof :
             apply_vals (func_val f) (arg_vals f θ)
           {{{ (v : val), RET v; post_interp θ v post }}} ⌝ }}}.
 Proof.
-  intros f vars pre post lf svars lpre lpost.
-  apply (wp_Check f vars pre post lf svars lpre lpost).
+  intros f vars pre post lf svars lpre lpost Φ. iIntros "Hpre HΦ".
+  iApply (wp_Check f vars pre post lf svars lpre lpost with "Hpre").
+  iIntros "!>" (b) "%Hb". iApply "HΦ". iPureIntro.
+  intros Htrue θ Hθ. exact (Hb Htrue Σ hG sem package_sem θ Hθ).
 Qed.
 
 End semantics.

@@ -2,11 +2,11 @@
     (checker/exec.go): the shapes [execIfs], [execAlloc] and [execStore]
     actually produce.
 
-    - [exec_sound_if_gen] generalizes [exec_sound_if] (exec_spec.v) to what
+    - [exec_sound_at_if_gen] generalizes [exec_sound_at_if] (exec_spec.v) to what
       [execIf] does per path: a *literal* condition takes one branch with the
       state unchanged, anything else forks with the condition (resp. its
       negation) assumed.
-    - [exec_sound_store] is the store case, which exec_spec.v does not have.
+    - [exec_sound_at_store] is the store case, which exec_spec.v does not have.
     - [paths_wf_alloc] / [paths_wf_store] are the well-formedness of the
       result lists [execAlloc] and [storeAll] build. *)
 From New.checker Require Import prelude nodes exec_spec.
@@ -65,25 +65,25 @@ Qed.
 
     What [execIf] establishes for one path [p] of the condition, with result
     list [qs]. *)
-Definition if_ok (ct cf : cexpr) ρ (p : spath) (qs : list spath) : Prop :=
-  (∃ b, pret p = TBool b ∧ exec_sound (if b then ct else cf) ρ (pst p) qs) ∨
-  (exec_sound ct ρ (st_assume (pst p) (pret p)) qs ∧
-   exec_sound cf ρ (st_assume (pst p) (negate (pret p))) qs).
+Definition if_ok_at (ct cf : cexpr) ρ (p : spath) (qs : list spath) : Prop :=
+  (∃ b, pret p = TBool b ∧ exec_sound_at (if b then ct else cf) ρ (pst p) qs) ∨
+  (exec_sound_at ct ρ (st_assume (pst p) (pret p)) qs ∧
+   exec_sound_at cf ρ (st_assume (pst p) (negate (pret p))) qs).
 
-Lemma if_ok_mono ct cf ρ p qs qs' :
-  qs ⊆ qs' → if_ok ct cf ρ p qs → if_ok ct cf ρ p qs'.
+Lemma if_ok_at_mono ct cf ρ p qs qs' :
+  qs ⊆ qs' → if_ok_at ct cf ρ p qs → if_ok_at ct cf ρ p qs'.
 Proof.
   intros Hsub [(b & Hb & Hs)|[H1 H2]].
-  - left. exists b. split; first done. by eapply exec_sound_mono.
-  - right. split; by eapply exec_sound_mono.
+  - left. exists b. split; first done. by eapply exec_sound_at_mono.
+  - right. split; by eapply exec_sound_at_mono.
 Qed.
 
-Lemma exec_sound_if_gen (cc ct cf : cexpr) ρ sst ps out :
-  exec_sound cc ρ sst ps →
+Lemma exec_sound_at_if_gen (cc ct cf : cexpr) ρ sst ps out :
+  exec_sound_at cc ρ sst ps →
   paths_wf (length (svars sst)) ps →
   (∀ p, p ∈ ps → sort_of_vars (svars (pst p)) (pret p) = Some SBool) →
-  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧ if_ok ct cf ρ p qs) →
-  exec_sound (CEIf cc ct cf) ρ sst out.
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧ if_ok_at ct cf ρ p qs) →
+  exec_sound_at (CEIf cc ct cf) ρ sst out.
 Proof.
   intros Hc Hwfps Hsort Hbr Hwf Hρ V Hsat.
   iIntros "Hheap". simpl.
@@ -181,13 +181,13 @@ Definition store_ok (x : term) (qs out : list spath) : Prop :=
   ∀ q, q ∈ qs → ∃ H', heap_update (sheap (pst q)) x (pret q) = Some H' ∧
                      mkPath TUnit (st_heap (pst q) H') ∈ out.
 
-Lemma exec_sound_store (cty : ctype) (ce1 ce2 : cexpr) ρ sst ps out :
-  exec_sound ce1 ρ sst ps →
+Lemma exec_sound_at_store (cty : ctype) (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound_at ce1 ρ sst ps →
   paths_wf (length (svars sst)) ps →
-  (∀ p, p ∈ ps → ∃ qs, exec_sound ce2 ρ (pst p) qs ∧
+  (∀ p, p ∈ ps → ∃ qs, exec_sound_at ce2 ρ (pst p) qs ∧
                        paths_wf (length (svars (pst p))) qs ∧
                        store_ok (pret p) qs out) →
-  exec_sound (CEStore cty ce1 ce2) ρ sst out.
+  exec_sound_at (CEStore cty ce1 ce2) ρ sst out.
 Proof.
   intros He1 Hwfps Hcont Hwf Hρ V Hsat. iIntros "Hheap". simpl.
   iApply (wp_bind (fill [PairLCtx (csubst (env_interp V ρ) ce2);
@@ -235,3 +235,50 @@ Proof.
 Qed.
 
 End exec_sound_c.
+
+(** * The ghost-state-independent layer (see exec_spec.v) *)
+Section exec_uniform_c.
+Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+        {ffi_sem : ffi_semantics ext ffi}.
+
+Definition if_ok (ct cf : cexpr) ρ (p : spath) (qs : list spath) : Prop :=
+  (∃ b, pret p = TBool b ∧ exec_sound (if b then ct else cf) ρ (pst p) qs) ∨
+  (exec_sound ct ρ (st_assume (pst p) (pret p)) qs ∧
+   exec_sound cf ρ (st_assume (pst p) (negate (pret p))) qs).
+
+Lemma if_ok_at_of `{hG : !heapGS Σ} {sem : go.Semantics} {package_sem : checker.Assumptions}
+    ct cf ρ p qs :
+  if_ok ct cf ρ p qs → if_ok_at ct cf ρ p qs.
+Proof. rewrite /if_ok /if_ok_at /exec_sound. naive_solver. Qed.
+
+Lemma if_ok_mono ct cf ρ p qs qs' :
+  qs ⊆ qs' → if_ok ct cf ρ p qs → if_ok ct cf ρ p qs'.
+Proof.
+  intros Hsub [(b & Hb & Hs)|[Ht Hf]].
+  - left. exists b. split; first done. by eapply exec_sound_mono.
+  - right. split; by eapply exec_sound_mono.
+Qed.
+
+Lemma exec_sound_if_gen (cc ct cf : cexpr) ρ sst ps out :
+  exec_sound cc ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → sort_of_vars (svars (pst p)) (pret p) = Some SBool) →
+  (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧ if_ok ct cf ρ p qs) →
+  exec_sound (CEIf cc ct cf) ρ sst out.
+Proof.
+  intros Hc Hwf Hb Hbr Σ hG sem package_sem.
+  eapply exec_sound_at_if_gen; [exact (Hc _ _ _ _)|done|done|].
+  intros p Hp. destruct (Hbr p Hp) as (qs & Hqs & Hok).
+  exists qs. split; first done. by apply if_ok_at_of.
+Qed.
+
+Lemma exec_sound_store (cty : ctype) (ce1 ce2 : cexpr) ρ sst ps out :
+  exec_sound ce1 ρ sst ps →
+  paths_wf (length (svars sst)) ps →
+  (∀ p, p ∈ ps → ∃ qs, exec_sound ce2 ρ (pst p) qs ∧
+                       paths_wf (length (svars (pst p))) qs ∧
+                       store_ok (pret p) qs out) →
+  exec_sound (CEStore cty ce1 ce2) ρ sst out.
+Proof. exec_lift exec_sound_at_store. Qed.
+
+End exec_uniform_c.

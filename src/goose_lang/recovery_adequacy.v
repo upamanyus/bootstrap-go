@@ -1,19 +1,57 @@
 From iris.proofmode Require Import proofmode.
-From iris.algebra Require Import auth.
+From iris.algebra Require Import auth gmap_view.
 From Perennial.goose_lang Require Import lang.
 From Perennial.program_logic Require Import recovery_weakestpre recovery_adequacy.
 From Perennial.goose_lang Require Export lifting recovery_lifting.
 From Perennial.goose_lang Require Import adequacy lang crash_borrow.
 Set Default Proof Using "Type".
 
-Theorem goose_recv_adequacy `{ffi_sem: ffi_semantics} `{!ffi_interp ffi}
+(** [na_heap_name_init], but also handing out every cell of the initial heap,
+    in the lock state it starts in. *)
+Lemma na_heap_name_init_pointsto `{Countable L} `{!BlockAddr L} {V} `{!na_heapGpreS L V Σ}
+    {LK} (tls : LK → lock_state) (σ : gmap L (LK * V)) :
+  ⊢ |==> ∃ names : na_heap_names,
+    na_heap_ctx (hG := na_heapGS_update_pre _ names) tls σ ∗
+    [∗ map] l ↦ lkv ∈ σ,
+      na_heap_pointsto_st (hG := na_heapGS_update_pre _ names) (tls lkv.1) l (DfracOwn 1) lkv.2.
+Proof.
+  iMod (own_alloc (gmap_view_auth (DfracOwn 1) (∅ : gmap L (na_heap_cmra V)))) as (γh) "Hh".
+  { apply gmap_view_auth_valid. }
+  iMod (own_update with "Hh") as "[Hh Hfrag]".
+  { apply (gmap_view_alloc_big _ (to_na_heap tls σ) (DfracOwn 1));
+      [apply map_disjoint_empty_r|done|].
+    intros l x Hx. rewrite /to_na_heap in Hx.
+    apply lookup_fmap_Some in Hx as (lkv & <- & _).
+    split; simpl; last done. by destruct (tls lkv.1). }
+  rewrite right_id_L.
+  iMod (own_alloc (● to_na_size ∅)) as (γs) "Hs".
+  { rewrite auth_auth_valid. exact: to_na_size_valid. }
+  iMod (own_alloc (gmap_view_auth (DfracOwn 1) (∅ : gmap L (agreeR gnameO)))) as (γm) "Hm".
+  { apply gmap_view_auth_valid. }
+  iModIntro. iExists {| na_heap_heap_name := γh; na_heap_size_name := γs; na_heap_meta_name := γm |}.
+  iSplitR "Hfrag".
+  - iExists ∅, ∅; simpl. iFrame "Hh Hm". rewrite dom_empty_L. iFrame.
+    iPureIntro; split.
+    + set_solver.
+    + rewrite /block_sizes_wf. set_solver.
+  - rewrite big_opM_own_1 /to_na_heap big_sepM_fmap. done.
+Qed.
+
+(** The general form: besides the FFI's and the package state's initial
+    resources, the program gets every cell of the initial heap (in the lock
+    state it starts in), and it may assume that the Go local context of its
+    ghost state is that of the initial state. *)
+Theorem goose_recv_adequacy_heap `{ffi_sem: ffi_semantics} `{!ffi_interp ffi}
   {go_gctx : GoGlobalContext}
   {Hffi_adequacy:ffi_interp_adequacy} Σ `{!all.allG Σ} `{hPre: !gooseGpreS Σ} s e r σ g φ φr φinv n :
   ffi_initgP g.(global_world) → ffi_initP σ.(world) g.(global_world) →
-  (∀ (Hl : gooseLocalGS Σ) (Hg : gooseGlobalGS Σ), ∃ Φinv,
+  (∀ (Hl : gooseLocalGS Σ) (Hg : gooseGlobalGS Σ),
+     goose_go_local_context = σ.(go_state).(go_lctx) → ∃ Φinv,
      ⊢ ffi_global_start goose_ffiGlobalGS g.(global_world) -∗
        ffi_local_start goose_ffiLocalGS σ.(world) -∗
        own_go_state σ.(go_state).(package_state) -∗
+       ([∗ map] l ↦ lkv ∈ σ.(heap),
+          na_heap_pointsto_st (tls lkv.1) l (DfracOwn 1) lkv.2) -∗
        pre_borrowN n ={⊤}=∗
        □ (∀ σ nt, state_interp σ nt -∗ |NC={⊤, ∅}=> ⌜ φinv σ ⌝) ∗
        □ (∀ hL : gooseLocalGS Σ,
@@ -25,7 +63,7 @@ Proof.
   intros Hinit Hinitg Hwp.
   eapply (wp_recv_adequacy_inv Σ _ _ (n * 4 + crash_borrow_ginv_number)).
   iIntros (???).
-  iMod (na_heap_name_init tls σ.(heap)) as (name_na_heap) "Hh".
+  iMod (na_heap_name_init_pointsto tls σ.(heap)) as (name_na_heap) "[Hh Hcells]".
   iMod (ffi_global_init _ _ g.(global_world)) as (ffi_namesg) "(Hgw&Hgstart)"; first by eauto.
   iMod (ffi_local_init _ _ σ.(world)) as (ffi_names) "(Hw&Hstart)"; first by eauto.
   iMod (go_state_init _ σ.(go_state).(package_state)) as (globals_name) "(Hg & Hgfrag)".
@@ -43,12 +81,12 @@ Proof.
                           (σ.(go_state).(go_lctx))
                           (na_heapGS_update_pre _ name_na_heap)
                           (go_stateGS_update_pre Σ _ globals_name)).
-  destruct (Hwp _ _) as [Φinv Hwp']. clear Hwp.
+  destruct (Hwp hL hG eq_refl) as [Φinv Hwp']. clear Hwp.
   iExists state_interp, global_state_interp, fork_post.
   iExists _, _.
   iExists ((λ Hinv hGen, ∃ hL:gooseLocalGS Σ, ⌜hGen = goose_generationGS (L:=hL)⌝ ∗ Φinv (HeapGS _ _ _ hL _)))%I.
   iDestruct (@cred_frag_to_pre_borrowN _ _ _ _ _ hG _ n with "Hpre") as "Hpre".
-  iMod (Hwp' with "[$] [$] [$] [$]") as "(#H1&#H2&Hwp)".
+  iMod (Hwp' with "[$] [$] [$] Hcells [$]") as "(#H1&#H2&Hwp)".
   iModIntro.
   iSplitR.
   { iModIntro. iIntros (??) "Hσ".
@@ -65,6 +103,27 @@ Proof.
   iSplit; first by eauto.
   iSplit; first by eauto.
   iIntros (? v) "(% & % & $)". done.
+Qed.
+
+Theorem goose_recv_adequacy `{ffi_sem: ffi_semantics} `{!ffi_interp ffi}
+  {go_gctx : GoGlobalContext}
+  {Hffi_adequacy:ffi_interp_adequacy} Σ `{!all.allG Σ} `{hPre: !gooseGpreS Σ} s e r σ g φ φr φinv n :
+  ffi_initgP g.(global_world) → ffi_initP σ.(world) g.(global_world) →
+  (∀ (Hl : gooseLocalGS Σ) (Hg : gooseGlobalGS Σ), ∃ Φinv,
+     ⊢ ffi_global_start goose_ffiGlobalGS g.(global_world) -∗
+       ffi_local_start goose_ffiLocalGS σ.(world) -∗
+       own_go_state σ.(go_state).(package_state) -∗
+       pre_borrowN n ={⊤}=∗
+       □ (∀ σ nt, state_interp σ nt -∗ |NC={⊤, ∅}=> ⌜ φinv σ ⌝) ∗
+       □ (∀ hL : gooseLocalGS Σ,
+           let hG := HeapGS _ _ _ hL _ in
+           Φinv hG -∗ □ ∀ σ nt, state_interp σ nt -∗ |NC={⊤, ∅}=> ⌜ φinv σ ⌝) ∗
+       wpr s ⊤ e r (λ v, ⌜φ v⌝) (Φinv) (λ _ v, ⌜φr v⌝)) →
+  recv_adequate (CS := goose_crash_lang) s e r σ g (λ v _ _, φ v) (λ v _ _, φr v) (λ σ _, φinv σ).
+Proof.
+  intros Hinit Hinitg Hwp. apply (goose_recv_adequacy_heap Σ s e r σ g φ φr φinv n); [done|done|].
+  intros Hl Hg _. destruct (Hwp Hl Hg) as [Φinv Hwp']. exists Φinv.
+  iIntros "Hgs Hls Hgo _ Hpre". iApply (Hwp' with "Hgs Hls Hgo Hpre").
 Qed.
 
 Section failstop.
@@ -94,6 +153,39 @@ Proof.
   exists (λ _, True)%I.
   iIntros "Hstartg Hstart _ _".
   iMod (Hwp with "Hstartg Hstart") as "Hwp". iModIntro.
+  iSplitR.
+  { iIntros "!> * _". iApply ncfupd_mask_intro; auto. }
+  iSplitR.
+  { do 2 iIntros "!> * _". iApply ncfupd_mask_intro; auto. }
+  iApply (idempotence_wpr (hG:=HeapGS _ _ _ _ _) _ _ _ _ _ _ _ (λ _, True%I) with "[Hwp] []").
+  { iApply wp_wpc. eauto. }
+  { iModIntro. iIntros (????) "_".
+    iModIntro.
+    rewrite /crash_modality.post_crash.
+    iIntros (???) "H". iModIntro; iFrame. iIntros "H". iSplit; first auto.
+    iApply wpc_value; eauto.
+  }
+Qed.
+
+(** [goose_recv_adequacy_failstop], with the initial heap and the Go local
+    context of [goose_recv_adequacy_heap]. *)
+Theorem goose_recv_adequacy_failstop_heap
+        Σ `{!all.allG Σ} `{hPre: !gooseGpreS Σ} (e: expr) (σ: state) (g: global_state) φpost :
+  ffi_initgP g.(global_world) → ffi_initP σ.(world) g.(global_world) →
+  (∀ (Hl : gooseLocalGS Σ) (Hg : gooseGlobalGS Σ),
+    goose_go_local_context = σ.(go_state).(go_lctx) →
+    ⊢ ffi_global_start goose_ffiGlobalGS g.(global_world) -∗
+      ffi_local_start goose_ffiLocalGS σ.(world) -∗
+      own_go_state σ.(go_state).(package_state) -∗
+      ([∗ map] l ↦ lkv ∈ σ.(heap),
+         na_heap_pointsto_st (tls lkv.1) l (DfracOwn 1) lkv.2) ={⊤}=∗
+      WP e @ ⊤ {{ v, ⌜φpost v⌝ }}) →
+  adequate_failstop e σ g (λ v _ _, φpost v).
+Proof.
+  intros Hinitg Hinit Hwp. eapply goose_recv_adequacy_heap with (n:=0%nat); [done..|].
+  intros Hl Hg Hlctx. exists (λ _, True)%I.
+  iIntros "Hstartg Hstart Hgo Hcells _".
+  iMod (Hwp Hl Hg Hlctx with "Hstartg Hstart Hgo Hcells") as "Hwp". iModIntro.
   iSplitR.
   { iIntros "!> * _". iApply ncfupd_mask_intro; auto. }
   iSplitR.
