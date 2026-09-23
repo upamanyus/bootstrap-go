@@ -167,37 +167,4 @@ Proof.
   }
 Qed.
 
-(** [goose_recv_adequacy_failstop], with the initial heap and the Go local
-    context of [goose_recv_adequacy_heap]. *)
-Theorem goose_recv_adequacy_failstop_heap
-        Σ `{!all.allG Σ} `{hPre: !gooseGpreS Σ} (e: expr) (σ: state) (g: global_state) φpost :
-  ffi_initgP g.(global_world) → ffi_initP σ.(world) g.(global_world) →
-  (∀ (Hl : gooseLocalGS Σ) (Hg : gooseGlobalGS Σ),
-    goose_go_local_context = σ.(go_state).(go_lctx) →
-    ⊢ ffi_global_start goose_ffiGlobalGS g.(global_world) -∗
-      ffi_local_start goose_ffiLocalGS σ.(world) -∗
-      own_go_state σ.(go_state).(package_state) -∗
-      ([∗ map] l ↦ lkv ∈ σ.(heap),
-         na_heap_pointsto_st (tls lkv.1) l (DfracOwn 1) lkv.2) ={⊤}=∗
-      WP e @ ⊤ {{ v, ⌜φpost v⌝ }}) →
-  adequate_failstop e σ g (λ v _ _, φpost v).
-Proof.
-  intros Hinitg Hinit Hwp. eapply goose_recv_adequacy_heap with (n:=0%nat); [done..|].
-  intros Hl Hg Hlctx. exists (λ _, True)%I.
-  iIntros "Hstartg Hstart Hgo Hcells _".
-  iMod (Hwp Hl Hg Hlctx with "Hstartg Hstart Hgo Hcells") as "Hwp". iModIntro.
-  iSplitR.
-  { iIntros "!> * _". iApply ncfupd_mask_intro; auto. }
-  iSplitR.
-  { do 2 iIntros "!> * _". iApply ncfupd_mask_intro; auto. }
-  iApply (idempotence_wpr (hG:=HeapGS _ _ _ _ _) _ _ _ _ _ _ _ (λ _, True%I) with "[Hwp] []").
-  { iApply wp_wpc. eauto. }
-  { iModIntro. iIntros (????) "_".
-    iModIntro.
-    rewrite /crash_modality.post_crash.
-    iIntros (???) "H". iModIntro; iFrame. iIntros "H". iSplit; first auto.
-    iApply wpc_value; eauto.
-  }
-Qed.
-
 End failstop.

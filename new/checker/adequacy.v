@@ -11,9 +11,9 @@
     every ghost state and under every Go semantics satisfying the
     assumptions.
 
-    The proof is the fail-stop adequacy theorem of GooseLang, in the form
-    [goose_recv_adequacy_failstop_heap] (src/goose_lang/recovery_adequacy.v),
-    which also hands the program the cells of the initial heap. Inside it,
+    The proof is GooseLang's adequacy theorem for crash-free runs,
+    [goose_adequacy_heap] (src/goose_lang/heap_adequacy.v), which also hands
+    the program the cells of the initial heap. Inside it,
     [wp_Check_closed] reads the input trees out of those cells and runs
     [wp_Check]. The postcondition that adequacy extracts has to be a fact
     that does not mention the ghost state adequacy allocates, and
@@ -21,7 +21,7 @@
     results in every ghost state (see exec_spec.v). *)
 From New.checker Require Import prelude layout.
 From New.checker.fn Require Import Check.
-From Perennial.goose_lang Require Import adequacy recovery_adequacy.
+From Perennial.goose_lang Require Import adequacy heap_adequacy.
 
 Section closed.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
@@ -75,9 +75,9 @@ Theorem check_adequate (f : cfunc) (vars : list sort) (pre post : cassn)
   triple_holds f vars pre post.
 Proof.
   intros Hinitg Hinit Hlctx Hin Hsteps.
-  assert (adequate_failstop (@! checker.Check #lf #svars #lpre #lpost)%E σ g
-            (λ v _ _, v = #true → triple_holds f vars pre post)) as Had.
-  { apply (goose_recv_adequacy_failstop_heap checkΣ); [done|done|].
+  assert (goose_adequate (@! checker.Check #lf #svars #lpre #lpost)%E σ g
+            (λ v, v = #true → triple_holds f vars pre post)) as Had.
+  { apply (goose_adequacy_heap checkΣ); [done|done|].
     intros Hl Hg Hctx.
     (* The run's Go local context is [lctx], so [sem] and [package_sem]
        describe the semantics of the ghost state adequacy provides. *)
@@ -87,10 +87,7 @@ Proof.
     iApply (wp_Check_closed (hG := HeapGS checkΣ _ Hg (GooseLocalGS _ crashG ffiL lctx naG goG) _)
               with "Hcells").
     done. }
-  destruct Had as [Hnormal _ _ _].
-  pose proof (Hnormal tp σ' g' #true) as Hres. simpl in Hres.
-  apply Hres; last done.
-  by constructor.
+  by apply (goose_adequate_result _ _ _ _ Had tp σ' g' #true).
 Qed.
 
 End adequacy.

@@ -526,7 +526,10 @@ of `check_sound`, in every `heapGS Σ` and under every Go semantics satisfying
   no heap cells and did not relate the ghost state's Go local context to
   `σ`'s. `goose_recv_adequacy_heap` (src/goose_lang/recovery_adequacy.v) does
   both; the old theorem is now its corollary, with the same statement.
-  `goose_recv_adequacy_failstop_heap` is the fail-stop form.
+  `goose_adequacy_heap` (src/goose_lang/heap_adequacy.v) is the form for
+  crash-free runs that check_adequate uses; it concludes `goose_adequate`,
+  which is about `rtc erased_step` alone. It is proved from
+  `goose_recv_adequacy_heap` with a restart program that is never run.
   `na_heap_name_init_pointsto` lives there too, not in na_heap.v: editing
   na_heap.v rebuilds nearly all of Perennial.
 - **Layout.** layout.v mirrors `is_type`/`is_term`/`is_expr`/`is_assn`

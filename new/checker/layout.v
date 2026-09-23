@@ -206,7 +206,7 @@ Definition heap_ro (h : heap_t) : iProp Σ :=
 Proof. apply _. Qed.
 
 (** From the cells of the initial heap, as adequacy hands them out
-    ([goose_recv_adequacy_failstop_heap]). *)
+    ([goose_adequacy_heap]). *)
 Lemma heap_ro_init (h : heap_t) :
   ([∗ map] l ↦ lkv ∈ h, na_heap_pointsto_st (tls lkv.1) l (DfracOwn 1) lkv.2) ==∗ heap_ro h.
 Proof.
