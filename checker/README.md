@@ -38,6 +38,8 @@ new/checker/soundness.v   the soundness statement (definitions + Axiom)
 new/proof/github_com/mit_pdos/perennial/checker/examples/   hand-written Rocq
                           proofs of the same six specifications, one file
                           per function
+  reflect/                the same six lemmas again, proved with wp_symex
+new/proof/symex/          wp_symex: symbolic execution by reflection (see below)
 new/code/github_com/mit_pdos/perennial/checker.v      Goose output for checker/
 new/code/github_com/mit_pdos/perennial/checker/examples.v  Goose output for the examples
 ```
@@ -120,9 +122,10 @@ points-to, two wrong posts, an ill-sorted spec) and a few variants, asserting th
 exit code of each.
 
 The last section of the demo establishes each of the six specifications the
-other way too, with the hand-written Rocq proof of it in
-`new/proof/github_com/mit_pdos/perennial/checker/examples/`, and prints the
-wall-clock time of each. It rebuilds one `.vok` file per function -- the
+other way too, in Rocq, with two proofs of each: the hand-written one in
+`new/proof/github_com/mit_pdos/perennial/checker/examples/`, and one by
+reflection in its `reflect/` subdirectory (see "Proof by reflection" below). It
+prints the wall-clock time of each: it rebuilds one `.vok` file per proof -- the
 incremental cost of re-checking that one proof against prebuilt dependencies --
 and compares it against one whole run of the checker.
 
@@ -136,10 +139,29 @@ This part needs `rocq` in `PATH` and the dependencies built once, with
 
 ```
 make -j$(nproc) TIMED=false \
-  new/proof/github_com/mit_pdos/perennial/checker/examples/examples_init.vos
+  new/proof/github_com/mit_pdos/perennial/checker/examples/examples_init.vo \
+  new/proof/symex/tactic.vo
 ```
 
-and says so and skips itself if either is missing.
+(or the same targets as `.vos`), and says so and skips itself if either is
+missing. A typical run:
+
+```
+                hand-written     by reflection
+function        -vok   proof      -vok   proof  gocheck hand/refl  refl/go
+Double          5.16    2.38      3.43    0.76     0.05        3x      15x
+Max             4.10    1.21      3.05    0.51     0.05        2x      10x
+Swap            4.49    1.49      3.06    0.26     0.05        6x       5x
+Abs             3.74    1.25      3.41    0.33     0.05        4x       7x
+CondStore       3.93    1.41      3.24    0.57     0.05        2x      11x
+Median3        24.27   21.63      5.79    3.16     0.05        7x      63x
+```
+
+The gap grows with the length of the program: the hand-written Median3 spends
+about 17 of its 22 seconds stepping through the eight paths with `wp_auto` and
+`wp_if_destruct`, which `wp_symex` does in a quarter of a second. What is left of
+the reflective proofs is the per-path reasoning (for Median3, refuting the two
+infeasible paths with `word`, about 1.7 seconds), which the two proofs share.
 
 Or by hand, e.g.
 
@@ -152,6 +174,52 @@ go run ./gocheck -pkg ./checker/examples \
 Exit codes: 0 verified (or strongest postcondition printed when `-post` is
 omitted), 1 the checker answered false (unsafe path or post not established),
 2 usage/parse/translation error.
+
+## Proof by reflection: `wp_symex`
+
+`new/proof/symex/` is a from-scratch reflective symbolic executor for the same
+kind of Go code, written in Gallina and proved sound once, so that a proof of a
+function's specification does not have to step through the function in the
+proof mode. It is independent of the Go checker and of
+`new/checker/`: nothing in it mirrors checker/ or the checker's Rocq model.
+
+```
+syntax.v   the reflected syntax (sexpr: the loop-free fragment Goose emits for
+           int/int64/uint64/bool/pointer code, including its exception monad),
+           symbolic values over numbered atoms, and the executor [exec]
+           (continuation-passing, forks on if:, one path per branch)
+denote.v   what the syntax means: values and expressions as GooseLang,
+           symbolic heaps as typed points-to, paths as the residual goal
+sound.v    symex_sound, proved once by induction on the executor's fuel
+tactic.v   wp_symex: an Ltac reifier and the tactic
+```
+
+On a goal `WP e {{ Φ }}` (for instance right after `wp_start`), `wp_symex`
+reifies `e`, and the full-ownership typed points-to facts of the spatial context,
+into syntax over an environment of the Rocq words, booleans and locations they
+mention; runs the executor with `vm_compute`; applies `symex_sound`, checking
+that the syntax denotes `e` by conversion and the executor's answer with a
+`vm_cast`; frames the initial heap; and leaves one goal per path:
+
+```
+∀ (locations allocated on the path) (_ : path condition) .., cells -∗ .. -∗ Φ ret
+```
+
+with the path condition stated the way a person would write it
+(`uint.Z b ≤ uint.Z a` for the `else` branch of `a < b`), and without the cells
+Goose allocates for parameters and locals, which nothing the caller can name
+points to. `symex_intros` introduces all of it. For `Max`:
+
+```
+wp_start as "_". wp_symex.
+- symex_intros. iApply "HΦ". iLeft. by iPureIntro.
+- symex_intros. iApply "HΦ". iRight. by iPureIntro.
+```
+
+Unlike the Go checker, the executor needs no trust: a `wp_symex` proof is an
+ordinary Rocq proof, checked by the kernel. What it does not do is reason about
+the path conditions -- infeasible paths are left as goals with contradictory
+hypotheses, to be refuted by `word` -- or support loops, calls, structs or slices.
 
 ## Constraints on the core package (Goose translatability)
 

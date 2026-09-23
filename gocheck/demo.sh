@@ -9,10 +9,12 @@
 #   1  the checker rejected the program (unsafe) or the postcondition
 #   2  a usage, parse, translation or sort error
 #
-# The last section re-checks the same six specifications the slow way, with
-# the hand-written Rocq proofs in
-# new/proof/github_com/mit_pdos/perennial/checker/examples/, and times each
-# proof against the corresponding run of the checker.
+# The last section re-checks the same six specifications the slow way, twice:
+# with the hand-written Rocq proofs in
+# new/proof/github_com/mit_pdos/perennial/checker/examples/, and with the
+# proofs by reflection in its reflect/ subdirectory (which use the reflective
+# symbolic executor of new/proof/symex/), and times each proof against the
+# corresponding run of the checker.
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
@@ -115,10 +117,17 @@ echo "$pass cases behaved as expected, $fail did not"
 
 # --- The same specifications, checked by Rocq -------------------------------
 #
-# For each function we rebuild just the .vok file of its proof -- that is, we
-# re-check that one proof against already-built dependencies, the way an
-# incremental `make` would -- and run the checker on the same specification,
-# and report both wall-clock times.
+# For each function we rebuild just the .vok file of each of its two proofs --
+# that is, we re-check that one proof against already-built dependencies, the
+# way an incremental `make` would -- and run the checker on the same
+# specification, and report the wall-clock times.
+#
+# The two proofs establish the same lemma. The hand-written one steps through
+# the program with wp_auto and wp_if_destruct, building a proof term one
+# instruction at a time. The one by reflection calls wp_symex, which reifies
+# the whole function body, runs a symbolic executor written in Gallina on it
+# with vm_compute, and applies a soundness theorem proved once and for all,
+# leaving one goal per path.
 #
 # Most of a -vok run is spent loading the proof's imports (the Perennial and
 # Iris prelude), which says nothing about the proof itself, so we also report
@@ -127,9 +136,10 @@ echo "$pass cases behaved as expected, $fail did not"
 # be summed separately.
 
 PROOFS=new/proof/github_com/mit_pdos/perennial/checker/examples
-# examples_init.vos is the last .vos in the proofs' dependency closure, so its
-# presence means the whole closure has been built.
-DEPS=$PROOFS/examples_init.vos
+# examples_init and the tactic library are the last files in the proofs'
+# dependency closure, so their presence means the whole closure has been
+# built (as .vo, or as .vos by `make vos`; a -vok run can load either).
+DEPS="$PROOFS/examples_init new/proof/symex/tactic"
 NCPU=$(nproc 2>/dev/null || echo 4)
 
 # Microseconds since the epoch. $EPOCHREALTIME is a bash 5 builtin; it holds
@@ -183,12 +193,16 @@ rocq_available() {
 		echo "(With opam: eval \$(opam env --switch=perennial))"
 		return 1
 	fi
-	if [ ! -f "$DEPS" ]; then
+	local d missing=
+	for d in $DEPS; do
+		[ -f "$d.vo" ] || [ -f "$d.vos" ] || missing="$missing $d.vo"
+	done
+	if [ -n "$missing" ]; then
 		echo "The proofs' dependencies have not been built, so only the"
 		echo "checker can be timed. Build them once (this takes a few"
 		echo "minutes, and is not part of what we time) with"
 		echo
-		echo "    make -j$NCPU TIMED=false $DEPS"
+		echo "    make -j$NCPU TIMED=false$missing"
 		return 1
 	fi
 	return 0
@@ -197,37 +211,53 @@ rocq_available() {
 cmp_pass=0
 cmp_fail=0
 
-row() { printf '%-11s %10s %9s %10s %10s %9s\n' "$@"; }
+row() { printf '%-10s %9s %7s %9s %7s %8s %9s %8s\n' "$@"; }
+
+# time_proof FILE.v -- rebuild FILE.vok alone, and set t_total (seconds,
+# wall clock), t_proof (seconds spent on the proof itself, imports excluded)
+# and t_ok.
+time_proof() {
+	local v=$1 vok=${1%.v}.vok t0 t1 status
+	rm -f "$vok"
+	t0=$(now_us)
+	# shellcheck disable=SC2046 # the _RocqProject arguments must split
+	rocq compile $(rocq_args) -vok -time -o "$vok" "$v" >"$TIMELOG" 2>/dev/null
+	status=$?
+	t1=$(now_us)
+	t_total=$(secs $((t1 - t0)))
+	t_proof=$(rocq_phase_secs "$TIMELOG" proof)
+	t_ok=yes
+	if [ "$status" -ne 0 ]; then
+		echo "rocq failed on $v"
+		t_ok=no
+	fi
+}
+
+# ratio A B -- A / B, as "12x"
+ratio() {
+	awk -v a="$1" -v b="$2" 'BEGIN { if (b > 0) printf "%.0fx", a / b; else printf "-" }'
+}
 
 # compare NAME PROOF-BASENAME GOCHECK-ARGS...
 compare() {
 	local name=$1 proof=$2
 	shift 2
-	local vok=$PROOFS/$proof.vok
-	local t0 t1 rocq_us gocheck_us status ok=yes imports proof_only
+	local t0 t1 gocheck status ok=yes hand_total hand_proof refl_total refl_proof
 
-	# Rocq: rebuild this one .vok, nothing else.
-	rm -f "$vok"
-	t0=$(now_us)
-	# shellcheck disable=SC2046 # the _RocqProject arguments must split
-	rocq compile $(rocq_args) -vok -time -o "$vok" "$PROOFS/$proof.v" \
-		>"$TIMELOG" 2>/dev/null
-	status=$?
-	t1=$(now_us)
-	rocq_us=$((t1 - t0))
-	if [ "$status" -ne 0 ]; then
-		echo "$name: rocq failed on $PROOFS/$proof.v"
-		ok=no
-	fi
-	imports=$(rocq_phase_secs "$TIMELOG" imports)
-	proof_only=$(rocq_phase_secs "$TIMELOG" proof)
+	# Rocq, twice: the hand-written proof and the proof by reflection.
+	time_proof "$PROOFS/$proof.v"
+	hand_total=$t_total hand_proof=$t_proof
+	[ "$t_ok" = yes ] || ok=no
+	time_proof "$PROOFS/reflect/$proof.v"
+	refl_total=$t_total refl_proof=$t_proof
+	[ "$t_ok" = yes ] || ok=no
 
 	# The checker, on the same specification.
 	t0=$(now_us)
 	"$GOCHECK" "$@" >/dev/null 2>&1
 	status=$?
 	t1=$(now_us)
-	gocheck_us=$((t1 - t0))
+	gocheck=$(secs $((t1 - t0)))
 	if [ "$status" -ne 0 ]; then
 		echo "$name: gocheck exited $status"
 		ok=no
@@ -238,13 +268,9 @@ compare() {
 	else
 		cmp_fail=$((cmp_fail + 1))
 	fi
-	row "$name" "$(secs "$rocq_us")" "$imports" "$proof_only" \
-		"$(secs "$gocheck_us")" \
-		"$(awk -v r="$proof_only" -v g="$gocheck_us" \
-			'BEGIN {
-				g /= 1e6
-				if (g > 0) printf "%.0fx", r / g; else printf "-"
-			}')"
+	row "$name" "$hand_total" "$hand_proof" "$refl_total" "$refl_proof" \
+		"$gocheck" "$(ratio "$hand_proof" "$refl_proof")" \
+		"$(ratio "$refl_proof" "$gocheck")"
 }
 
 echo
@@ -254,7 +280,8 @@ echo "--------------------------------------------------------------"
 if rocq_available; then
 	rocq --version | head -1
 	TIMELOG=$(mktemp)
-	row function "-vok total" imports proof gocheck speedup
+	printf '%-10s %17s %17s\n' "" "hand-written" "by reflection"
+	row function "-vok" proof "-vok" proof gocheck hand/refl refl/go
 	compare Double double -pkg $PKG -pre "$DOUBLE_PRE" \
 		-post "$DOUBLE_POST" Double
 	compare Max max -pkg $PKG -post "$MAX_POST" Max
@@ -265,14 +292,15 @@ if rocq_available; then
 	compare Median3 median3 -pkg $PKG -post "$MEDIAN_POST" Median3
 	rm -f "$TIMELOG"
 	echo "--------------------------------------------------------------"
-	echo "Seconds. -vok total is the wall-clock time of rebuilding that"
-	echo "one .vok against prebuilt dependencies; imports and proof split"
-	echo "it into loading the proof's imports and checking the proof"
-	echo "itself, as rocq -time attributes time per command. The two do"
-	echo "not quite add up to the total, which also pays for Rocq's own"
-	echo "startup. The gocheck column is one whole run of the checker,"
-	echo "process startup and loading the Go package included, so the"
-	echo "speedup -- proof over that whole run -- is conservative."
+	echo "Seconds. -vok is the wall-clock time of rebuilding that one"
+	echo ".vok against prebuilt dependencies; proof is the part of it"
+	echo "spent checking the proof itself rather than loading its"
+	echo "imports, as rocq -time attributes time per command (the rest"
+	echo "is imports and Rocq's own startup). hand/refl is how much"
+	echo "faster the proof by reflection (wp_symex, new/proof/symex/) is"
+	echo "than the hand-written one; refl/go compares it with one whole"
+	echo "run of the checker, process startup and loading the Go"
+	echo "package included, so that ratio is conservative."
 	echo "$cmp_pass of $((cmp_pass + cmp_fail)) comparisons agreed"
 	[ "$cmp_fail" -eq 0 ] || fail=$((fail + cmp_fail))
 fi
