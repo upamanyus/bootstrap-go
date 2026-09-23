@@ -221,7 +221,12 @@ Qed.
 Fixpoint vars_below (k : nat) (t : term) : Prop :=
   match t with
   | TVar n => (n < k)%nat
-  | TPat _ | TResult | TInt _ | TBool _ | TUnit | TNull | TExec => True
+  (* Pattern variables and [ret] belong to postconditions; a term of the
+     program's own execution never mentions them. The postcondition matcher
+     relies on this: it re-interprets a path's return term under a valuation
+     whose pattern variables and [ret] have been changed. *)
+  | TPat _ | TResult => False
+  | TInt _ | TBool _ | TUnit | TNull | TExec => True
   | TPlus a b | TMinus a b | TMul a b | TEq a b | TLt _ a b | TLe _ a b =>
       vars_below k a ∧ vars_below k b
   | TNeg a | TNot a | TRet a => vars_below k a

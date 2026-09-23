@@ -939,3 +939,24 @@ func TestExportedHelpers(t *testing.T) {
 		t.Fatal("term equality should be nil-safe")
 	}
 }
+
+// TestPostNamesAllocatedVar is a regression test for a soundness bug: the
+// postcondition was sort-checked against the path's logical variables, which
+// include the ones allocation adds. Those have no meaning in the soundness
+// statement -- post_interp interprets TVar n by the caller's valuation, which
+// is unconstrained beyond the declared vars -- so a postcondition naming one
+// claimed that the fresh cell was at an arbitrary caller-chosen location.
+// Here vars is empty, so TVar 0 is not a declared variable at all, and
+// {emp} new(int){TVar 0 ↦ 0} is false.
+func TestPostNamesAllocatedVar(t *testing.T) {
+	f := &checker.Func{Body: eAlloc(tyInt(), eInt(0))}
+	post := &checker.Assn{Kind: checker.APointsTo, X: tVar(0), Y: tInt(0)}
+	if checker.Check(f, nil, aEmp(), post) {
+		t.Fatal("a postcondition naming an allocated variable was accepted")
+	}
+	// The same cell is described correctly through ret.
+	good := &checker.Assn{Kind: checker.APointsTo, X: tRes(), Y: tInt(0)}
+	if !checker.Check(f, nil, aEmp(), good) {
+		t.Fatal("ret ↦ 0 should hold of new(int) storing 0")
+	}
+}

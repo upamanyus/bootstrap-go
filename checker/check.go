@@ -163,26 +163,29 @@ func Analyze(f *Func, vars []Sort, pre *Assn) ([]Path, *Failure) {
 }
 
 // Verify checks that every path satisfies at least one disjunct of post.
-// Heap cells that no disjunct mentions are permitted to leak. vars is
-// accepted for symmetry with Analyze; the sorts that matter are the ones
-// recorded in each path's state, which allocation may have extended.
+// Heap cells that no disjunct mentions are permitted to leak. vars are the
+// declared logical variables, the same as Analyze's: post may name only
+// those, not the ones allocation added to a path (see checkSorts).
 func Verify(paths []Path, vars []Sort, post *Assn) *Failure {
 	ds := parseDisjuncts(post)
 	var pi uint64 = 0
 	for _, p := range paths {
-		pass := false
-		for _, d := range ds {
-			if checkDisjunct(p, d) == nil {
-				pass = true
-				break
-			}
-		}
-		if !pass {
+		if !anyDisjunct(p, ds, vars) {
 			return &Failure{Reason: RPostNoDisjunct, PathIdx: pi}
 		}
 		pi = pi + 1
 	}
 	return nil
+}
+
+// anyDisjunct reports whether path p satisfies some disjunct of ds.
+func anyDisjunct(p Path, ds []*disjunct, vars []Sort) bool {
+	for _, d := range ds {
+		if checkDisjunct(p, d, vars) == nil {
+			return true
+		}
+	}
+	return false
 }
 
 // DisjunctFailure records why one disjunct of a postcondition failed for one
@@ -204,7 +207,7 @@ func Explain(paths []Path, vars []Sort, post *Assn) []DisjunctFailure {
 		pass := false
 		var di uint64 = 0
 		for _, d := range ds {
-			fl := checkDisjunct(p, d)
+			fl := checkDisjunct(p, d, vars)
 			if fl == nil {
 				pass = true
 			} else {

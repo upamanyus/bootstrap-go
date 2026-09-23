@@ -84,254 +84,355 @@ func negate(t *Term) *Term {
 // Path per feasible execution path, in evaluation order (for `if`, the `then`
 // paths precede the `else` paths), or a Failure if some path could not be
 // shown safe.
+//
+// Each case lives in its own function, all with exec's signature, so that the
+// soundness proof can treat each separately (see new/checker/): exec itself
+// only dispatches on the kind.
 func exec(e *Expr, en *env, st *State) ([]Path, *Failure) {
 	if e == nil {
 		return nil, &Failure{Reason: RUnsupported}
 	}
 	switch e.Kind {
 	case EInt:
-		return onePath(&Term{Kind: TInt, Num: e.Num}, st), nil
+		return execInt(e, en, st)
 	case EBool:
-		return onePath(&Term{Kind: TBool, Num: e.Num}, st), nil
+		return execBool(e, en, st)
 	case EUnit:
-		return onePath(&Term{Kind: TUnit}, st), nil
+		return execUnit(e, en, st)
 	case EVar:
-		t, ok := envLookup(en, e.Name)
-		if !ok {
-			return nil, &Failure{Reason: RUnboundVar, Name: e.Name, Expr: e}
-		}
-		return onePath(t, st), nil
+		return execVar(e, en, st)
 	case ELet:
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			// The name is always bound, even when it is empty: Goose emits
-			// `let: Name := A in B`, which binds Name whatever it is, and
-			// the checker has to agree with that denotation exactly. (A
-			// real Go declaration never has an empty name anyway.)
-			en2 := envBind(en, e.Name, p.Ret)
-			ps2, fl2 := exec(e.B, en2, p.St)
-			if fl2 != nil {
-				return nil, fl2
-			}
-			out = append(out, ps2...)
-		}
-		return out, nil
+		return execLet(e, en, st)
 	case ESeq:
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			ps2, fl2 := exec(e.B, en, p.St)
-			if fl2 != nil {
-				return nil, fl2
-			}
-			out = append(out, ps2...)
-		}
-		return out, nil
+		return execSeq(e, en, st)
 	case EIf:
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			ps2, fl2 := execIf(e, en, p.Ret, p.St)
-			if fl2 != nil {
-				return nil, fl2
-			}
-			out = append(out, ps2...)
-		}
-		return out, nil
+		return execIfs(e, en, st)
 	case ELoad:
-		_, tok := TypeSort(e.Ty)
-		if !tok {
-			return nil, &Failure{Reason: RBadType, Expr: e}
-		}
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			v, ok := heapLookup(p.St.Heap, p.Ret)
-			if !ok {
-				return nil, &Failure{Reason: RNoPointsTo, Expr: e, Got: p.Ret}
-			}
-			out = append(out, Path{Ret: v, St: p.St})
-		}
-		return out, nil
+		return execLoad(e, en, st)
 	case EStore:
-		_, tok := TypeSort(e.Ty)
-		if !tok {
-			return nil, &Failure{Reason: RBadType, Expr: e}
-		}
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			ps2, fl2 := exec(e.B, en, p.St)
-			if fl2 != nil {
-				return nil, fl2
-			}
-			for _, q := range ps2 {
-				st2 := q.St.clone()
-				h, ok := heapUpdate(st2.Heap, p.Ret, q.Ret)
-				if !ok {
-					return nil, &Failure{Reason: RNoPointsTo, Expr: e, Got: p.Ret}
-				}
-				st2.Heap = h
-				out = append(out, Path{Ret: &Term{Kind: TUnit}, St: st2})
-			}
-		}
-		return out, nil
+		return execStore(e, en, st)
 	case EAlloc:
-		_, tok := TypeSort(e.Ty)
-		if !tok {
-			return nil, &Failure{Reason: RBadType, Expr: e}
-		}
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			st2 := p.St.clone()
-			n := uint64(len(st2.Vars))
-			st2.Vars = append(st2.Vars, SortLoc)
-			l := &Term{Kind: TVar, Num: n}
-			st2.Heap = append(st2.Heap, Cell{Loc: l, Val: p.Ret})
-			out = append(out, Path{Ret: l, St: st2})
-		}
-		return out, nil
+		return execAlloc(e, en, st)
 	case EZero:
-		z, ok := typeZero(e.Ty)
-		if !ok {
-			return nil, &Failure{Reason: RBadType, Expr: e}
-		}
-		return onePath(z, st), nil
+		return execZero(e, en, st)
 	case EBinOp:
-		_, tok := TypeSort(e.Ty)
-		if !tok {
-			return nil, &Failure{Reason: RBadType, Expr: e}
-		}
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			ps2, fl2 := exec(e.B, en, p.St)
-			if fl2 != nil {
-				return nil, fl2
-			}
-			for _, q := range ps2 {
-				v, ok := applyBinOp(e.Op, e.Ty, q.St.Vars, p.Ret, q.Ret)
-				if !ok {
-					return nil, &Failure{Reason: RIllSorted, Expr: e, Want: p.Ret, Got: q.Ret}
-				}
-				out = append(out, Path{Ret: v, St: q.St})
-			}
-		}
-		return out, nil
+		return execBinOp(e, en, st)
 	case EUnOp:
-		_, tok := TypeSort(e.Ty)
-		if !tok {
-			return nil, &Failure{Reason: RBadType, Expr: e}
-		}
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			v, ok := applyUnOp(e.Op, e.Ty, p.St.Vars, p.Ret)
-			if !ok {
-				return nil, &Failure{Reason: RIllSorted, Expr: e, Got: p.Ret}
-			}
-			out = append(out, Path{Ret: v, St: p.St})
-		}
-		return out, nil
+		return execUnOp(e, en, st)
 	case EConvert:
-		_, tok := TypeSort(e.Ty)
-		if !tok {
-			return nil, &Failure{Reason: RBadType, Expr: e}
-		}
-		if !TypeEq(e.Ty, e.Ty2) {
-			return nil, &Failure{Reason: RBadConvert, Expr: e}
-		}
-		return exec(e.A, en, st)
+		return execConvert(e, en, st)
 	case EDo:
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			out = append(out, Path{Ret: &Term{Kind: TExec}, St: p.St})
-		}
-		return out, nil
+		return execDo(e, en, st)
 	case EReturn:
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			out = append(out, Path{Ret: &Term{Kind: TRet, A: p.Ret}, St: p.St})
-		}
-		return out, nil
+		return execReturn(e, en, st)
 	case EExcSeq:
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			if p.Ret == nil {
-				return nil, &Failure{Reason: RBadMonad, Expr: e}
-			}
-			if p.Ret.Kind == TExec {
-				ps2, fl2 := exec(e.B, en, p.St)
-				if fl2 != nil {
-					return nil, fl2
-				}
-				out = append(out, ps2...)
-			} else if p.Ret.Kind == TRet {
-				out = append(out, p)
-			} else {
-				return nil, &Failure{Reason: RBadMonad, Expr: e, Got: p.Ret}
-			}
-		}
-		return out, nil
+		return execExcSeq(e, en, st)
 	case EExcDo:
-		ps, fl := exec(e.A, en, st)
-		if fl != nil {
-			return nil, fl
-		}
-		var out []Path
-		for _, p := range ps {
-			if p.Ret == nil {
-				return nil, &Failure{Reason: RBadMonad, Expr: e}
-			}
-			if p.Ret.Kind == TExec {
-				out = append(out, Path{Ret: &Term{Kind: TUnit}, St: p.St})
-			} else if p.Ret.Kind == TRet {
-				out = append(out, Path{Ret: p.Ret.A, St: p.St})
-			} else {
-				return nil, &Failure{Reason: RBadMonad, Expr: e, Got: p.Ret}
-			}
-		}
-		return out, nil
+		return execExcDo(e, en, st)
 	}
 	return nil, &Failure{Reason: RUnsupported, Expr: e}
+}
+
+func execInt(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	return onePath(&Term{Kind: TInt, Num: e.Num}, st), nil
+}
+
+func execBool(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	return onePath(&Term{Kind: TBool, Num: e.Num}, st), nil
+}
+
+func execUnit(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	return onePath(&Term{Kind: TUnit}, st), nil
+}
+
+func execVar(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	t, ok := envLookup(en, e.Name)
+	if !ok {
+		return nil, &Failure{Reason: RUnboundVar, Name: e.Name, Expr: e}
+	}
+	return onePath(t, st), nil
+}
+
+func execLet(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		// The name is always bound, even when it is empty: Goose emits
+		// `let: Name := A in B`, which binds Name whatever it is, and
+		// the checker has to agree with that denotation exactly. (A
+		// real Go declaration never has an empty name anyway.)
+		en2 := envBind(en, e.Name, p.Ret)
+		ps2, fl2 := exec(e.B, en2, p.St)
+		if fl2 != nil {
+			return nil, fl2
+		}
+		out = append(out, ps2...)
+	}
+	return out, nil
+}
+
+func execSeq(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		ps2, fl2 := exec(e.B, en, p.St)
+		if fl2 != nil {
+			return nil, fl2
+		}
+		out = append(out, ps2...)
+	}
+	return out, nil
+}
+
+// execIfs runs the condition of an `if` and then execIf on each of its paths.
+func execIfs(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		ps2, fl2 := execIf(e, en, p.Ret, p.St)
+		if fl2 != nil {
+			return nil, fl2
+		}
+		out = append(out, ps2...)
+	}
+	return out, nil
+}
+
+func execLoad(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	_, tok := TypeSort(e.Ty)
+	if !tok {
+		return nil, &Failure{Reason: RBadType, Expr: e}
+	}
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		v, ok := heapLookup(p.St.Heap, p.Ret)
+		if !ok {
+			return nil, &Failure{Reason: RNoPointsTo, Expr: e, Got: p.Ret}
+		}
+		out = append(out, Path{Ret: v, St: p.St})
+	}
+	return out, nil
+}
+
+func execStore(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	_, tok := TypeSort(e.Ty)
+	if !tok {
+		return nil, &Failure{Reason: RBadType, Expr: e}
+	}
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		ps2, fl2 := exec(e.B, en, p.St)
+		if fl2 != nil {
+			return nil, fl2
+		}
+		qs, fl3 := storeAll(e, p.Ret, ps2)
+		if fl3 != nil {
+			return nil, fl3
+		}
+		out = append(out, qs...)
+	}
+	return out, nil
+}
+
+// storeAll performs the store of an EStore at location term l on each of the
+// paths the stored value reached.
+func storeAll(e *Expr, l *Term, ps []Path) ([]Path, *Failure) {
+	var out []Path
+	for _, q := range ps {
+		st2 := q.St.clone()
+		h, ok := heapUpdate(st2.Heap, l, q.Ret)
+		if !ok {
+			return nil, &Failure{Reason: RNoPointsTo, Expr: e, Got: l}
+		}
+		st2.Heap = h
+		out = append(out, Path{Ret: &Term{Kind: TUnit}, St: st2})
+	}
+	return out, nil
+}
+
+func execAlloc(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	_, tok := TypeSort(e.Ty)
+	if !tok {
+		return nil, &Failure{Reason: RBadType, Expr: e}
+	}
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		st2 := p.St.clone()
+		n := uint64(len(st2.Vars))
+		st2.Vars = append(st2.Vars, SortLoc)
+		l := &Term{Kind: TVar, Num: n}
+		st2.Heap = append(st2.Heap, Cell{Loc: l, Val: p.Ret})
+		out = append(out, Path{Ret: l, St: st2})
+	}
+	return out, nil
+}
+
+func execZero(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	z, ok := typeZero(e.Ty)
+	if !ok {
+		return nil, &Failure{Reason: RBadType, Expr: e}
+	}
+	return onePath(z, st), nil
+}
+
+func execBinOp(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	_, tok := TypeSort(e.Ty)
+	if !tok {
+		return nil, &Failure{Reason: RBadType, Expr: e}
+	}
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		ps2, fl2 := exec(e.B, en, p.St)
+		if fl2 != nil {
+			return nil, fl2
+		}
+		qs, fl3 := binOpAll(e, p.Ret, ps2)
+		if fl3 != nil {
+			return nil, fl3
+		}
+		out = append(out, qs...)
+	}
+	return out, nil
+}
+
+// binOpAll applies the operator of an EBinOp with left operand a to each of
+// the paths the right operand reached.
+func binOpAll(e *Expr, a *Term, ps []Path) ([]Path, *Failure) {
+	var out []Path
+	for _, q := range ps {
+		v, ok := applyBinOp(e.Op, e.Ty, q.St.Vars, a, q.Ret)
+		if !ok {
+			return nil, &Failure{Reason: RIllSorted, Expr: e, Want: a, Got: q.Ret}
+		}
+		out = append(out, Path{Ret: v, St: q.St})
+	}
+	return out, nil
+}
+
+func execUnOp(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	_, tok := TypeSort(e.Ty)
+	if !tok {
+		return nil, &Failure{Reason: RBadType, Expr: e}
+	}
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		v, ok := applyUnOp(e.Op, e.Ty, p.St.Vars, p.Ret)
+		if !ok {
+			return nil, &Failure{Reason: RIllSorted, Expr: e, Got: p.Ret}
+		}
+		out = append(out, Path{Ret: v, St: p.St})
+	}
+	return out, nil
+}
+
+func execConvert(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	_, tok := TypeSort(e.Ty)
+	if !tok {
+		return nil, &Failure{Reason: RBadType, Expr: e}
+	}
+	if !TypeEq(e.Ty, e.Ty2) {
+		return nil, &Failure{Reason: RBadConvert, Expr: e}
+	}
+	return exec(e.A, en, st)
+}
+
+func execDo(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		out = append(out, Path{Ret: &Term{Kind: TExec}, St: p.St})
+	}
+	return out, nil
+}
+
+func execReturn(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		out = append(out, Path{Ret: &Term{Kind: TRet, A: p.Ret}, St: p.St})
+	}
+	return out, nil
+}
+
+func execExcSeq(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		if p.Ret == nil {
+			return nil, &Failure{Reason: RBadMonad, Expr: e}
+		}
+		if p.Ret.Kind == TExec {
+			ps2, fl2 := exec(e.B, en, p.St)
+			if fl2 != nil {
+				return nil, fl2
+			}
+			out = append(out, ps2...)
+		} else if p.Ret.Kind == TRet {
+			out = append(out, p)
+		} else {
+			return nil, &Failure{Reason: RBadMonad, Expr: e, Got: p.Ret}
+		}
+	}
+	return out, nil
+}
+
+func execExcDo(e *Expr, en *env, st *State) ([]Path, *Failure) {
+	ps, fl := exec(e.A, en, st)
+	if fl != nil {
+		return nil, fl
+	}
+	var out []Path
+	for _, p := range ps {
+		if p.Ret == nil {
+			return nil, &Failure{Reason: RBadMonad, Expr: e}
+		}
+		if p.Ret.Kind == TExec {
+			out = append(out, Path{Ret: &Term{Kind: TUnit}, St: p.St})
+		} else if p.Ret.Kind == TRet {
+			out = append(out, Path{Ret: p.Ret.A, St: p.St})
+		} else {
+			return nil, &Failure{Reason: RBadMonad, Expr: e, Got: p.Ret}
+		}
+	}
+	return out, nil
 }
 
 // execIf runs one path of an `if`: c is the condition term reached on that
