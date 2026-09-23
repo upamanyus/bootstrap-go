@@ -12,7 +12,7 @@ From New.checker Require Import prelude nodes.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 Fixpoint assn_disjuncts (x : cassn) : list (option cassn) :=
   match x with
@@ -37,7 +37,7 @@ Lemma wp_append_nil (s2 : slice.t) (vs : list loc) Φ :
   (∀ s' : slice.t,
      s' ↦* vs ∗ own_slice_cap loc s' (DfracOwn 1) -∗ Φ #s') -∗
   WP #(functions go.append [go.SliceType (go.PointerType checker.Assn)]) #slice.nil #s2 {{ Φ }}.
-Proof.
+Proof using All.
   iIntros "Hs2 HΦ".
   iDestruct (own_slice_nil (V:=loc) (DfracOwn 1)) as "Hnil".
   iDestruct (own_slice_cap_nil (V:=loc)) as "Hnilc".
@@ -50,7 +50,7 @@ Lemma wp_collectDisjuncts (la : loc) (x : option cassn) :
   {{{ is_pkg_init checker ∗ is_oassn la x }}}
     @! checker.collectDisjuncts #la
   {{{ (s : slice.t), RET #s; is_assns s (oassn_disjuncts x) }}}.
-Proof.
+Proof using All.
   iLöb as "IH" forall (la x).
   wp_start as "#Hx".
   iDestruct (is_oassn_null with "Hx") as %Hnull.

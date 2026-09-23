@@ -39,7 +39,8 @@ End input_syntax.
 
 Section term_semantics.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
+Set Default Proof Using "All".
 
 (** * Injectivity of the value constructors *)
 

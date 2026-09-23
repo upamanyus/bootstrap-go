@@ -7,9 +7,9 @@
     started in a state [σ] whose heap holds the input trees ([inputs_in],
     layout.v, a plain proposition about [σ.(heap)]), and the run reduces, with
     no crash, to [#true] (with any other threads in any state). Then
-    [triple_holds] (defs.v): the triple of [check_sound] holds for [f], in
-    every ghost state and under every Go semantics satisfying the
-    assumptions.
+    [triple_holds] (defs.v): the triple of [check_sound] holds for [f], for
+    every FFI, in every ghost state and under every Go semantics satisfying
+    [go.Semantics].
 
     The proof is GooseLang's adequacy theorem for crash-free runs,
     [goose_adequacy_heap] (src/goose_lang/heap_adequacy.v), which also hands

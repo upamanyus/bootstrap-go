@@ -12,7 +12,8 @@ Set Default Proof Using "All".
 
 Section prelude.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
+Set Default Proof Using "All".
 
 (** The checker has no package-level state. *)
 Lemma wp_initialize' get_is_pkg_init :

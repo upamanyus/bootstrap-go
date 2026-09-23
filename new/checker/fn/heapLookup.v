@@ -10,7 +10,7 @@ From New.checker.fn Require Import termEq.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** The Gallina mirror: the first cell whose location term is syntactically
     [x]. *)
@@ -58,7 +58,7 @@ Lemma wp_heapLookup (s : slice.t) (H : list scell) (lx : loc) (x : term) :
   {{{ (lv : loc) (ok : bool), RET (#lv, #ok);
       is_heap s H ∗ ⌜ok = bool_decide (heap_lookup H x ≠ None)⌝ ∗
       is_oterm lv (heap_lookup H x) }}}.
-Proof.
+Proof using All.
   wp_start as "[Hheap #Hx]".
   iDestruct "Hheap" as (cs) "[Hs #Hcs]".
   iDestruct (big_sepL2_length with "Hcs") as %Hlen2.

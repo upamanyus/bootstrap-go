@@ -35,7 +35,7 @@ Proof. rewrite /pad. apply lookup_app_l_Some. Qed.
 
 Section parse_sound.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
 Set Default Proof Using "All".
 
 Lemma teval_ext V V' t :
@@ -169,7 +169,7 @@ End parse_sound.
 
 (** [binders_interp] entails an assertion, in any ghost state: the invariant of
     [parseDisjunct]'s loop, which ends in [dj_entails] (verify_def.v). *)
-Definition binders_entails {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
-    {ffi_sem : ffi_semantics ext ffi} (dj : cdisjunct) (b y : cassn) : Prop :=
-  ∀ Σ (hG : heapGS Σ) (sem : go.Semantics) (package_sem : checker.Assumptions),
+Definition binders_entails (dj : cdisjunct) (b y : cassn) : Prop :=
+  ∀ (ext : ffi_syntax) (ffi : ffi_model) (ffi_interp0 : ffi_interp ffi)
+    (ffi_sem : ffi_semantics ext ffi) Σ (hG : heapGS Σ) (sem : go.Semantics),
     ∀ V, binders_interp V dj b ⊢ assn_interp V y.

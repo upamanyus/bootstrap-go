@@ -13,7 +13,8 @@ Set Default Proof Using "All".
 
 Section interp.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
+Set Default Proof Using "All".
 
 (** Mirrors [checker.Cell]: a location term and the value term stored there. *)
 Record scell := mkCell { cloc : term; cval : term }.

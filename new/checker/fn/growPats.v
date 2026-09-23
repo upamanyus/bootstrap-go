@@ -9,7 +9,7 @@ From New.checker Require Import prelude nodes disjunct.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** Pad a list with [x] until index [k] is in range. *)
 Definition pad {A} (xs : list A) (x : A) (k : nat) : list A :=
@@ -57,7 +57,7 @@ Lemma wp_disjunct__growPats (ld : loc) (dj : cdisjunct) (m : w64) :
   {{{ is_pkg_init checker ∗ is_disjunct ld dj }}}
     ld @! (go.PointerType checker.disjunct) @! "growPats" #m
   {{{ RET #(); is_disjunct ld (grow_pats dj (uint.nat m)) }}}.
-Proof.
+Proof using All.
   wp_start as "Hdj".
   iDestruct "Hdj"
     as (sp0 sok0 sa lf las) "(Hs & Hp & Hpc & Hok & Hokc & Ha & Hac & #Hats & %Hlen0 & %Hf)".

@@ -84,8 +84,8 @@ Proof.
     apply elem_of_app in Hin as [Hin|Hin]; first by apply Hsnd.
     apply list_elem_of_singleton in Hin as ->.
     destruct (Hdj Hf) as (y & -> & Hent).
-    intros Σ' hG' sem' package_sem' V.
-    etrans; first apply (Hent _ _ _ _).
+    intros ext' ffi' ffi_interp' ffi_sem' Σ' hG' sem' V.
+    etrans; first apply (Hent _ _ _ _ _ _ _).
     apply assn_disjuncts_sound.
     by eapply list_elem_of_lookup_2.
   - try wp_auto.

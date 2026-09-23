@@ -9,7 +9,7 @@ From New.checker Require Import prelude nodes.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 Fixpoint cassn_pure (x : cassn) : list term :=
   match x with
@@ -33,7 +33,7 @@ Lemma wp_append_nil (s2 : slice.t) (ls : list loc) Φ :
      s' ↦* ls ∗ own_slice_cap loc s' (DfracOwn 1) -∗ Φ #s') -∗
   WP #(functions go.append [go.SliceType (go.PointerType checker.Term)])
        #slice.nil #s2 {{ Φ }}.
-Proof.
+Proof using All.
   iIntros "Hs2 HΦ".
   iDestruct (own_slice_nil (V:=loc) (DfracOwn 1)) as "Hnil".
   iDestruct (own_slice_cap_nil (V:=loc)) as "Hnilc".
@@ -47,7 +47,7 @@ Lemma wp_assnPure (l : loc) (x : option cassn) :
     @! checker.assnPure #l
   {{{ (s : slice.t), RET #s;
       is_cond s (oassn_pure x) ∗ own_slice_cap loc s (DfracOwn 1) }}}.
-Proof.
+Proof using All.
   iLöb as "IH" forall (l x).
   wp_start as "#Hx".
   iDestruct (is_oassn_null with "Hx") as %Hn.

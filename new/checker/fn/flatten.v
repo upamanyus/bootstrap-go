@@ -14,7 +14,7 @@ From New.checker Require Import prelude nodes disjunct.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** Appending to a disjunct's atom list. *)
 Definition dj_atoms (dj : cdisjunct) (ats : list cassn) : cdisjunct :=
@@ -56,7 +56,7 @@ Lemma wp_disjunct__flatten (ld : loc) (dj : cdisjunct) (la : loc) (x : option ca
       | Some ats => ⌜lres = null⌝ ∗ is_disjunct ld (dj_atoms dj ats)
       | None => ⌜lres ≠ null⌝ ∗ ∃ ats, is_disjunct ld (dj_atoms dj ats)
       end }}}.
-Proof.
+Proof using All.
   iLöb as "IH" forall (la x dj).
   wp_start as "[Hdj #Hx]".
   iDestruct (is_oassn_null with "Hx") as %Hnull.

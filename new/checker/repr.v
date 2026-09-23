@@ -14,7 +14,8 @@ Set Default Proof Using "All".
 
 Section repr.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
+Set Default Proof Using "All".
 
 (** * Persistence
 

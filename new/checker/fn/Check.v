@@ -20,7 +20,7 @@ From New.checker.fn Require Import Analyze Verify.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** A function application is never a value, so the [▷] in front of a Hoare
     triple's continuation can be stripped by its first step. *)
@@ -75,21 +75,20 @@ Proof.
 Qed.
 
 End proof.
+Set Default Proof Using "Type".
 
 (** The composition in every ghost state. *)
-Lemma triple_holds_intro {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
-    {ffi_sem : ffi_semantics ext ffi}
-    (cf : cfunc) (vs : list sort) (P Q : cassn) (ps : list spath) :
+Lemma triple_holds_intro (cf : cfunc) (vs : list sort) (P Q : cassn) (ps : list spath) :
   paths_wf (length vs) ps →
   analyze_ok cf vs P ps →
   (∀ sp, sp ∈ ps → path_ok vs Q sp) →
   triple_holds cf vs P Q.
 Proof.
-  intros Hwf (Hlen & Hws & Hsnd) Hver Σ hG sem package_sem θ Hθ.
+  intros Hwf (Hlen & Hws & Hsnd) Hver ext ffi ffi_interp0 ffi_sem Σ hG sem θ Hθ.
   apply (check_triple cf vs P Q ps θ Hwf); [|intros sp Hsp|done].
   - intros θ' Hθ'. by apply analyze_sound.
   - destruct (Hver sp Hsp) as (dj & Hf & Hsat & Hent).
-    exists dj. split_and!; [done|exact (Hsat _ _ _ _)|exact (Hent _ _ _ _)].
+    exists dj. split_and!; [done|exact (Hsat _ _ _ _ _ _ _)|exact (Hent _ _ _ _ _ _ _)].
 Qed.
 
 Section proof_Check.

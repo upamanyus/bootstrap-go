@@ -463,7 +463,7 @@ End teval.
 
 Section sound.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
 Set Default Proof Using "All".
 
 Lemma big_sepL_seq_lookup {A} `{!Inhabited A} (Φ : A → iProp Σ) (l : list A) :

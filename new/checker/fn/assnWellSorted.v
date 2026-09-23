@@ -27,7 +27,7 @@ Definition oassn_ws (E : sort_env) (x : option cassn) : bool :=
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 Local Ltac reject :=
   try wp_auto;
@@ -41,7 +41,7 @@ Lemma wp_assnWellSorted (dq : dfrac) (lse la : loc) (E : sort_env) (oa : option 
     @! checker.assnWellSorted #lse #la
   {{{ (lf : loc), RET #lf;
       is_sortenv dq lse E ∗ ⌜(lf = null) ↔ oassn_ws E oa = true⌝ }}}.
-Proof.
+Proof using All.
   iLöb as "IH" forall (la oa).
   wp_start as "(Henv & #Hoa & %Hwf)".
   iDestruct (is_oassn_null with "Hoa") as %Hnull.

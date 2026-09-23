@@ -540,3 +540,38 @@ of `check_sound`, in every `heapGS Σ` and under every Go semantics satisfying
 - The old goose_lang adequacy stack (`src/goose_lang/adequacy.v`,
   `recovery_adequacy.v`, ...) was not in the default build; build it with
   `make src/goose_lang/recovery_adequacy.vo`.
+
+### 2026-09-23: wp_Median3 from an observed run
+
+- gocheck `-rocq FILE` writes the checker input as Rocq terms
+  (gocheck/render/rocq.go). gocheck/observe.sh records Median3's input in
+  `.../examples/observed/median3_input.v`; `observed/median3.v` states
+  `median3_check_run` (some run of `Check` on it returns `#true`) and proves
+  `wp_Median3` from it with `check_adequate`.
+- To make that possible, `triple_holds` and the uniform checker facts
+  (`exec_sound`, `if_ok`, `path_sat_dj`, `dj_entails`, `binders_entails`)
+  now also quantify over the FFI and the language (`ext`, `ffi`,
+  `ffi_interp`, `ffi_semantics`). They no longer assume
+  `checker.Assumptions`: `wp_Median3`'s context has a generic FFI, no
+  `ffi_interp_adequacy` and only `examples.Assumptions`.
+  - The semantic base files (term_lemmas, subst, interp, steps, repr,
+    prelude, nodes, disjunct(_ro), exec_spec, exec_def, exec_sound_*,
+    pre_sound, parse_sound, match_sound) no longer declare `package_sem`.
+    Only excluding it from `Proof using` is not enough: typeclass search can
+    still pick it up, and `Qed` then fails.
+  - The fn files these import (heapLookup, heapUpdate, assnHeap, assnPure,
+    assnWellSorted, atomWellSorted, termEq, growPats, flatten,
+    collectDisjuncts, instantiate, hasPat, findCell, condHolds) default to
+    `Proof using "All - package_sem"`, and their `wp_` lemmas are `Proof
+    using All`.
+  - `Set Default Proof Using` is not local to a section.
+- `func_val median3_func = examples.Median3ⁱᵐᵖˡ` holds by `reflexivity`, so
+  gocheck's translation of the body is checked.
+- post_simp.v: `assn_interp_simp_eq` reads an interpreted assertion as an
+  ordinary one by computation. A first version rewrote with iff lemmas
+  (`setoid_rewrite`) and took 7.9 s on Median3; the computational one takes
+  0.17 s.
+- touch.sh (bumping copied build products past the sources) masked a stale
+  `new/code/.../checker/examples.vo` that lacked Median3. Compare .vo and .v
+  mtimes in the source checkout before copying.
+

@@ -10,7 +10,7 @@ From New.checker.fn Require Import termEq.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** What the [range] loop decides: [t] is non-nil and is one of the recorded
     facts.  [termEq c t] is [bool_decide (Some c = ox)], and every cell of
@@ -82,7 +82,7 @@ Lemma wp_condHolds (s : slice.t) (pc : list term) (lx : loc) (ox : option term) 
   {{{ is_pkg_init checker ∗ is_cond s pc ∗ is_oterm lx ox }}}
     @! checker.condHolds #s #lx
   {{{ RET #(cond_holds pc ox); is_cond s pc }}}.
-Proof.
+Proof using All.
   wp_start as "[Hcond #Hox]".
   iDestruct "Hcond" as (ls) "[Hs #Hls]".
   iDestruct (big_sepL2_length with "Hls") as %Hlen2.

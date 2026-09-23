@@ -20,7 +20,8 @@ Set Default Proof Using "All".
 
 Section subst.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
+Set Default Proof Using "All".
 
 (** A notation rather than a definition, so that [csubst] and [expr_of] are
     syntactically comparable. *)

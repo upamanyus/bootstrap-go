@@ -14,7 +14,7 @@ From New.checker.fn Require Import heapUpdate.
 
 Section exec_sound_c.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
 Set Default Proof Using "All".
 
 (** * Well-formedness of the result lists *)
@@ -238,15 +238,14 @@ End exec_sound_c.
 
 (** * The ghost-state-independent layer (see exec_spec.v) *)
 Section exec_uniform_c.
-Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
-        {ffi_sem : ffi_semantics ext ffi}.
 
 Definition if_ok (ct cf : cexpr) ρ (p : spath) (qs : list spath) : Prop :=
   (∃ b, pret p = TBool b ∧ exec_sound (if b then ct else cf) ρ (pst p) qs) ∨
   (exec_sound ct ρ (st_assume (pst p) (pret p)) qs ∧
    exec_sound cf ρ (st_assume (pst p) (negate (pret p))) qs).
 
-Lemma if_ok_at_of `{hG : !heapGS Σ} {sem : go.Semantics} {package_sem : checker.Assumptions}
+Lemma if_ok_at_of {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
+    {ffi_sem : ffi_semantics ext ffi} {Σ} {hG : heapGS Σ} {sem : go.Semantics}
     ct cf ρ p qs :
   if_ok ct cf ρ p qs → if_ok_at ct cf ρ p qs.
 Proof. rewrite /if_ok /if_ok_at /exec_sound. naive_solver. Qed.
@@ -266,8 +265,8 @@ Lemma exec_sound_if_gen (cc ct cf : cexpr) ρ sst ps out :
   (∀ p, p ∈ ps → ∃ qs, qs ⊆ out ∧ if_ok ct cf ρ p qs) →
   exec_sound (CEIf cc ct cf) ρ sst out.
 Proof.
-  intros Hc Hwf Hb Hbr Σ hG sem package_sem.
-  eapply exec_sound_at_if_gen; [exact (Hc _ _ _ _)|done|done|].
+  intros Hc Hwf Hb Hbr ext ffi ffi_interp0 ffi_sem Σ hG sem.
+  eapply exec_sound_at_if_gen; [exact (Hc _ _ _ _ _ _ _)|done|done|].
   intros p Hp. destruct (Hbr p Hp) as (qs & Hqs & Hok).
   exists qs. split; first done. by apply if_ok_at_of.
 Qed.

@@ -9,7 +9,7 @@ From New.checker Require Import prelude nodes.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 Fixpoint cassn_heap (x : cassn) : list scell :=
   match x with
@@ -32,7 +32,7 @@ Lemma wp_append_nil (s2 : slice.t) (vs : list checker.Cell.t) Φ :
   (∀ s' : slice.t,
      s' ↦* vs ∗ own_slice_cap checker.Cell.t s' (DfracOwn 1) -∗ Φ #s') -∗
   WP #(functions go.append [go.SliceType checker.Cell]) #slice.nil #s2 {{ Φ }}.
-Proof.
+Proof using All.
   iIntros "Hs2 HΦ".
   iDestruct (own_slice_nil (V:=checker.Cell.t) (DfracOwn 1)) as "Hnil".
   iDestruct (own_slice_cap_nil (V:=checker.Cell.t)) as "Hnilc".
@@ -46,7 +46,7 @@ Lemma wp_assnHeap (l : loc) (x : option cassn) :
     @! checker.assnHeap #l
   {{{ (s : slice.t), RET #s;
       is_heap s (oassn_heap x) ∗ own_slice_cap checker.Cell.t s (DfracOwn 1) }}}.
-Proof.
+Proof using All.
   iLöb as "IH" forall (l x).
   wp_start as "#Hx".
   iDestruct (is_oassn_null with "Hx") as %Hn.

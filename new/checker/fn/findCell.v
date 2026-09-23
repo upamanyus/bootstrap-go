@@ -9,7 +9,7 @@ From New.checker.fn Require Import termEq.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** Mirrors [findCell]: the first index [i] at which the cell is unused and
     its location term is [y], counting from [i]. *)
@@ -67,7 +67,7 @@ Lemma wp_findCell (sh su : slice.t) (cs : list scell) (u : list bool)
       is_heap sh cs ∗ su ↦* u ∗
       ⌜ok = bool_decide (find_cell cs u y 0 ≠ None)⌝ ∗
       ⌜∀ j, find_cell cs u y 0 = Some j → uint.nat idx = j⌝ }}}.
-Proof.
+Proof using All.
   intros Hlen.
   wp_start as "(Hheap & Hu & #Hy)".
   iDestruct "Hheap" as (xs) "[Hsh #Hcells]".

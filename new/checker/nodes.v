@@ -7,7 +7,7 @@ From New.checker Require Import prelude.
 
 Section nodes.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
 Set Default Proof Using "All".
 
 (** * [Expr] nodes *)

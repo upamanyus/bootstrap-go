@@ -13,7 +13,7 @@ From New.checker.fn Require Import termEq.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** The Gallina mirror. *)
 Fixpoint heap_update (H : list scell) (x v : term) : option (list scell) :=
@@ -83,7 +83,7 @@ Lemma wp_heapUpdate_aux (s : slice.t) (H : list scell) (lx lvt : loc) (x vt : te
   {{{ (s' : slice.t) (ok : bool), RET (#s', #ok);
       is_heap s H ∗ ⌜ok = bool_decide (heap_update H x vt ≠ None)⌝ ∗
       (if ok then ∃ H', ⌜heap_update H x vt = Some H'⌝ ∗ is_heap s' H' else True) }}}.
-Proof.
+Proof using All.
   wp_start as "(Hheap & #Hx & #Hvt)".
   iDestruct "Hheap" as (cs) "[Hs #Hcs]".
   iDestruct (big_sepL2_length with "Hcs") as %Hlen2.
@@ -220,6 +220,6 @@ Lemma wp_heapUpdate (s : slice.t) (H : list scell) (lx lv : loc) (x v : term) :
       is_heap s H ∗ ⌜ok = bool_decide (heap_update H x v ≠ None)⌝ ∗
       (if ok then ∃ H', ⌜heap_update H x v = Some H'⌝ ∗ is_heap s' H'
        else True) }}}.
-Proof. apply wp_heapUpdate_aux. Qed.
+Proof using All. apply wp_heapUpdate_aux. Qed.
 
 End proof.

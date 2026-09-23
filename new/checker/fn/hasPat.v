@@ -8,7 +8,7 @@ From New.checker Require Import prelude nodes.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** Mirrors [hasPat]: [TPat] anywhere below, reached through the [A], [B] and
     [C] fields, which is exactly [term_a]/[term_b]/[term_c]. *)
@@ -41,7 +41,7 @@ Lemma wp_hasPat (l : loc) (ox : option term) :
   {{{ is_pkg_init checker ∗ is_oterm l ox }}}
     @! checker.hasPat #l
   {{{ RET #(ohas_pat ox); True }}}.
-Proof.
+Proof using All.
   iLöb as "IH" forall (l ox).
   wp_start as "#Hox".
   iDestruct (is_oterm_null with "Hox") as %Hnull.

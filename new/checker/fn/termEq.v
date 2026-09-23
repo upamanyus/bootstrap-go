@@ -4,7 +4,7 @@ From New.checker Require Import prelude.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** The kind code as a [nat], so that the 18x18 case analysis below can
     discharge the impossible cases with [discriminate] instead of a [w64]
@@ -49,7 +49,7 @@ Lemma wp_termEq (la lb : loc) (oa ob : option term) :
   {{{ is_pkg_init checker ∗ is_oterm la oa ∗ is_oterm lb ob }}}
     @! checker.termEq #la #lb
   {{{ RET #(bool_decide (oa = ob)); True }}}.
-Proof.
+Proof using All.
   iLöb as "IH" forall (la lb oa ob).
   wp_start as "[#Hoa #Hob]".
   iDestruct (is_oterm_null with "Hoa") as %Hna.

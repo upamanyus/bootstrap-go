@@ -65,7 +65,7 @@ Proof.
   iIntros (lf3) "(Hpath & Hsub & %Hpure)".
   try wp_auto.
   iApply "HΦ". iFrame. iPureIntro. intros Hnull. split; first done.
-  intros Σ' hG' sem' package_sem'.
+  intros ext' ffi' ffi_interp' ffi_sem' Σ' hG' sem'.
   eapply match_path_sat; [done| |exact Hinv|done|by apply Hpure].
   done.
 Qed.

@@ -147,7 +147,7 @@ Proof. intros [?|(?&?&?)]; destruct (term_c x); simpl in *; auto. Qed.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** * The specification *)
 
@@ -192,7 +192,7 @@ Lemma wp_instantiate (lx : loc) (s : slice.t) (lr : loc)
       is_oterm lx ox ∗ is_subst s σ ∗ is_oterm lr oret }}}
     @! checker.instantiate #lx #s #lr
   {{{ (l : loc), RET #l; is_subst s σ ∗ is_oterm l (oinstantiate_t ox σ oret) }}}.
-Proof.
+Proof using All.
   iLöb as "IH" forall (lx ox).
   wp_start as "(%Hwf & #Hox & Hsub & #Hor)".
   iDestruct (is_oterm_null with "Hox") as %Hnull.
@@ -310,7 +310,7 @@ Lemma wp_instantiate_ret (lx : loc) (s : slice.t) (lr : loc)
     @! checker.instantiate #lx #s #lr
   {{{ (l : loc), RET #l;
       is_subst s σ ∗ is_oterm l (oinstantiate_t ox σ (Some rt)) }}}.
-Proof.
+Proof using All.
   iIntros (Φ) "(#Hpkg & #Hox & Hsub & #Hor) HΦ".
   iApply (wp_instantiate lx s lr ox σ (Some rt) with "[Hsub]").
   { iFrame "∗ #". iPureIntro. destruct ox as [xx|]; simpl; last done.

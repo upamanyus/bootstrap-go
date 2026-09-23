@@ -16,7 +16,7 @@ From New.checker.fn Require Import sortOfEnv.
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
-Set Default Proof Using "All".
+Set Default Proof Using "All - package_sem".
 
 (** The mirror. [None] stands for the nil [*Assn], which is rejected. *)
 Definition atom_well_sorted (E : sort_env) (oa : option cassn) : bool :=
@@ -43,7 +43,7 @@ Lemma wp_atomWellSorted (dq : dfrac) (lse la : loc) (E : sort_env) (oa : option 
     @! checker.atomWellSorted #lse #la
   {{{ (lf : loc), RET #lf;
       is_sortenv dq lse E ∗ ⌜(lf = null) ↔ atom_well_sorted E oa = true⌝ }}}.
-Proof.
+Proof using All.
   wp_start as "(Henv & #Hoa & %Hwf)".
   iDestruct (is_oassn_null with "Hoa") as %Hnull.
   wp_auto.

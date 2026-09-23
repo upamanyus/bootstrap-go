@@ -34,7 +34,7 @@ Proof.
   intros f vars pre post lf svars lpre lpost Φ. iIntros "Hpre HΦ".
   iApply (wp_Check f vars pre post lf svars lpre lpost with "Hpre").
   iIntros "!>" (b) "%Hb". iApply "HΦ". iPureIntro.
-  intros Htrue θ Hθ. exact (Hb Htrue Σ hG sem package_sem θ Hθ).
+  intros Htrue θ Hθ. exact (Hb Htrue _ _ _ _ Σ hG sem θ Hθ).
 Qed.
 
 End semantics.

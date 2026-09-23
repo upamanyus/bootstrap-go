@@ -20,7 +20,8 @@ From New.checker Require Import prelude nodes exec_spec.
 
 Section exec_def.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
+Set Default Proof Using "All".
 
 Definition exec_post (ce : cexpr) (ρ : list (go_string * term)) (sst : sstate)
     (s : slice.t) (lf : loc) : iProp Σ :=

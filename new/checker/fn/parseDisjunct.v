@@ -79,7 +79,7 @@ Proof.
   { iExists _, lx, x. iFrame "body Hdj Hx". iPureIntro.
     split; first done. split; first done.
     intros b ->. exists b. split; first done.
-    intros Σ' hG' sem' package_sem' V. by apply binders_interp_init. }
+    intros ext' ffi' ffi_interp' ffi_sem' Σ' hG' sem' V. by apply binders_interp_init. }
   wp_for "HI".
   iApply (wp_wand_r _ _ _ (λ v, ⌜v = #(oassn_is_exists ob)⌝ ∗ body_ptr ↦ lb)%I).
   iSplitL "body".
@@ -159,8 +159,8 @@ Proof.
         intros b [= <-].
         destruct (Hsem (CAExists k s p) eq_refl) as (y & Hy & Hent).
         exists y. split; first done.
-        intros Σ' hG' sem' package_sem' V.
-        etrans; last apply (Hent _ _ _ _). by apply binders_interp_step.
+        intros ext' ffi' ffi_interp' ffi_sem' Σ' hG' sem' V.
+        etrans; last apply (Hent _ _ _ _ _ _ _). by apply binders_interp_step.
   - (* the binders are done: flatten the body *)
     rewrite decide_False; last done. rewrite decide_True; last done. wp_auto.
     wp_apply (wp_disjunct__flatten with "[$Hdj $Hb]") as (lres) "Hres".
@@ -171,8 +171,8 @@ Proof.
       destruct ob as [b|]; last done. simpl in Hof.
       destruct (Hsem b eq_refl) as (y & Hy & Hent).
       exists y. split; first done.
-      intros Σ' hG' sem' package_sem' V.
-      etrans; last apply (Hent _ _ _ _). by apply dj_interp_flatten.
+      intros ext' ffi' ffi_interp' ffi_sem' Σ' hG' sem' V.
+      etrans; last apply (Hent _ _ _ _ _ _ _). by apply dj_interp_flatten.
     + iDestruct "Hres" as "[%Hnn Hdj]".
       iDestruct "Hdj" as (ats sp sok sa lf las)
         "(Hs & Hp & Hpc & Hok & Hokc & Ha & Hac & #Hats & %Hlen & %Hf)".

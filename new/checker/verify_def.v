@@ -14,8 +14,9 @@
 
     As with [exec_sound] (exec_spec.v), both facts come in two layers: the
     [_at] form is about the ambient [heapGS Σ], and the plain form
-    ([path_sat_dj], [dj_entails]) quantifies it over every ghost state; the
-    plain form is what the checker's specifications promise.
+    ([path_sat_dj], [dj_entails]) quantifies it over every FFI, ghost state
+    and Go semantics; the plain form is what the checker's specifications
+    promise.
 
     [Check] then chains [Analyze]'s path postcondition ([paths_post]) through
     these two to [post_interp]. *)
@@ -53,17 +54,13 @@ Definition path_sat_dj_at (vars : list sort) (sp : spath) (dj : cdisjunct) : Pro
 
 End verify_def.
 
-Section verify_uniform.
-Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
-        {ffi_sem : ffi_semantics ext ffi}.
-
 Definition path_sat_dj (vars : list sort) (sp : spath) (dj : cdisjunct) : Prop :=
-  ∀ Σ (hG : heapGS Σ) (sem : go.Semantics) (package_sem : checker.Assumptions),
+  ∀ (ext : ffi_syntax) (ffi : ffi_model) (ffi_interp0 : ffi_interp ffi)
+    (ffi_sem : ffi_semantics ext ffi) Σ (hG : heapGS Σ) (sem : go.Semantics),
     path_sat_dj_at vars sp dj.
 
 (** A parsed disjunct entails an assertion, in any ghost state. *)
 Definition dj_entails (dj : cdisjunct) (P : cassn) : Prop :=
-  ∀ Σ (hG : heapGS Σ) (sem : go.Semantics) (package_sem : checker.Assumptions),
+  ∀ (ext : ffi_syntax) (ffi : ffi_model) (ffi_interp0 : ffi_interp ffi)
+    (ffi_sem : ffi_semantics ext ffi) Σ (hG : heapGS Σ) (sem : go.Semantics),
     ∀ V, dj_interp V dj ⊢ assn_interp V P.
-
-End verify_uniform.

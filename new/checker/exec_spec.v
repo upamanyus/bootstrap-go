@@ -8,11 +8,13 @@
     checker/exec.go build.
 
     The statement comes in two layers. [exec_sound_at] is about the ambient
-    [heapGS Σ], that is, about one particular choice of ghost state; the
-    lemmas of the section are proved about it. [exec_sound], at the end,
-    quantifies it over every [heapGS Σ] (and every Go semantics satisfying the
-    checker's assumptions), and the lemmas are lifted to it under their plain
+    [heapGS Σ], that is, about one particular choice of ghost state (and FFI
+    and Go semantics); the lemmas of the section are proved about it.
+    [exec_sound], at the end, quantifies it over every FFI, every [heapGS Σ]
+    and every Go semantics, and the lemmas are lifted to it under their plain
     names; it is what the specifications of the checker's functions promise.
+    The lemmas about [exec_sound_at] do not assume [checker.Assumptions]: they
+    are about the analysed program, not about the checker's code.
     The quantification is what lets a [true] answer survive adequacy
     (new/checker/adequacy.v): adequacy runs the checker in ghost state it
     allocates itself, and what it hands back must be a fact about the
@@ -22,7 +24,7 @@ From New.checker.fn Require Import heapLookup heapUpdate.
 
 Section exec_spec.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
 Set Default Proof Using "All".
 
 (** The environment the checker carries stands for a substitution; [csubst]
@@ -657,28 +659,18 @@ Qed.
 End exec_spec.
 
 (** * The ghost-state-independent layer *)
-Section exec_uniform.
-Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
-        {ffi_sem : ffi_semantics ext ffi}.
-
 Definition exec_sound (ce : cexpr) (ρ : list (go_string * term))
                       (sst : sstate) (ps : list spath) : Prop :=
-  ∀ Σ (hG : heapGS Σ) (sem : go.Semantics) (package_sem : checker.Assumptions),
+  ∀ (ext : ffi_syntax) (ffi : ffi_model) (ffi_interp0 : ffi_interp ffi)
+    (ffi_sem : ffi_semantics ext ffi) Σ (hG : heapGS Σ) (sem : go.Semantics),
     exec_sound_at ce ρ sst ps.
-
-End exec_uniform.
 
 (** Lifting a lemma about [exec_sound_at]: fix the ghost state, apply it, and
     specialise the (positively occurring) [exec_sound] premises. *)
 Tactic Notation "exec_lift" uconstr(L) :=
-  rewrite /exec_sound; intros;
-  let Σ := fresh "Σ" in let hG := fresh "hG" in
-  let sem := fresh "sem" in let psem := fresh "package_sem" in
-  intros Σ hG sem psem; eapply L; eauto; naive_solver.
+  rewrite /exec_sound; intros; eapply L; eauto; naive_solver.
 
 Section exec_uniform_lemmas.
-Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
-        {ffi_sem : ffi_semantics ext ffi}.
 
 Lemma exec_sound_mono ce ρ sst ps ps' :
   ps ⊆ ps' → exec_sound ce ρ sst ps → exec_sound ce ρ sst ps'.

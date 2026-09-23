@@ -34,7 +34,7 @@ Qed.
 
 Section exec_sound_b.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
 Set Default Proof Using "All".
 
 (** * [exec_post] *)
@@ -136,8 +136,6 @@ End exec_sound_b.
 
 (** * The ghost-state-independent layer (see exec_spec.v) *)
 Section exec_uniform_b.
-Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
-        {ffi_sem : ffi_semantics ext ffi}.
 
 Lemma exec_sound_unop (op : cop) (cty : ctype) (ce : cexpr) ρ sst ps out :
   exec_sound ce ρ sst ps →

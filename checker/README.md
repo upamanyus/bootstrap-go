@@ -13,13 +13,18 @@ hardware and trust its answer via the axiom
 
 ## Status and trust boundary
 
-- The checker is **not verified** (yet). `new/checker/soundness.v` *states* what a
-  `true` answer means (`Axiom check_sound`) in terms of the Goose translation of
-  `checker.Check` (`new/code/github_com/mit_pdos/perennial/checker.v`); there is
-  no proof and no Gallina reference implementation.
+- The checker is verified: `new/checker/soundness.v` states what a `true`
+  answer means (`check_sound`) in terms of the Goose translation of
+  `checker.Check` (`new/code/github_com/mit_pdos/perennial/checker.v`), and
+  it is proved (`new/checker/NOTES.md` describes the proof).
+- `new/checker/adequacy.v` closes the program logic: a crash-free run of
+  `checker.Check` from a heap holding the input that returns `true` gives
+  `triple_holds`, the triple for every FFI, ghost state and Go semantics.
 - The frontend `gocheck/` (Go source → checker input, spec parsing) is unverified
-  marshalling, in the same role a kernel-level `exec` term would play.
-- Trusted: the GooseLang semantics, `check_sound`, and the frontend.
+  marshalling, in the same role a kernel-level `exec` term would play. Its
+  output can be checked in Rocq, though (see "From a run to a Rocq proof").
+- Trusted: the GooseLang semantics, the Goose translation, and the
+  observation that the checker returned `true`.
 
 ## Layout
 
@@ -174,6 +179,40 @@ go run ./gocheck -pkg ./checker/examples \
 Exit codes: 0 verified (or strongest postcondition printed when `-post` is
 omitted), 1 the checker answered false (unsafe path or post not established),
 2 usage/parse/translation error.
+
+## From a run to a Rocq proof
+
+`gocheck -rocq FILE` (with `-post`) also calls `checker.Check` on the input and
+writes that input to FILE as Rocq terms over `new/checker/defs.v` (`cfunc`,
+`cassn`, `sort`). `gocheck/observe.sh` does this for Median3, producing
+`new/proof/github_com/mit_pdos/perennial/checker/examples/observed/median3_input.v`,
+and fails unless the checker answers `true`.
+
+`observed/median3.v` then proves `wp_Median3` from one axiom,
+`median3_check_run`: some GooseLang run of `checker.Check` on exactly that
+input returns `#true` (OBSERVE-EXECUTION). `check_adequate` turns the run into
+`triple_holds`. The function in the input is checked to be Goose's `Median3`
+by `reflexivity`, so the frontend's translation is not trusted. The
+postcondition is read off by computation (`new/checker/post_simp.v`: one
+rewrite and `simpl`), with no case analysis or arithmetic per program.
+
+The resulting specification returns a `val`: `RET v` with `⌜v = #b⌝`, not
+`RET #r` with `⌜r = b⌝`. The two forms are equivalent, but only the first is
+the checker's postcondition up to simplification. In the second, the last two
+(contradictory) disjuncts would have to be refuted by arithmetic before an
+`r` can be produced, and each of the others would need a case of its own to
+pick one.
+
+With the dependencies built, the three proofs of `wp_Median3` cost (`rocq
+compile -vok -time`, as in the demo):
+
+```
+proof                  total  imports  proof
+median3.v              22.88     2.29  20.34   hand-written
+reflect/median3.v       5.50     2.11   3.21   wp_symex
+observed/median3.v      3.31     2.55   0.57   from the checker's run
+gocheck                 0.23                   go run, including go build
+```
 
 ## Proof by reflection: `wp_symex`
 

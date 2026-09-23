@@ -32,7 +32,7 @@ Definition disjunct_env (vars : list sort) (dj : cdisjunct)
 
 Section disjunct.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : checker.Assumptions}.
+Context {sem : go.Semantics}.
 Set Default Proof Using "All".
 
 (** The [pats]/[patOk] length agreement is an invariant of the Go struct --
