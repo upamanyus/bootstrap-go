@@ -434,3 +434,16 @@ the missing `sortOfEnv` proof, and are now discharged by `fn/sortOfEnv.v`.
 - `elem_of_list_fmap` is now `list_elem_of_fmap`.
 - Lemmas that call exec_spec's section lemmas must themselves be in a section
   with the same Context, even when pure, or the instance evars are not inferred.
+
+### Lessons from the exec case proofs (let/seq/load/unop/binop)
+
+- The invariant goal after `wp_for_post` also contains the unchanged local
+  points-tos (`"en"`, `"e"`, ...); frame them by name before `iExists`, or it
+  reports "not an existential".
+- The `Default Proof Using "All"` trap also hits pure lemmas *outside* a
+  section that use section lemmas under `eapply`: "the proof term is not
+  complete" at `Qed` with no open goals. Moving the lemma inside fixed it.
+- `split_and!` also splits `0 ≤ x ≤ n`, so a following `first word` closes
+  only half; use `split; first word. split.`
+- exec_sound_b.v has `exec_post_ok` / `exec_post_fail` for unfolding
+  `exec_post` without fighting `decide`.
