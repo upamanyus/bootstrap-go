@@ -411,3 +411,26 @@ the missing `sortOfEnv` proof, and are now discharged by `fn/sortOfEnv.v`.
 - Pure lemmas about `teval` need `ffi_syntax`, so outside a section they fail
   with "Could not find an instance for ffi_syntax" -- put them inside, as
   term_lemmas.v does (but beware the `Default Proof Using "All"` note above).
+
+### Lessons from the exec case proofs (if/alloc/store)
+
+- `wp_start` unfolds `is_expr` into its `fix` body for the children; `fold
+  (is_expr la ce)` each child right after destructing the node.
+- Using a premise `Hex : ⊢ exec_like checker.exec ce`:
+  `wp_apply (Hex $! la lρ lst ρ sst with "[$Hst]")`, then `{ iFrame "#". done. }`.
+- After a call returning `exec_post`, `wp_if_destruct` on the failure test
+  gives the `lf = null` case first; `rewrite decide_True` does not match the
+  `if decide (lf = null)` in `exec_post` -- use
+  `destruct (decide (null = null)) as [_|]; last congruence.`
+- `wp_if_destruct` may name its hypothesis `n`, a Go local in several exec
+  functions (the naming trap again).
+- A `return` inside a range loop needs `wp_for_post` before `iApply "HΦ"`.
+- In a loop invariant with an evar'd accumulator list, a bare `iFrame` in the
+  initial-invariant proof frames the *input* list into the accumulator slot;
+  give the witnesses first (`iExists (W64 0), _, slice.nil, [], []`).
+- Consuming each path's state in a range loop: keep
+  `[∗ list] y;o ∈ drop k xs; drop k pl, is_path y o` in the invariant and peel
+  one element per iteration with `drop_S`.
+- `elem_of_list_fmap` is now `list_elem_of_fmap`.
+- Lemmas that call exec_spec's section lemmas must themselves be in a section
+  with the same Context, even when pure, or the instance evars are not inferred.
