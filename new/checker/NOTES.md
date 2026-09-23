@@ -388,3 +388,26 @@ the missing `sortOfEnv` proof, and are now discharged by `fn/sortOfEnv.v`.
 - A Go named constant such as `SortLoc` can stay folded after `wp_auto`
   (`checker.SortLoc` is a `val` definition equal to `#(W64 2)`); `rewrite
   /checker.SortLoc` before `iApply "HΦ"`.
+
+### Lessons from the parser/Verify proofs (2026-09-23)
+
+- **`wp_for` with an `&&` condition**: its value lands in
+  `if decide (v = #true) then … else …`; compute it once with
+  `iApply (wp_wand_r _ _ _ (λ v, ⌜v = #(f ob)⌝ ∗ …)%I)` against a Gallina
+  boolean `f`, then `destruct (f ob) eqn:…`. On exit:
+  `rewrite decide_False; last done. rewrite decide_True; last done.`
+- **`wp_load_slice_index` can pick the wrong value** when the load feeds an
+  `if:` (the value evar unifies with a literal); pass the value positionally,
+  `wp_load_slice_index _ _ _ _ okk` (`(v:=…)` is rejected).
+- **`wp_store_slice_index` needs a `wp_auto` first** after the bounds-check
+  `rewrite -> decide_True; last word.`, or `wp_apply` says "cannot apply".
+- **`wp_slice_literal`'s binder is the slice's `ptr` (a `loc`)**, not the
+  slice; pass `_` for the literal slice to `wp_slice_append`.
+- There is no `big_sepL2_bupd`; freezing a `[∗ list]` of `is_disjunct` is a
+  five-line induction (`big_disjunct_freeze` in fn/Verify.v).
+- A section-hypothesis spec used by one lemma becomes an argument of that
+  lemma, so every caller's file needs the same hypothesis until it is
+  discharged.
+- Pure lemmas about `teval` need `ffi_syntax`, so outside a section they fail
+  with "Could not find an instance for ffi_syntax" -- put them inside, as
+  term_lemmas.v does (but beware the `Default Proof Using "All"` note above).
