@@ -39,12 +39,14 @@ checker/            core, translated by Goose; NO imports (see below)
   check.go          Analyze / Verify / Check / Explain
   examples/         target Go programs for the demo
 gocheck/            frontend + CLI (not translated): translate/, spec/, render/, demo.sh
+  rocqgoal/         reads Rocq goals exported by new/proof/rocqgoal/ (see its README)
 new/checker/soundness.v   the soundness statement (definitions + Axiom)
 new/proof/github_com/mit_pdos/perennial/checker/examples/   hand-written Rocq
                           proofs of the same six specifications, one file
                           per function
   reflect/                the same six lemmas again, proved with wp_symex
 new/proof/symex/          wp_symex: symbolic execution by reflection (see below)
+new/proof/rocqgoal/       export.v: a generic goal exporter, Rocq proof state -> S-expression
 new/code/github_com/mit_pdos/perennial/checker.v      Goose output for checker/
 new/code/github_com/mit_pdos/perennial/checker/examples.v  Goose output for the examples
 ```

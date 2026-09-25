@@ -1,0 +1,1 @@
+(Goal (Hyp p (I New.proof.rocqgoal.examples.small.pt)) (Hyp Hp (A (I Corelib.Init.Logic.eq) (I Corelib.Init.Datatypes.nat) (Proj New.proof.rocqgoal.examples.small.px (V p)) (Proj New.proof.rocqgoal.examples.small.py (V p)))) (Concl (I Corelib.Init.Logic.True)))
