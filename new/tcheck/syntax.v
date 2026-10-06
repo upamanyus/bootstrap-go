@@ -158,3 +158,16 @@ Definition ser_input (i : tinput) : go_string :=
   ") (facts" ++ ser_tail ser_fact i.(in_facts) ++ ") " ++ ser_func i.(in_func) ++ " " ++
   ser_spec i.(in_spec) ++ ")".
 End ser.
+
+(** * Specifications as rules
+
+    A function's specification, as callers use it: the rule whose left-hand
+    side is the call [h a1 .. an], where [h] is the value called (for a
+    method, [#(methods T m recv)]) and [a1 .. an] are the specification's
+    arguments after the first (the receiver, which [h] already contains). *)
+Definition call_pat (h : tterm) (args : list tterm) : tpat :=
+  foldl (λ p a, PApp p (PVal a)) (PVal h) args.
+
+Definition spec_rule (h : tterm) (sp : tspec) : trule :=
+  mkRule sp.(sp_vars) (call_pat h (tail sp.(sp_args))) sp.(sp_pre) sp.(sp_ex) sp.(sp_ret)
+    sp.(sp_post).

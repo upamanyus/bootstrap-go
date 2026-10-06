@@ -42,6 +42,7 @@
   (sym fn_traceBecomeFollower () func `functions raft.traceBecomeFollower []`)
   (sym meth_reset (loc) func `λ r : loc, methods (go.PointerType raft.raft) "reset"%go #r`)
   (sym meth_tickElection (loc) func `λ r : loc, methods (go.PointerType raft.raft) "tickElection"%go #r`)
+  (sym meth_becomeFollower (loc) func `λ r : loc, methods (go.PointerType raft.raft) "becomeFollower"%go #r`)
   (sym meth_Infof (lok) func `λ l : interface.t_ok, methods l.(interface.ty) "Infof"%go l.(interface.v)`)
 
   ;; The physical state [nstate.t] (election_proof/defs.v).
@@ -165,9 +166,12 @@
            role_Follower))
     (rhs (set_prvals (become_follower s term lead) pvs)))
 
-  ;; Specifications (election_proof/spec_*.v).
+  ;; Specifications (election_proof/spec_*.v).  Each func is checked against
+  ;; its specification, and is a rule for the others: the call of its head
+  ;; on its arguments after the receiver.
   (func becomeFollower `raft__becomeFollowerⁱᵐᵖˡ`
     (vars (cfg cfgset) (r loc) (id w64) (s nstate) (term w64) (lead w64))
+    (head (val_func (meth_becomeFollower r)))
     (args (val_loc r) (val_w64 term) (val_w64 lead))
     (pre (pkg_init) (phys cfg r id s))
     (ex (pvs pvs)) (ret unit)

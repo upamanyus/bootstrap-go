@@ -21,7 +21,11 @@ import (
 //	  (pred NAME [persistent] (SORT*) `Gallina function to iProp`)*
 //	  (rule NAME (vars (X SORT)*) (lhs PAT) (pre ATOM*) (ex (X SORT)*) (ret TERM) (post ATOM*))*
 //	  (fact NAME (vars (X SORT)*) (lhs TERM) (rhs TERM))*
-//	  (func NAME `impl` (vars ..) (args TERM*) (pre ..) (ex ..) (ret TERM) (post ..))*)
+//	  (func NAME `impl` (vars ..) (head TERM) (args TERM*) (pre ..) (ex ..) (ret TERM) (post ..))*)
+//
+// A func is checked against its specification; callers (other funcs)
+// use it as the rule [spec_rule head spec]: the call of head on the args
+// after the first (the receiver, which head contains).
 //
 // SORT is val, type, or a declared sort. A TERM is a variable, unit, a
 // nullary symbol, (SYM TERM*), (pair TERM TERM) or (lit TERM TERM*). A PAT is
@@ -54,6 +58,7 @@ type tripleDecl struct {
 	vars []varDecl
 	lhs  *node   // rules
 	args []*node // funcs
+	head *node   // funcs: the value called (the method value of the receiver)
 	pre  []*node
 	ex   []varDecl
 	ret  *node
@@ -174,6 +179,11 @@ func (t *table) triple(d *node, fields []*node, isRule bool) (tripleDecl, error)
 				return tr, errAt(f, "(args ..) belongs to a func")
 			}
 			tr.args = rest
+		case "head":
+			if isRule || len(rest) != 1 {
+				return tr, errAt(f, "(head TERM) belongs to a func")
+			}
+			tr.head = rest[0]
 		case "pre":
 			tr.pre = rest
 		case "post":
@@ -190,8 +200,8 @@ func (t *table) triple(d *node, fields []*node, isRule bool) (tripleDecl, error)
 			return tr, err
 		}
 	}
-	if tr.ret == nil || (isRule && tr.lhs == nil) {
-		return tr, errAt(d, "missing (ret ..) or (lhs ..)")
+	if tr.ret == nil || (isRule && tr.lhs == nil) || (!isRule && (tr.head == nil || len(tr.args) < 2)) {
+		return tr, errAt(d, "missing (ret ..), (lhs ..) or (head ..), or a func with fewer than two args")
 	}
 	return tr, nil
 }
@@ -599,4 +609,52 @@ func (t *table) funcDecl(name string) (*funcDecl, error) {
 		}
 	}
 	return nil, fmt.Errorf("no (func %s ...) in the table", name)
+}
+
+// funcRule is the rule callers use for f: [spec_rule head spec]
+// (new/tcheck/syntax.v), built the same way.
+func (t *table) funcRule(f funcDecl) (*tcheck.Rule, error) {
+	sp, err := t.spec(f)
+	if err != nil {
+		return nil, err
+	}
+	sc := &scope{}
+	if err := t.addVars(f.ret, sc, f.vars); err != nil {
+		return nil, err
+	}
+	h, err := t.term(sc, f.head)
+	if err != nil {
+		return nil, err
+	}
+	lhs := &tcheck.Pat{Kind: tcheck.PVal, T: h}
+	for _, a := range sp.Args[1:] {
+		lhs = &tcheck.Pat{Kind: tcheck.PApp, A: lhs, B: &tcheck.Pat{Kind: tcheck.PVal, T: a}}
+	}
+	return &tcheck.Rule{Vars: sp.Vars, Lhs: lhs, Pre: sp.Pre, Ex: sp.Ex, Ret: sp.Ret, Post: sp.Post}, nil
+}
+
+// allRules: the table's rules, then the rules of its funcs other than skip.
+func (t *table) allRules(skip string) ([]*tcheck.Rule, []string, error) {
+	var rs []*tcheck.Rule
+	var names []string
+	for _, rd := range t.rules {
+		r, err := t.rule(rd)
+		if err != nil {
+			return nil, nil, fmt.Errorf("rule %s: %v", rd.name, err)
+		}
+		rs = append(rs, r)
+		names = append(names, rd.name)
+	}
+	for _, fd := range t.funcs {
+		if fd.name == skip {
+			continue
+		}
+		r, err := t.funcRule(fd)
+		if err != nil {
+			return nil, nil, fmt.Errorf("func %s: %v", fd.name, err)
+		}
+		rs = append(rs, r)
+		names = append(names, fd.name)
+	}
+	return rs, names, nil
 }

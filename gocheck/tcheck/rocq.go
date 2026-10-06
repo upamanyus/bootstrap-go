@@ -92,6 +92,12 @@ func rocqRule(r *tcheck.Rule) string {
 		rocqList(rocqAtom, r.Post)
 }
 
+func rocqSpec(sp *tcheck.Spec) string {
+	return fmt.Sprintf("mkSpec %s\n    %s\n    %s\n    %s %s\n    %s",
+		rocqList(rocqSort, sp.Vars), rocqList(rocqTerm, sp.Args), rocqList(rocqAtom, sp.Pre),
+		rocqList(rocqSort, sp.Ex), rocqTerm(sp.Ret), rocqList(rocqAtom, sp.Post))
+}
+
 func rocqFact(f *tcheck.Fact) string {
 	return "mkFact " + rocqList(rocqSort, f.Vars) + "\n    " + rocqTerm(f.Lhs) + "\n    " + rocqTerm(f.Rhs)
 }
@@ -107,6 +113,9 @@ func modulePath(path string) string {
 	}
 	return strings.ReplaceAll(p, "/", ".")
 }
+
+const ambientArgs = "(ext : ffi_syntax) (ffi : ffi_model) (ffi_interp0 : ffi_interp ffi)\n    " +
+	"(Σ : gFunctors) (hG : heapGS Σ) (ffi_semantics0 : ffi_semantics ext ffi) (sem : go.Semantics)"
 
 const ambientBinders = "{ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}\n  " +
 	"{Σ : gFunctors} {hG : heapGS Σ} {ffi_semantics0 : ffi_semantics ext ffi}\n  {sem : go.Semantics}"
@@ -193,6 +202,22 @@ func (t *table) genTable(src string, cmd string) (string, error) {
 		}
 		fmt.Fprintf(&b, "Definition %s_fact_%s : tfact :=\n  %s.\n\n", T, fd.name, rocqFact(f))
 	}
+	var moduleTypes []string
+	for _, fd := range t.funcs {
+		sp, err := t.spec(fd)
+		if err != nil {
+			return "", fmt.Errorf("func %s: %v", fd.name, err)
+		}
+		r, err := t.funcRule(fd)
+		if err != nil {
+			return "", fmt.Errorf("func %s: %v", fd.name, err)
+		}
+		fmt.Fprintf(&b, "(** [%s]: its specification, and the rule callers use. *)\n", fd.impl)
+		fmt.Fprintf(&b, "Definition %s_spec_%s : tspec :=\n  %s.\n", T, fd.name, rocqSpec(sp))
+		fmt.Fprintf(&b, "Definition %s_rule_%s : trule :=\n  spec_rule %s %s_spec_%s.\n\n", T, fd.name,
+			rocqTerm(patHeadTerm(r.Lhs)), T, fd.name)
+		moduleTypes = append(moduleTypes, fd.name)
+	}
 	b.WriteString("Section den.\n")
 	fmt.Fprintf(&b, "Context %s\n  {package_sem : %s}.\n\n", ambientBinders, t.assumptions)
 	fmt.Fprintf(&b, "Definition %s_sort (n : nat) : Type :=\n  match n with\n", T)
@@ -222,13 +247,22 @@ func (t *table) genTable(src string, cmd string) (string, error) {
 	for _, fd := range t.facts {
 		names = append(names, T+"_fact_"+fd.name)
 	}
+	for _, fd := range t.funcs {
+		names = append(names, T+"_spec_"+fd.name, T+"_rule_"+fd.name)
+	}
 	fmt.Fprintf(&b, "(** Unfold the table's definitions (before [tc_simp]). *)\nLtac %s_unfold :=\n  unfold %s.\n", T, strings.Join(names, ", "))
+	for _, name := range moduleTypes {
+		U, N := strings.ToUpper(T), strings.ToUpper(name)
+		fmt.Fprintf(&b, "\n(** The specification of [%s] as a rule, for postulates to [Include]. *)\n", name)
+		fmt.Fprintf(&b, "Module Type %s_RULE_%s.\n  Parameter %s_rule_%s_ok : rule_valid %s_den %s_rule_%s.\nEnd %s_RULE_%s.\n",
+			U, N, T, name, T, T, name, U, N)
+	}
 	return b.String(), nil
 }
 
 // genObservation writes the observation file of one run.
 func genObservation(t *table, tableFile string, f *funcDecl, inp *tcheck.Input, ruleNames, factNames []string,
-	bytes string, cmd string) string {
+	bytes string, cmd string, implName string, head *tcheck.Term) string {
 	T := t.name
 	F := f.name
 	var b strings.Builder
@@ -241,10 +275,6 @@ func genObservation(t *table, tableFile string, f *funcDecl, inp *tcheck.Input, 
 	b.WriteString("From New.tcheck Require Import observe.\n")
 	fmt.Fprintf(&b, "Require Import %s.\n\n", modulePath(tableFile))
 	fmt.Fprintf(&b, "Definition %s_func : cfunc :=\n  mkFunc %s\n  %s.\n\n", F, rocqList(rocqStr, inp.Fn.Params), rocqExpr(inp.Fn.Body))
-	sp := inp.Sp
-	fmt.Fprintf(&b, "Definition %s_spec : tspec :=\n  mkSpec %s\n    %s\n    %s\n    %s %s\n    %s.\n\n", F,
-		rocqList(rocqSort, sp.Vars), rocqList(rocqTerm, sp.Args), rocqList(rocqAtom, sp.Pre),
-		rocqList(rocqSort, sp.Ex), rocqTerm(sp.Ret), rocqList(rocqAtom, sp.Post))
 	var rs, fs []string
 	for _, n := range ruleNames {
 		rs = append(rs, T+"_rule_"+n)
@@ -254,10 +284,25 @@ func genObservation(t *table, tableFile string, f *funcDecl, inp *tcheck.Input, 
 	}
 	fmt.Fprintf(&b, "Definition %s_rules : list trule := [%s].\n", F, strings.Join(rs, "; "))
 	fmt.Fprintf(&b, "Definition %s_facts : list tfact := [%s].\n\n", F, strings.Join(fs, "; "))
-	fmt.Fprintf(&b, "Definition %s_input : tinput :=\n  mkInput %s_syms %s_preds %s_rules %s_facts %s_func %s_spec.\n\n", F, T, T, F, F, F, F)
+	fmt.Fprintf(&b, "Definition %s_input : tinput :=\n  mkInput %s_syms %s_preds %s_rules %s_facts %s_func %s_spec_%s.\n\n", F, T, T, F, F, F, T, F)
 	b.WriteString("(** OBSERVE-EXECUTION: tcheck.Check returned true on exactly these bytes. *)\n")
 	fmt.Fprintf(&b, "Axiom %s_check_run : observed_run\n  %s.\n\n", F, rocqStr(bytes))
 	fmt.Fprintf(&b, "Lemma %s_holds : input_holds %s_input.\n", F, F)
-	fmt.Fprintf(&b, "Proof. eapply observed_input_holds; [|exact %s_check_run]. vm_compute. reflexivity. Qed.\n", F)
+	fmt.Fprintf(&b, "Proof. eapply observed_input_holds; [|exact %s_check_run]. vm_compute. reflexivity. Qed.\n\n", F)
+	fmt.Fprintf(&b, "(** The checked function is Goose's. *)\n")
+	fmt.Fprintf(&b, "Lemma %s_func_val %s\n    (pkg : %s) :\n", F, ambientArgs, t.assumptions)
+	fmt.Fprintf(&b, "  func_val (%s_den.(d_at) ext ffi ffi_interp0 Σ hG ffi_semantics0 sem pkg) %s_func =\n    %s.\n", T, F, implName)
+	b.WriteString("Proof. vm_compute. reflexivity. Qed.\n\n")
+	fmt.Fprintf(&b, "(** The call [%s_rule_%s] is about unfolds to the checked function. *)\n", T, F)
+	fmt.Fprintf(&b, "Lemma %s_call_ok : call_ok %s_den %s_func %s_spec_%s %s.\n", F, T, F, T, F, rocqTerm(head))
+	fmt.Fprintf(&b, "Proof. call_ok_by %s_func_val %s_unfold uconstr:(%s). Qed.\n", F, T, t.assumptions)
 	return b.String()
+}
+
+// patHeadTerm is the value at the head of an application pattern.
+func patHeadTerm(p *tcheck.Pat) *tcheck.Term {
+	for p.Kind == tcheck.PApp {
+		p = p.A
+	}
+	return p.T
 }

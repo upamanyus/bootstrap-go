@@ -11,8 +11,9 @@ The first client is the raft proof (`new/proof/go_etcd_io/raft/`): the
 `wp_raft_load_*` / `wp_raft_store_*` accessor lemmas of
 `election_proof/inv_raft_phys.v`, the callees' postulated specs, and the pure
 steps `wp_auto` takes are rows of `new/proof/go_etcd_io/raft/tcheck/raft.tbl`,
-and `becomeFollower` is established from one observed run, as a drop-in
-module of type `BECOMEFOLLOWER`.
+and `becomeFollower` is established from one observed run: as the rule
+callers use (`RAFT_RULE_BECOMEFOLLOWER`), and, by conversion, as the
+hand-written `BECOMEFOLLOWER` statement.
 
 ## Pieces
 
@@ -35,7 +36,7 @@ new/proof/go_etcd_io/raft/tcheck/
   table_raft.v             its syntax and denotation (generated)
   link_table_raft.v        each rule proved from its lemma (hand-written)
   observed_raft__becomeFollower.v   one run (generated)
-  proof_raft__becomeFollower.v      BECOMEFOLLOWER from that run (hand-written)
+  proof_raft__becomeFollower.v      the rule, and BECOMEFOLLOWER, from that run (hand-written)
 ```
 
 ## What is trusted
@@ -89,6 +90,41 @@ predicate in the precondition of the rules that need it, and there is one
 table for the package. An observation records only the rules and facts its
 run used, so a proof links just those: shared rules from
 `link_table_raft.v`, rules for callees from its own postulates.
+
+## Specifications are rules
+
+A `func` of the table has a `(head TERM)`, the value called (for a method,
+`val_func (meth_becomeFollower r)`, i.e. `#(methods T m #r)`). The table file
+defines its specification `raft_spec_F` and the rule callers use,
+`raft_rule_F := spec_rule head raft_spec_F`: the call of the head on the
+arguments after the receiver. Other functions' runs may use that rule; a
+function's own run never does. The observation proves `input_holds`, a
+triple about `func_val f` applied to the arguments; `spec_rule_valid`
+(`link.v`, proved once for every function) turns it into `rule_valid` of the
+rule, given `F_call_ok` (generated: the head is the method value, and the
+method unfolds to the checked function, `F_func_val`, by `vm_compute`). So
+the per-function proof is
+
+```coq
+Lemma raft_rule_becomeFollower_ok : rule_valid raft_den raft_rule_becomeFollower.
+Proof. exact (spec_rule_valid _ _ _ _ (becomeFollower_holds raft_den table_ok) becomeFollower_call_ok). Qed.
+```
+
+and the hand-written statement follows by conversion alone (`exact`, 0.08 s).
+Computing a denotation inside a hypothesis, by contrast, normalizes the
+table's denotation wherever it appears unapplied; the first version of this
+proof did that and took 4.5 minutes.
+
+Costs for `becomeFollower` (this machine, files compiled with their
+dependencies built):
+
+| | time |
+|---|---|
+| `go run ./gocheck/tcheck ... -func becomeFollower` | 0.15 s |
+| `observed_raft__becomeFollower.v` (3.8 s of it the byte literal) | 8.9 s |
+| `proof_raft__becomeFollower.v` (4.3 s of it `table_ok`) | 8.0 s |
+| `link_table_raft.v` (once per table) | 9.9 s |
+| `election_proof/proof_raft__becomeFollower.v`, by hand | 12.1 s |
 
 ## How the checker executes
 

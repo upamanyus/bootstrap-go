@@ -29,41 +29,42 @@ Definition raft_syms : list symdecl := [
   (* 14 fn_traceBecomeFollower *) mkSym [] (SU 4);
   (* 15 meth_reset *) mkSym [(SU 1)] (SU 4);
   (* 16 meth_tickElection *) mkSym [(SU 1)] (SU 4);
-  (* 17 meth_Infof *) mkSym [(SU 6)] (SU 4);
-  (* 18 nterm *) mkSym [(SU 3)] (SU 2);
-  (* 19 set_stepfn *) mkSym [(SU 3); (SU 4)] (SU 3);
-  (* 20 set_prvals *) mkSym [(SU 3); (SU 7)] (SU 3);
-  (* 21 set_lead *) mkSym [(SU 3); (SU 2)] (SU 3);
-  (* 22 set_role *) mkSym [(SU 3); (SU 5)] (SU 3);
-  (* 23 reset_to *) mkSym [(SU 3); (SU 2)] (SU 3);
-  (* 24 become_follower *) mkSym [(SU 3); (SU 2); (SU 2)] (SU 3);
-  (* 25 role_Follower *) mkSym [] (SU 5);
-  (* 26 k_alloc_ptr_raft *) mkSym [] SVal;
-  (* 27 k_alloc_u64 *) mkSym [] SVal;
-  (* 28 k_load_ptr_raft *) mkSym [] SVal;
-  (* 29 k_load_u64 *) mkSym [] SVal;
-  (* 30 k_load_Logger *) mkSym [] SVal;
-  (* 31 k_store_stepFunc *) mkSym [] SVal;
-  (* 32 k_store_func0 *) mkSym [] SVal;
-  (* 33 k_store_u64 *) mkSym [] SVal;
-  (* 34 k_store_StateType *) mkSym [] SVal;
-  (* 35 k_sfr_step *) mkSym [] SVal;
-  (* 36 k_sfr_tick *) mkSym [] SVal;
-  (* 37 k_sfr_lead *) mkSym [] SVal;
-  (* 38 k_sfr_state *) mkSym [] SVal;
-  (* 39 k_sfr_id *) mkSym [] SVal;
-  (* 40 k_sfr_Term *) mkSym [] SVal;
-  (* 41 k_sfr_logger *) mkSym [] SVal;
-  (* 42 k_fr_stepFollower *) mkSym [] SVal;
-  (* 43 k_fr_traceBecomeFollower *) mkSym [] SVal;
-  (* 44 k_mr_reset *) mkSym [] SVal;
-  (* 45 k_mr_tickElection *) mkSym [] SVal;
-  (* 46 k_mr_Infof *) mkSym [] SVal;
-  (* 47 k_conv_u64_iface *) mkSym [] SVal;
-  (* 48 k_complit_iface_slice *) mkSym [] SVal;
-  (* 49 k_ty_iface *) mkSym [] SType;
-  (* 50 k_StateFollower *) mkSym [] SVal;
-  (* 51 k_fmt_becomeFollower *) mkSym [] SVal
+  (* 17 meth_becomeFollower *) mkSym [(SU 1)] (SU 4);
+  (* 18 meth_Infof *) mkSym [(SU 6)] (SU 4);
+  (* 19 nterm *) mkSym [(SU 3)] (SU 2);
+  (* 20 set_stepfn *) mkSym [(SU 3); (SU 4)] (SU 3);
+  (* 21 set_prvals *) mkSym [(SU 3); (SU 7)] (SU 3);
+  (* 22 set_lead *) mkSym [(SU 3); (SU 2)] (SU 3);
+  (* 23 set_role *) mkSym [(SU 3); (SU 5)] (SU 3);
+  (* 24 reset_to *) mkSym [(SU 3); (SU 2)] (SU 3);
+  (* 25 become_follower *) mkSym [(SU 3); (SU 2); (SU 2)] (SU 3);
+  (* 26 role_Follower *) mkSym [] (SU 5);
+  (* 27 k_alloc_ptr_raft *) mkSym [] SVal;
+  (* 28 k_alloc_u64 *) mkSym [] SVal;
+  (* 29 k_load_ptr_raft *) mkSym [] SVal;
+  (* 30 k_load_u64 *) mkSym [] SVal;
+  (* 31 k_load_Logger *) mkSym [] SVal;
+  (* 32 k_store_stepFunc *) mkSym [] SVal;
+  (* 33 k_store_func0 *) mkSym [] SVal;
+  (* 34 k_store_u64 *) mkSym [] SVal;
+  (* 35 k_store_StateType *) mkSym [] SVal;
+  (* 36 k_sfr_step *) mkSym [] SVal;
+  (* 37 k_sfr_tick *) mkSym [] SVal;
+  (* 38 k_sfr_lead *) mkSym [] SVal;
+  (* 39 k_sfr_state *) mkSym [] SVal;
+  (* 40 k_sfr_id *) mkSym [] SVal;
+  (* 41 k_sfr_Term *) mkSym [] SVal;
+  (* 42 k_sfr_logger *) mkSym [] SVal;
+  (* 43 k_fr_stepFollower *) mkSym [] SVal;
+  (* 44 k_fr_traceBecomeFollower *) mkSym [] SVal;
+  (* 45 k_mr_reset *) mkSym [] SVal;
+  (* 46 k_mr_tickElection *) mkSym [] SVal;
+  (* 47 k_mr_Infof *) mkSym [] SVal;
+  (* 48 k_conv_u64_iface *) mkSym [] SVal;
+  (* 49 k_complit_iface_slice *) mkSym [] SVal;
+  (* 50 k_ty_iface *) mkSym [] SType;
+  (* 51 k_StateFollower *) mkSym [] SVal;
+  (* 52 k_fmt_becomeFollower *) mkSym [] SVal
 ].
 
 Definition raft_preds : list preddecl := [
@@ -76,157 +77,157 @@ Definition raft_preds : list preddecl := [
 
 Definition raft_rule_alloc_loc : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 26 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 27 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [(SU 1)] (TSym 0 [(TVar 1)])
     [(APred 2 [(TVar 1); (TVar 0)])].
 
 Definition raft_rule_alloc_w64 : trule :=
   mkRule [(SU 2)]
-    (PApp (PVal (TSym 27 [])) (PVal (TSym 1 [(TVar 0)])))
+    (PApp (PVal (TSym 28 [])) (PVal (TSym 1 [(TVar 0)])))
     [] [(SU 1)] (TSym 0 [(TVar 1)])
     [(APred 3 [(TVar 1); (TVar 0)])].
 
 Definition raft_rule_load_loc : trule :=
   mkRule [(SU 1); (SU 1)]
-    (PApp (PVal (TSym 28 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 29 [])) (PVal (TSym 0 [(TVar 0)])))
     [(APred 2 [(TVar 0); (TVar 1)])] [] (TSym 0 [(TVar 1)])
     [(APred 2 [(TVar 0); (TVar 1)])].
 
 Definition raft_rule_load_w64 : trule :=
   mkRule [(SU 1); (SU 2)]
-    (PApp (PVal (TSym 29 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 30 [])) (PVal (TSym 0 [(TVar 0)])))
     [(APred 3 [(TVar 0); (TVar 1)])] [] (TSym 1 [(TVar 1)])
     [(APred 3 [(TVar 0); (TVar 1)])].
 
 Definition raft_rule_sfr_step : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 35 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 36 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [] (TSym 0 [(TSym 6 [(TVar 0)])])
     [].
 
 Definition raft_rule_sfr_tick : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 36 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 37 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [] (TSym 0 [(TSym 7 [(TVar 0)])])
     [].
 
 Definition raft_rule_sfr_lead : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 37 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 38 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [] (TSym 0 [(TSym 8 [(TVar 0)])])
     [].
 
 Definition raft_rule_sfr_state : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 38 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 39 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [] (TSym 0 [(TSym 9 [(TVar 0)])])
     [].
 
 Definition raft_rule_sfr_id : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 39 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 40 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [] (TSym 0 [(TSym 10 [(TVar 0)])])
     [].
 
 Definition raft_rule_sfr_Term : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 40 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 41 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [] (TSym 0 [(TSym 11 [(TVar 0)])])
     [].
 
 Definition raft_rule_sfr_logger : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 41 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 42 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [] (TSym 0 [(TSym 12 [(TVar 0)])])
     [].
 
 Definition raft_rule_fr_stepFollower : trule :=
   mkRule []
-    (PApp (PVal (TSym 42 [])) (PVal TUnit))
+    (PApp (PVal (TSym 43 [])) (PVal TUnit))
     [] [] (TSym 2 [(TSym 13 [])])
     [].
 
 Definition raft_rule_fr_traceBecomeFollower : trule :=
   mkRule []
-    (PApp (PVal (TSym 43 [])) (PVal TUnit))
+    (PApp (PVal (TSym 44 [])) (PVal TUnit))
     [] [] (TSym 2 [(TSym 14 [])])
     [].
 
 Definition raft_rule_mr_reset : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 44 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 45 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [] (TSym 2 [(TSym 15 [(TVar 0)])])
     [].
 
 Definition raft_rule_mr_tickElection : trule :=
   mkRule [(SU 1)]
-    (PApp (PVal (TSym 45 [])) (PVal (TSym 0 [(TVar 0)])))
+    (PApp (PVal (TSym 46 [])) (PVal (TSym 0 [(TVar 0)])))
     [] [] (TSym 2 [(TSym 16 [(TVar 0)])])
     [].
 
 Definition raft_rule_mr_Infof : trule :=
   mkRule [(SU 6)]
-    (PApp (PVal (TSym 46 [])) (PVal (TSym 4 [(TVar 0)])))
-    [] [] (TSym 2 [(TSym 17 [(TVar 0)])])
+    (PApp (PVal (TSym 47 [])) (PVal (TSym 4 [(TVar 0)])))
+    [] [] (TSym 2 [(TSym 18 [(TVar 0)])])
     [].
 
 Definition raft_rule_conv_u64_iface : trule :=
   mkRule [(SU 2)]
-    (PApp (PVal (TSym 47 [])) (PVal (TSym 1 [(TVar 0)])))
+    (PApp (PVal (TSym 48 [])) (PVal (TSym 1 [(TVar 0)])))
     [] [] (TSym 5 [(TVar 0)])
     [].
 
 Definition raft_rule_store_step : trule :=
   mkRule [(SU 0); (SU 1); (SU 2); (SU 3); (SU 4)]
-    (PApp (PVal (TSym 31 [])) (PVal (TPair (TSym 0 [(TSym 6 [(TVar 1)])]) (TSym 2 [(TVar 4)]))))
+    (PApp (PVal (TSym 32 [])) (PVal (TPair (TSym 0 [(TSym 6 [(TVar 1)])]) (TSym 2 [(TVar 4)]))))
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])] [] TUnit
-    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TSym 19 [(TVar 3); (TVar 4)])])].
+    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TSym 20 [(TVar 3); (TVar 4)])])].
 
 Definition raft_rule_store_tick : trule :=
   mkRule [(SU 0); (SU 1); (SU 2); (SU 3); (SU 4)]
-    (PApp (PVal (TSym 32 [])) (PVal (TPair (TSym 0 [(TSym 7 [(TVar 1)])]) (TSym 2 [(TVar 4)]))))
+    (PApp (PVal (TSym 33 [])) (PVal (TPair (TSym 0 [(TSym 7 [(TVar 1)])]) (TSym 2 [(TVar 4)]))))
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])] [] TUnit
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])].
 
 Definition raft_rule_store_lead : trule :=
   mkRule [(SU 0); (SU 1); (SU 2); (SU 3); (SU 2)]
-    (PApp (PVal (TSym 33 [])) (PVal (TPair (TSym 0 [(TSym 8 [(TVar 1)])]) (TSym 1 [(TVar 4)]))))
+    (PApp (PVal (TSym 34 [])) (PVal (TPair (TSym 0 [(TSym 8 [(TVar 1)])]) (TSym 1 [(TVar 4)]))))
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])] [] TUnit
-    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TSym 21 [(TVar 3); (TVar 4)])])].
+    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TSym 22 [(TVar 3); (TVar 4)])])].
 
 Definition raft_rule_store_state_Follower : trule :=
   mkRule [(SU 0); (SU 1); (SU 2); (SU 3)]
-    (PApp (PVal (TSym 34 [])) (PVal (TPair (TSym 0 [(TSym 9 [(TVar 1)])]) (TSym 50 []))))
+    (PApp (PVal (TSym 35 [])) (PVal (TPair (TSym 0 [(TSym 9 [(TVar 1)])]) (TSym 51 []))))
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])] [] TUnit
-    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TSym 22 [(TVar 3); (TSym 25 [])])])].
+    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TSym 23 [(TVar 3); (TSym 26 [])])])].
 
 Definition raft_rule_load_id : trule :=
   mkRule [(SU 0); (SU 1); (SU 2); (SU 3)]
-    (PApp (PVal (TSym 29 [])) (PVal (TSym 0 [(TSym 10 [(TVar 1)])])))
+    (PApp (PVal (TSym 30 [])) (PVal (TSym 0 [(TSym 10 [(TVar 1)])])))
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])] [] (TSym 1 [(TVar 2)])
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])].
 
 Definition raft_rule_load_Term : trule :=
   mkRule [(SU 0); (SU 1); (SU 2); (SU 3)]
-    (PApp (PVal (TSym 29 [])) (PVal (TSym 0 [(TSym 11 [(TVar 1)])])))
-    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])] [] (TSym 1 [(TSym 18 [(TVar 3)])])
+    (PApp (PVal (TSym 30 [])) (PVal (TSym 0 [(TSym 11 [(TVar 1)])])))
+    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])] [] (TSym 1 [(TSym 19 [(TVar 3)])])
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])].
 
 Definition raft_rule_load_logger : trule :=
   mkRule [(SU 0); (SU 1); (SU 2); (SU 3)]
-    (PApp (PVal (TSym 30 [])) (PVal (TSym 0 [(TSym 12 [(TVar 1)])])))
+    (PApp (PVal (TSym 31 [])) (PVal (TSym 0 [(TSym 12 [(TVar 1)])])))
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])] [(SU 6)] (TSym 4 [(TVar 4)])
     [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)]); (APred 4 [(TVar 4)])].
 
 Definition raft_rule_slice_lit_u64_u64 : trule :=
   mkRule [(SU 2); (SU 2)]
-    (PApp (PVal (TSym 48 [])) (PVal (TLit (TSym 49 []) [(TSym 5 [(TVar 0)]); (TSym 5 [(TVar 1)])])))
+    (PApp (PVal (TSym 49 [])) (PVal (TLit (TSym 50 []) [(TSym 5 [(TVar 0)]); (TSym 5 [(TVar 1)])])))
     [] [(SU 8)] (TSym 3 [(TVar 2)])
     [].
 
 Definition raft_rule_logf_Infof_becomeFollower : trule :=
   mkRule [(SU 6); (SU 8)]
-    (PApp (PApp (PVal (TSym 2 [(TSym 17 [(TVar 0)])])) (PVal (TSym 51 []))) (PVal (TSym 3 [(TVar 1)])))
+    (PApp (PApp (PVal (TSym 2 [(TSym 18 [(TVar 0)])])) (PVal (TSym 52 []))) (PVal (TSym 3 [(TVar 1)])))
     [(APred 4 [(TVar 0)])] [] TUnit
     [].
 
@@ -234,7 +235,7 @@ Definition raft_rule_reset : trule :=
   mkRule [(SU 0); (SU 1); (SU 2); (SU 3); (SU 2)]
     (PApp (PVal (TSym 2 [(TSym 15 [(TVar 1)])])) (PVal (TSym 1 [(TVar 4)])))
     [(APred 0 []); (APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])] [(SU 7)] TUnit
-    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TSym 20 [(TSym 23 [(TVar 3); (TVar 4)]); (TVar 5)])])].
+    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TSym 21 [(TSym 24 [(TVar 3); (TVar 4)]); (TVar 5)])])].
 
 Definition raft_rule_traceBecomeFollower : trule :=
   mkRule [(SU 1)]
@@ -244,8 +245,18 @@ Definition raft_rule_traceBecomeFollower : trule :=
 
 Definition raft_fact_become_follower : tfact :=
   mkFact [(SU 3); (SU 2); (SU 7); (SU 2)]
-    (TSym 22 [(TSym 21 [(TSym 20 [(TSym 23 [(TSym 19 [(TVar 0); (TSym 13 [])]); (TVar 1)]); (TVar 2)]); (TVar 3)]); (TSym 25 [])])
-    (TSym 20 [(TSym 24 [(TVar 0); (TVar 1); (TVar 3)]); (TVar 2)]).
+    (TSym 23 [(TSym 22 [(TSym 21 [(TSym 24 [(TSym 20 [(TVar 0); (TSym 13 [])]); (TVar 1)]); (TVar 2)]); (TVar 3)]); (TSym 26 [])])
+    (TSym 21 [(TSym 25 [(TVar 0); (TVar 1); (TVar 3)]); (TVar 2)]).
+
+(** [raft__becomeFollowerⁱᵐᵖˡ]: its specification, and the rule callers use. *)
+Definition raft_spec_becomeFollower : tspec :=
+  mkSpec [(SU 0); (SU 1); (SU 2); (SU 3); (SU 2); (SU 2)]
+    [(TSym 0 [(TVar 1)]); (TSym 1 [(TVar 4)]); (TSym 1 [(TVar 5)])]
+    [(APred 0 []); (APred 1 [(TVar 0); (TVar 1); (TVar 2); (TVar 3)])]
+    [(SU 7)] TUnit
+    [(APred 1 [(TVar 0); (TVar 1); (TVar 2); (TSym 21 [(TSym 25 [(TVar 3); (TVar 4); (TVar 5)]); (TVar 6)])])].
+Definition raft_rule_becomeFollower : trule :=
+  spec_rule (TSym 2 [(TSym 17 [(TVar 1)])]) raft_spec_becomeFollower.
 
 Section den.
 Context {ext : ffi_syntax} {ffi : ffi_model} {ffi_interp0 : ffi_interp ffi}
@@ -286,41 +297,42 @@ Definition raft_sym (n : nat) : sym_ty raft_sort (lookup_sym raft_syms n) :=
   | 14%nat => ((functions raft.traceBecomeFollower []) : (func.t)) (* fn_traceBecomeFollower *)
   | 15%nat => ((λ r : loc, methods (go.PointerType raft.raft) "reset"%go #r) : (loc) → (func.t)) (* meth_reset *)
   | 16%nat => ((λ r : loc, methods (go.PointerType raft.raft) "tickElection"%go #r) : (loc) → (func.t)) (* meth_tickElection *)
-  | 17%nat => ((λ l : interface.t_ok, methods l.(interface.ty) "Infof"%go l.(interface.v)) : (interface.t_ok) → (func.t)) (* meth_Infof *)
-  | 18%nat => ((λ s : nstate.t, s.(nstate.term)) : (nstate.t) → (w64)) (* nterm *)
-  | 19%nat => ((λ (s : nstate.t) (f : func.t), s <| nstate.stepfn := f |>) : (nstate.t) → (func.t) → (nstate.t)) (* set_stepfn *)
-  | 20%nat => ((λ s p, s <| nstate.prvals := p |>) : (nstate.t) → (gmap w64 (tracker.Progress.t * tracker.Inflights.t)) → (nstate.t)) (* set_prvals *)
-  | 21%nat => ((λ (s : nstate.t) (v : w64), s <| nstate.lead := v |>) : (nstate.t) → (w64) → (nstate.t)) (* set_lead *)
-  | 22%nat => ((λ (s : nstate.t) (ro : role.t), s <| nstate.role := ro |>) : (nstate.t) → (role.t) → (nstate.t)) (* set_role *)
-  | 23%nat => ((reset_to) : (nstate.t) → (w64) → (nstate.t)) (* reset_to *)
-  | 24%nat => ((become_follower) : (nstate.t) → (w64) → (w64) → (nstate.t)) (* become_follower *)
-  | 25%nat => ((role.Follower) : (role.t)) (* role_Follower *)
-  | 26%nat => ((GoInstruction (GoAlloc (go.PointerType raft.raft))) : goose_lang.val) (* k_alloc_ptr_raft *)
-  | 27%nat => ((GoInstruction (GoAlloc go.uint64)) : goose_lang.val) (* k_alloc_u64 *)
-  | 28%nat => ((GoInstruction (GoLoad (go.PointerType raft.raft))) : goose_lang.val) (* k_load_ptr_raft *)
-  | 29%nat => ((GoInstruction (GoLoad go.uint64)) : goose_lang.val) (* k_load_u64 *)
-  | 30%nat => ((GoInstruction (GoLoad raft.Logger)) : goose_lang.val) (* k_load_Logger *)
-  | 31%nat => ((GoInstruction (GoStore raft.stepFunc)) : goose_lang.val) (* k_store_stepFunc *)
-  | 32%nat => ((GoInstruction (GoStore (go.FunctionType (go.Signature [] false [])))) : goose_lang.val) (* k_store_func0 *)
-  | 33%nat => ((GoInstruction (GoStore go.uint64)) : goose_lang.val) (* k_store_u64 *)
-  | 34%nat => ((GoInstruction (GoStore raft.StateType)) : goose_lang.val) (* k_store_StateType *)
-  | 35%nat => ((GoInstruction (StructFieldRef raft.raft "step"%go)) : goose_lang.val) (* k_sfr_step *)
-  | 36%nat => ((GoInstruction (StructFieldRef raft.raft "tick"%go)) : goose_lang.val) (* k_sfr_tick *)
-  | 37%nat => ((GoInstruction (StructFieldRef raft.raft "lead"%go)) : goose_lang.val) (* k_sfr_lead *)
-  | 38%nat => ((GoInstruction (StructFieldRef raft.raft "state"%go)) : goose_lang.val) (* k_sfr_state *)
-  | 39%nat => ((GoInstruction (StructFieldRef raft.raft "id"%go)) : goose_lang.val) (* k_sfr_id *)
-  | 40%nat => ((GoInstruction (StructFieldRef raft.raft "Term"%go)) : goose_lang.val) (* k_sfr_Term *)
-  | 41%nat => ((GoInstruction (StructFieldRef raft.raft "logger"%go)) : goose_lang.val) (* k_sfr_logger *)
-  | 42%nat => ((GoInstruction (FuncResolve raft.stepFollower [])) : goose_lang.val) (* k_fr_stepFollower *)
-  | 43%nat => ((GoInstruction (FuncResolve raft.traceBecomeFollower [])) : goose_lang.val) (* k_fr_traceBecomeFollower *)
-  | 44%nat => ((GoInstruction (MethodResolve (go.PointerType raft.raft) "reset"%go)) : goose_lang.val) (* k_mr_reset *)
-  | 45%nat => ((GoInstruction (MethodResolve (go.PointerType raft.raft) "tickElection"%go)) : goose_lang.val) (* k_mr_tickElection *)
-  | 46%nat => ((GoInstruction (MethodResolve raft.Logger "Infof"%go)) : goose_lang.val) (* k_mr_Infof *)
-  | 47%nat => ((GoInstruction (Convert go.uint64 (go.InterfaceType []))) : goose_lang.val) (* k_conv_u64_iface *)
-  | 48%nat => ((GoInstruction (CompositeLiteral (go.SliceType (go.InterfaceType [])))) : goose_lang.val) (* k_complit_iface_slice *)
-  | 49%nat => ((go.InterfaceType []) : go.type) (* k_ty_iface *)
-  | 50%nat => ((raft.StateFollower) : goose_lang.val) (* k_StateFollower *)
-  | 51%nat => ((#"%x became follower at term %d"%go) : goose_lang.val) (* k_fmt_becomeFollower *)
+  | 17%nat => ((λ r : loc, methods (go.PointerType raft.raft) "becomeFollower"%go #r) : (loc) → (func.t)) (* meth_becomeFollower *)
+  | 18%nat => ((λ l : interface.t_ok, methods l.(interface.ty) "Infof"%go l.(interface.v)) : (interface.t_ok) → (func.t)) (* meth_Infof *)
+  | 19%nat => ((λ s : nstate.t, s.(nstate.term)) : (nstate.t) → (w64)) (* nterm *)
+  | 20%nat => ((λ (s : nstate.t) (f : func.t), s <| nstate.stepfn := f |>) : (nstate.t) → (func.t) → (nstate.t)) (* set_stepfn *)
+  | 21%nat => ((λ s p, s <| nstate.prvals := p |>) : (nstate.t) → (gmap w64 (tracker.Progress.t * tracker.Inflights.t)) → (nstate.t)) (* set_prvals *)
+  | 22%nat => ((λ (s : nstate.t) (v : w64), s <| nstate.lead := v |>) : (nstate.t) → (w64) → (nstate.t)) (* set_lead *)
+  | 23%nat => ((λ (s : nstate.t) (ro : role.t), s <| nstate.role := ro |>) : (nstate.t) → (role.t) → (nstate.t)) (* set_role *)
+  | 24%nat => ((reset_to) : (nstate.t) → (w64) → (nstate.t)) (* reset_to *)
+  | 25%nat => ((become_follower) : (nstate.t) → (w64) → (w64) → (nstate.t)) (* become_follower *)
+  | 26%nat => ((role.Follower) : (role.t)) (* role_Follower *)
+  | 27%nat => ((GoInstruction (GoAlloc (go.PointerType raft.raft))) : goose_lang.val) (* k_alloc_ptr_raft *)
+  | 28%nat => ((GoInstruction (GoAlloc go.uint64)) : goose_lang.val) (* k_alloc_u64 *)
+  | 29%nat => ((GoInstruction (GoLoad (go.PointerType raft.raft))) : goose_lang.val) (* k_load_ptr_raft *)
+  | 30%nat => ((GoInstruction (GoLoad go.uint64)) : goose_lang.val) (* k_load_u64 *)
+  | 31%nat => ((GoInstruction (GoLoad raft.Logger)) : goose_lang.val) (* k_load_Logger *)
+  | 32%nat => ((GoInstruction (GoStore raft.stepFunc)) : goose_lang.val) (* k_store_stepFunc *)
+  | 33%nat => ((GoInstruction (GoStore (go.FunctionType (go.Signature [] false [])))) : goose_lang.val) (* k_store_func0 *)
+  | 34%nat => ((GoInstruction (GoStore go.uint64)) : goose_lang.val) (* k_store_u64 *)
+  | 35%nat => ((GoInstruction (GoStore raft.StateType)) : goose_lang.val) (* k_store_StateType *)
+  | 36%nat => ((GoInstruction (StructFieldRef raft.raft "step"%go)) : goose_lang.val) (* k_sfr_step *)
+  | 37%nat => ((GoInstruction (StructFieldRef raft.raft "tick"%go)) : goose_lang.val) (* k_sfr_tick *)
+  | 38%nat => ((GoInstruction (StructFieldRef raft.raft "lead"%go)) : goose_lang.val) (* k_sfr_lead *)
+  | 39%nat => ((GoInstruction (StructFieldRef raft.raft "state"%go)) : goose_lang.val) (* k_sfr_state *)
+  | 40%nat => ((GoInstruction (StructFieldRef raft.raft "id"%go)) : goose_lang.val) (* k_sfr_id *)
+  | 41%nat => ((GoInstruction (StructFieldRef raft.raft "Term"%go)) : goose_lang.val) (* k_sfr_Term *)
+  | 42%nat => ((GoInstruction (StructFieldRef raft.raft "logger"%go)) : goose_lang.val) (* k_sfr_logger *)
+  | 43%nat => ((GoInstruction (FuncResolve raft.stepFollower [])) : goose_lang.val) (* k_fr_stepFollower *)
+  | 44%nat => ((GoInstruction (FuncResolve raft.traceBecomeFollower [])) : goose_lang.val) (* k_fr_traceBecomeFollower *)
+  | 45%nat => ((GoInstruction (MethodResolve (go.PointerType raft.raft) "reset"%go)) : goose_lang.val) (* k_mr_reset *)
+  | 46%nat => ((GoInstruction (MethodResolve (go.PointerType raft.raft) "tickElection"%go)) : goose_lang.val) (* k_mr_tickElection *)
+  | 47%nat => ((GoInstruction (MethodResolve raft.Logger "Infof"%go)) : goose_lang.val) (* k_mr_Infof *)
+  | 48%nat => ((GoInstruction (Convert go.uint64 (go.InterfaceType []))) : goose_lang.val) (* k_conv_u64_iface *)
+  | 49%nat => ((GoInstruction (CompositeLiteral (go.SliceType (go.InterfaceType [])))) : goose_lang.val) (* k_complit_iface_slice *)
+  | 50%nat => ((go.InterfaceType []) : go.type) (* k_ty_iface *)
+  | 51%nat => ((raft.StateFollower) : goose_lang.val) (* k_StateFollower *)
+  | 52%nat => ((#"%x became follower at term %d"%go) : goose_lang.val) (* k_fmt_becomeFollower *)
   | _ => #()
   end.
 
@@ -342,4 +354,9 @@ Definition raft_den : den raft_syms raft_preds :=
 
 (** Unfold the table's definitions (before [tc_simp]). *)
 Ltac raft_unfold :=
-  unfold raft_den, raft_sym, raft_sort, raft_pred, raft_syms, raft_preds, raft_rule_alloc_loc, raft_rule_alloc_w64, raft_rule_load_loc, raft_rule_load_w64, raft_rule_sfr_step, raft_rule_sfr_tick, raft_rule_sfr_lead, raft_rule_sfr_state, raft_rule_sfr_id, raft_rule_sfr_Term, raft_rule_sfr_logger, raft_rule_fr_stepFollower, raft_rule_fr_traceBecomeFollower, raft_rule_mr_reset, raft_rule_mr_tickElection, raft_rule_mr_Infof, raft_rule_conv_u64_iface, raft_rule_store_step, raft_rule_store_tick, raft_rule_store_lead, raft_rule_store_state_Follower, raft_rule_load_id, raft_rule_load_Term, raft_rule_load_logger, raft_rule_slice_lit_u64_u64, raft_rule_logf_Infof_becomeFollower, raft_rule_reset, raft_rule_traceBecomeFollower, raft_fact_become_follower.
+  unfold raft_den, raft_sym, raft_sort, raft_pred, raft_syms, raft_preds, raft_rule_alloc_loc, raft_rule_alloc_w64, raft_rule_load_loc, raft_rule_load_w64, raft_rule_sfr_step, raft_rule_sfr_tick, raft_rule_sfr_lead, raft_rule_sfr_state, raft_rule_sfr_id, raft_rule_sfr_Term, raft_rule_sfr_logger, raft_rule_fr_stepFollower, raft_rule_fr_traceBecomeFollower, raft_rule_mr_reset, raft_rule_mr_tickElection, raft_rule_mr_Infof, raft_rule_conv_u64_iface, raft_rule_store_step, raft_rule_store_tick, raft_rule_store_lead, raft_rule_store_state_Follower, raft_rule_load_id, raft_rule_load_Term, raft_rule_load_logger, raft_rule_slice_lit_u64_u64, raft_rule_logf_Infof_becomeFollower, raft_rule_reset, raft_rule_traceBecomeFollower, raft_fact_become_follower, raft_spec_becomeFollower, raft_rule_becomeFollower.
+
+(** The specification of [becomeFollower] as a rule, for postulates to [Include]. *)
+Module Type RAFT_RULE_BECOMEFOLLOWER.
+  Parameter raft_rule_becomeFollower_ok : rule_valid raft_den raft_rule_becomeFollower.
+End RAFT_RULE_BECOMEFOLLOWER.

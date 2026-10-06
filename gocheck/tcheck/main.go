@@ -106,13 +106,11 @@ func main() {
 	if inp.Fn, err = reifyFunc(t, fd.impl); err != nil {
 		die(2, "%v", err)
 	}
-	for _, rd := range t.rules {
-		r, err := t.rule(rd)
-		if err != nil {
-			die(2, "rule %s: %v", rd.name, err)
-		}
-		inp.Rules = append(inp.Rules, r)
+	allNames, rules, err := []string(nil), []*tcheck.Rule(nil), error(nil)
+	if rules, allNames, err = t.allRules(fd.name); err != nil {
+		die(2, "%v", err)
 	}
+	inp.Rules = rules
 	for _, fdl := range t.facts {
 		f, err := t.fact(fdl)
 		if err != nil {
@@ -125,7 +123,7 @@ func main() {
 	}
 	f, used := tcheck.Run(inp)
 	if f != nil {
-		fmt.Println(t.renderFailure(inp, f))
+		fmt.Println(t.renderFailure(inp, allNames, f))
 		os.Exit(1)
 	}
 	// The input of the observation: only the rules and facts the run used.
@@ -134,7 +132,7 @@ func main() {
 	for i, r := range inp.Rules {
 		if used[i] {
 			small.Rules = append(small.Rules, r)
-			ruleNames = append(ruleNames, t.rules[i].name)
+			ruleNames = append(ruleNames, allNames[i])
 		}
 	}
 	for i, fa := range inp.Facts {
@@ -150,7 +148,16 @@ func main() {
 	fmt.Printf("checker.Check: true -- %s (%d bytes)\n  rules: %s\n  facts: %s\n", fd.name, len(bytes),
 		strings.Join(ruleNames, " "), strings.Join(factNames, " "))
 	if *observe != "" {
-		s := genObservation(t, *tableFile, fd, small, ruleNames, factNames, bytes, cmd)
+		fr, err := t.funcRule(*fd)
+		if err != nil {
+			die(2, "%v", err)
+		}
+		cf, err := loadCode(t.codeFile, t.module)
+		if err != nil {
+			die(2, "%v", err)
+		}
+		s := genObservation(t, *tableFile, fd, small, ruleNames, factNames, bytes, cmd,
+			cf.qualify(fd.impl), patHeadTerm(fr.Lhs))
 		if err := os.WriteFile(*observe, []byte(s), 0o644); err != nil {
 			die(2, "%v", err)
 		}
@@ -196,7 +203,7 @@ func (t *table) renderPat(p *tcheck.Pat) string {
 	return "(app " + t.renderPat(p.A) + " " + t.renderPat(p.B) + ")"
 }
 
-func (t *table) renderFailure(inp *tcheck.Input, f *tcheck.Failure) string {
+func (t *table) renderFailure(inp *tcheck.Input, ruleNames []string, f *tcheck.Failure) string {
 	names := map[uint64]string{
 		tcheck.FailParse: "the input does not parse", tcheck.FailInput: "the input is ill formed",
 		tcheck.FailUnbound: "unbound variable", tcheck.FailNoRule: "no rule applies",
@@ -209,10 +216,10 @@ func (t *table) renderFailure(inp *tcheck.Input, f *tcheck.Failure) string {
 	case tcheck.FailNoRule:
 		s += " to\n  " + t.renderPat(f.Pat)
 	case tcheck.FailInput:
-		nr := uint64(len(t.rules))
+		nr := uint64(len(ruleNames))
 		switch {
 		case f.Item < nr:
-			s += " (rule " + t.rules[f.Item].name + ")"
+			s += " (rule " + ruleNames[f.Item] + ")"
 		case f.Item < nr+uint64(len(t.facts)):
 			s += " (fact " + t.facts[f.Item-nr].name + ")"
 		default:
