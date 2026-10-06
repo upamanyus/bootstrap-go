@@ -355,6 +355,24 @@ Proof.
   wp_call_lc "?". by iApply "HΦ".
 Qed.
 
+Lemma wp__new_cap (l: w64) :
+  {{{ True }}}
+    slice._new_cap #l
+  {{{ (cap: w64), RET #cap; ⌜sint.Z l ≤ sint.Z cap⌝ }}}.
+Proof.
+  iIntros (Φ) "_ HΦ".
+  wp_call. wp_apply wp_ArbitraryInt.
+  iIntros (x) "_".
+  wp_pures.
+  match goal with
+  | |- context[bool_decide ?P] => destruct (bool_decide_reflect P); wp_pures
+  end.
+  - iApply "HΦ".
+    word.
+  - iApply "HΦ".
+    word.
+Qed.
+
 Context [V] `[!ZeroVal V] `[!TypedPointsto (Σ:=Σ) V].
 
 Lemma wp_slice_make3 `[!st ↓u go.SliceType t] `[!IntoValTyped V t] stk E (len cap : w64) :
@@ -902,31 +920,20 @@ Proof.
   iMod (dfractional_update_to_dfrac (λ dq, s ↦*{dq} vs) with "Hs") as "$"; auto.
 Qed.
 
-Lemma wp__new_cap (l: w64) :
-  {{{ True }}}
-    slice._new_cap #l
-  {{{ (cap: w64), RET #cap; ⌜sint.Z l ≤ sint.Z cap⌝ }}}.
-Proof.
-  iIntros (Φ) "_ HΦ".
-  wp_call. wp_apply wp_ArbitraryInt.
-  iIntros (x) "_".
-  wp_pures.
-  match goal with
-  | |- context[bool_decide ?P] => destruct (bool_decide_reflect P); wp_pures
-  end.
-  - iApply "HΦ".
-    word.
-  - iApply "HΦ".
-    word.
-Qed.
-
-Lemma wp_slice_append `[!st ↓u go.SliceType t] `[!IntoValTyped V t] (s: slice.t) (vs: list V) (s2: slice.t) (vs': list V) dq :
-  {{{ s ↦* vs ∗ own_slice_cap V s (DfracOwn 1) ∗ s2 ↦*{dq} vs' }}}
+(** [append] onto a destination whose elements are held at any fraction
+    [dq_s].  Go's [append] writes only the capacity slack past [len(s)] when
+    it appends in place, and only reads the old elements when it reallocates,
+    so only the slack has to be owned.  [✓dq_s] is needed because [s ↦*{dq_s}
+    []] holds no resource (the slice may be nil), so it says nothing about
+    [dq_s]; the appended elements are then handed back at [dq_s]. *)
+Lemma wp_slice_append_dfrac `[!st ↓u go.SliceType t] `[!IntoValTyped V t]
+    (s: slice.t) (vs: list V) dq_s (s2: slice.t) (vs': list V) dq :
+  {{{ s ↦*{dq_s} vs ∗ own_slice_cap V s (DfracOwn 1) ∗ s2 ↦*{dq} vs' ∗ ⌜✓dq_s⌝ }}}
     #(functions go.append [st]) #s #s2
   {{{ (s' : slice.t), RET #s';
-      s' ↦* (vs ++ vs') ∗ own_slice_cap V s' (DfracOwn 1) ∗ s2 ↦*{dq} vs' }}}.
+      s' ↦*{dq_s} (vs ++ vs') ∗ own_slice_cap V s' (DfracOwn 1) ∗ s2 ↦*{dq} vs' }}}.
 Proof.
-  wp_start as "(Hs & Hcap & Hs2)".
+  wp_start as "(Hs & Hcap & Hs2 & %Hdq)".
   iDestruct (own_slice_len with "Hs") as %Hs.
   iDestruct (own_slice_len with "Hs2") as %Hs2.
   iDestruct (own_slice_wf with "Hs") as %Hwf1.
@@ -937,28 +944,29 @@ Proof.
     rewrite decide_True; last word. wp_auto.
     rewrite slice_slice; last word.
     do 2 ereplace (word.add (W64 0) ?[e]) with ?e by word.
-    iDestruct (own_slice_slice_into_capacity
-                 s.(slice.len) (word.add s.(slice.len) s2.(slice.len)) with "[$Hs $Hcap]") as
-        (vs'') "(Hs & Hs_new & Hcap)"; [ word | ].
+    (* the slack up to [high], at full ownership; the old elements stay
+       where they are, at [dq_s] *)
+    iDestruct (own_slice_cap_split (word.add s.(slice.len) s2.(slice.len)) with "[$Hcap]") as (vs'') "[Hs_new Hcap]".
+    { word. }
     iDestruct (own_slice_len with "Hs_new") as %Hlen.
     simpl in Hlen; autorewrite with len in Hlen.
     wp_apply (wp_slice_copy with "[$Hs_new $Hs2]").
-    autorewrite with len.
     rewrite -> !Nat.min_l by word.
     iIntros (n) "(%Hn & Hs_new & Hs2)".
     rewrite -> drop_ge, app_nil_r by len.
+    rewrite -> take_ge by len.
+    iMod (own_slice_update_to_dfrac dq_s with "Hs_new") as "Hs_new"; first done.
     wp_auto.
     iApply "HΦ".
     iFrame "Hs2".
     iSplitL "Hs Hs_new".
-    { iDestruct (own_slice_combine s.(slice.len) with "Hs Hs_new") as "Hs_new".
+    { iDestruct (own_slice_trivial_slice with "Hs") as "Hs0".
+      iDestruct (own_slice_combine s.(slice.len) with "Hs0 Hs_new") as "Hall".
       { len. }
-      rewrite -> !take_app_le, !take_ge by word.
-      iFrame "Hs_new".
-    }
+      iExact "Hall". }
     iApply (own_slice_cap_slice_change_first with "Hcap").
     move: l; word.
-  - wp_apply (wp__new_cap) as "%x %Hcap_ge".
+  - wp_apply wp__new_cap as "%x %Hcap_ge".
     wp_apply wp_slice_make3.
     { word. }
     iIntros (sl) "(Hnew & Hnew_cap & %Hcap)".
@@ -972,7 +980,7 @@ Proof.
     wp_apply (wp_slice_copy with "[$Hnew $Hs]").
     autorewrite with len.
     rewrite -> !Nat.min_r by word.
-    iIntros (n') "(%Hn' & Hnew & Hs)".
+    iIntros (n') "(%Hn' & Hnew & _)".
     rewrite -> take_ge by len.
     rewrite drop_replicate.
     wp_auto. rewrite decide_True; last word.
@@ -987,23 +995,42 @@ Proof.
     iIntros (n'') "(%Hn'' & Hnew2 & Hs2)".
     rewrite -> !drop_ge, app_nil_r by len.
     rewrite -> !take_app_le, !take_ge by word.
-    wp_auto.
-    iApply "HΦ".
-    iFrame "Hs2".
-    iSplitL "Hnew1 Hnew2".
-    {
-      iDestruct (own_slice_combine with "Hnew1 Hnew2") as "Hnew".
-      { len. }
-      iDestruct (own_slice_len with "Hnew") as %Hlen.
-      simpl in Hlen.
-      autorewrite with len in Hlen.
-      iExactEq "Hnew".
+    iDestruct (own_slice_combine with "Hnew1 Hnew2") as "Hnew".
+    { len. }
+    iDestruct (own_slice_len with "Hnew") as %Hlen.
+    simpl in Hlen.
+    autorewrite with len in Hlen.
+    iAssert (sl ↦* (vs ++ vs'))%I with "[Hnew]" as "Hnew".
+    { iExactEq "Hnew".
       f_equal.
       rewrite {2}(slice_slice_trivial sl (V:=V)).
       f_equal.
-      word.
-    }
-    iFrame.
+      word. }
+    iMod (own_slice_update_to_dfrac dq_s with "Hnew") as "Hnew"; first done.
+    wp_auto.
+    iApply "HΦ".
+    iFrame "Hs2 Hnew Hnew_cap".
+Qed.
+
+Lemma wp_slice_append `[!st ↓u go.SliceType t] `[!IntoValTyped V t] (s: slice.t) (vs: list V) (s2: slice.t) (vs': list V) dq :
+  {{{ s ↦* vs ∗ own_slice_cap V s (DfracOwn 1) ∗ s2 ↦*{dq} vs' }}}
+    #(functions go.append [st]) #s #s2
+  {{{ (s' : slice.t), RET #s';
+      s' ↦* (vs ++ vs') ∗ own_slice_cap V s' (DfracOwn 1) ∗ s2 ↦*{dq} vs' }}}.
+Proof.
+  iIntros (Φ) "(Hs & Hcap & Hs2) HΦ".
+  iApply (wp_slice_append_dfrac with "[$Hs $Hcap $Hs2 //] HΦ").
+Qed.
+
+Lemma wp_slice_append_persistent `[!st ↓u go.SliceType t] `[!IntoValTyped V t]
+    (s: slice.t) (vs: list V) (s2: slice.t) (vs': list V) dq :
+  {{{ s ↦*□ vs ∗ own_slice_cap V s (DfracOwn 1) ∗ s2 ↦*{dq} vs' }}}
+    #(functions go.append [st]) #s #s2
+  {{{ (s' : slice.t), RET #s';
+      s' ↦*□ (vs ++ vs') ∗ own_slice_cap V s' (DfracOwn 1) ∗ s2 ↦*{dq} vs' }}}.
+Proof.
+  iIntros (Φ) "(Hs & Hcap & Hs2) HΦ".
+  iApply (wp_slice_append_dfrac with "[$Hs $Hcap $Hs2 //] HΦ").
 Qed.
 
 Lemma wp_slice_literal `[!IntoValTyped V t] `{!st ↓u (go.SliceType t)} (l : list V) kvs Φ :

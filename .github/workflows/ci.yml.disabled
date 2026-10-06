@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["master"]
+    branches: ["main"]
   pull_request:
-    branches: ["master"]
+    branches: ["main"]
   schedule:
     # every day at 9am UTC (4am EST).
     - cron: "0 9 * * *"
@@ -39,8 +39,10 @@ jobs:
         run: |
           opam install --deps-only ./perennial.opam
       - name: Rocq build
+        # `make ci` prints a build report after the build, pass or fail
+        # (etc/build-report.py); this also puts it on the run's summary page.
         run: |
-          make -j4 -k ci
+          make -j4 -k ci BUILD_REPORT_ARGS="--markdown-to $GITHUB_STEP_SUMMARY"
       - name: Report timing statistics
         run: ./etc/timing-report.py --max-files 50
 
@@ -52,7 +54,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           version: ${{ env.UV_VERSION }}
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           # pin exact version for deterministic stdlib translation.
           go-version: "1.26.0"

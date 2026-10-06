@@ -1,18 +1,103 @@
-# Contributing to Perennial
+# Contributing to etcd-grove
+
+## Project notes
+
+Durable project context — current status, design decisions, gotchas, and a
+session journal — lives in [notes/](./notes/README.md), as plain markdown. Read
+[notes/STATUS.md](./notes/STATUS.md) before starting, and update the notes when
+you finish. Coding agents are pointed at the same place by
+[AGENTS.md](./AGENTS.md).
+
+## Checking the raft proof's module structure
+
+Every Hoare triple about a Go function in the etcd raft proof belongs in a
+`spec_<fn>.v` / `postulates_<fn>.v` / `proof_<fn>.v` / `link_<fn>.v`
+collection, so that a function has exactly one specification and nothing can
+bypass it — see
+[notes/decisions.md](./notes/decisions.md), "One file per function, via Rocq's
+module system". `etc/check-module-discipline.py` checks it:
+
+```
+etc/check-module-discipline.py --scope election_proof   # clean
+etc/check-module-discipline.py --summary
+etc/check-module-discipline.py --selftest        # the parsing contract
+```
+
+It reads the program expression out of each triple rather than trusting lemma
+names, so it reports which Go function a spec really specifies, and it
+cross-references the Goose output in `new/code/` to catch a spec named after a
+function that does not exist. It exits non-zero on errors. The whole raft
+proof is *not* clean: `readonly.v` and `protocol.v` predate the discipline.
+
+When one function's proof needs several files, the extra ones go in
+`proof_<fn>_helpers/` — so listing the top level shows exactly the four files
+of each collection, and the checker errors on a helper left outside. Today
+only `raft__Step` has one.
+
+The script knows the *toolchain* — how Goose renders a call, Perennial's
+`{{{ … }}}` notation, and the file-naming convention — and no particular
+package, function or file name. `--proof-root` points it at another
+development (it finds 24 out-of-place triples in
+`new/proof/go_etcd_io/etcd`, which predates the convention), `--code-root`
+at another translation, and `--scope` takes a path or the bare name of any
+directory under the proof root.
+
+## Seeing what is unproven, and how big the TCB is
+
+`etc/tcb-report.py` answers two questions that were otherwise answered by
+grepping: where the proof is incomplete, and what has to be believed for its
+results to mean anything.
+
+```
+R=new/proof/go_etcd_io/raft          # the development to report on; there is no default
+etc/tcb-report.py --proof-root $R                 # summary + the incomplete files
+etc/tcb-report.py --proof-root $R --scope election_proof
+etc/tcb-report.py --proof-root $R --view assumed  # every axiom and Admitted, classified
+etc/tcb-report.py --proof-root $R --view surface  # results, root lemmas, and what they rest on
+etc/tcb-report.py --proof-root $R --view files    # one line per file
+etc/tcb-report.py --proof-root $R --format json
+etc/tcb-report.py --selftest
+```
+
+It counts three things as trusted: everything **assumed** (an `Axiom` outside
+a `Module Type`, or a proof ending in `Admitted`), the **results** the
+development exports, and the **definitions** those results' statements are
+written in terms of — the last usually being the biggest part, and the one a
+count of axioms misses. It deliberately does *not* count a `Parameter` inside
+a `Module Type`, which the functor ascribed to that signature discharges, nor
+the spec of a function something else in the development calls: an internal
+spec is an untrusted proof artifact, since a wrong one makes its callers'
+proofs fail.
+
+"Externally facing" means nothing in the development depends on it — a
+collection no other collection requires or names, or a theorem in a file
+nothing requires. Go's export rule is reported next to each result, not used
+to decide.
+
+The definition count is a **lower bound**: references through a `Notation` or
+found by typeclass resolution are invisible, and definitions from Perennial,
+stdpp and Rocq are outside the tree and not counted, though they are trusted
+too. `--view surface` prints how many names it could not resolve.
+
+It always exits 0 — it is a viewer, not a gate. It shares its parser with
+`etc/check-module-discipline.py` (`etc/rocqscan.py`, which has its own
+`--selftest`), and like that script it knows the conventions and no
+particular package or file name, so `--proof-root` aims it elsewhere.
 
 ## Default build
 
 Not everything in the repo is built by default, even in CI. In order to be
-compiled, a file must be `Require`d from `src/ShouldBuild.vo` (which already includes
-`new/should_build.vo` for new goose proofs).
+compiled, a file must be `Require`d from `new/should_build.v`, which is what
+`make ci` builds.
 
 ## CI notes
 
-Rocq's CI checks the Perennial build on every commit to Rocq. In order to avoid
-breaking Rocq CI, they build a branch called `coq/tested` which we push to
-automatically only when perennial master's CI passes. They also only run `make
-lite`, which compiles `src/LiteBuild.v`, a representative subset of Perennial
-that takes much less time to build.
+CI runs on pushes and PRs to `main`, nightly, and on demand
+(see [.github/workflows/](.github/workflows/)).
+
+Upstream Perennial additionally pushes a `coq/tested` branch that Rocq's own CI
+builds against. That is upstream's arrangement, not ours, so the workflow for it
+is not in this fork.
 
 We skip running Qed commands in CI using
 [etc/disable-qed.sh](./etc/disable-qed.sh) - see that script for details. This
@@ -23,17 +108,16 @@ reduces build times by about 10%.
 The dependencies are pinned to a particular commit hash (using an opam
 `pin-depends` clause) to avoid breaking the
 Perennial build when there are incompatible upstream changes. We use Dependabot
-to do daily checks for dependency updates (see
+to do monthly checks for dependency updates (see
 [.github/dependabot.yml](.github/dependabot.yml) and read the GitHub
-documentation). In addition, a workflow
-[dependabot-automerge.yml](.github/workflows/dependabot-automerge.yml)
-automatically merges these (this depends on a GitHub Ruleset to ensure CI passes
-before the PR is merged).
+documentation). Unlike upstream, these are **not** auto-merged: upstream's
+auto-merge workflow relies on a GitHub Ruleset that gates merging on CI, which
+this fork does not have, so review and merge them yourself.
 
 ## Tips for managing compilation time
 
-Perennial takes about 180 CPU minutes to compile. Compiling in parallel with
-`make -j4` (or more) is significantly faster, and can cut the time down to 40-50
+The repo takes about 180 CPU minutes to compile from scratch. Compiling in
+parallel with `make -j4` (or more) is significantly faster, and can cut the time down to 40-50
 minutes. Incremental builds are generally much faster.
 
 You can compile individual files by simply running `make` with the path to a
@@ -54,32 +138,97 @@ is complete. Similar to compiling a single `vo` file, you can build a single
 edit-compile-debug cycle. Note that `vok` checking isn't the same as regular
 compilation - it doesn't check universe constraints.
 
-We compile with [rocqc.py](etc/rocqc.py), a Python wrapper around `rocq compile`
-to get timing information. You can compile without timing information with `make
-TIMED=false`. To read the results of the timing, run `uv run ./etc/timing-report.py`;
-use `--help` to access some other features.
+### Per-file build times
+
+We compile with [rocqc.py](etc/rocqc.py), a Python wrapper around `rocq
+compile`. Every build reports how long each file took, as it finishes:
+
+```
+ROCQ COMPILE new/proof/go_etcd_io/raft/election_proof/proof_raft__send.v
+ROCQ TIME   418.79s vo  new/proof/go_etcd_io/raft/election_proof/proof_raft__send.v
+```
+
+The seconds field is fixed-width, so `make ci 2>&1 | tee build.log` and then
+`grep 'ROCQ TIME' build.log | sort -rn -k3` ranks a build's bottlenecks
+without touching the database. `make TIMING_MIN=10 ...` prints only files
+taking at least ten seconds; `make TIMED=false ...` bypasses the wrapper
+entirely.
+
+The same timings go into `.timing.sqlite3`, one row per file **per build
+mode** — a file's `vo`, `vos` and `vok` builds cost very different amounts
+and are kept apart. Read them back with:
+
+```
+make timing-report                                      # the vo build
+make timing-report TIMING_REPORT_ARGS="--mode vok"
+./etc/timing-report.py --filter raft --max-qeds 20      # or call it directly
+./etc/timing-report.py --selftest
+```
+
+`timing-report.py` needs only the standard library. A compile that *fails* is
+not recorded, so a broken build does not overwrite the last good timing.
+
+Timings recorded before 2026-09-21 could not tell `vo` from `vok`, and the
+database's `vo` rows from then are a mix of the two; `rocqc.py` migrates such
+a database in place the next time it writes to one. `./etc/rocqc.py
+--selftest` checks the wrapper against the fixtures in `etc/test_coqc/`
+(those same checks are pytest tests in `etc/test_coqc.py`, but pytest is not
+a dependency and no CI job runs it).
+
+### Build reports
+
+`make ci` ends with a report on the build it just ran, pass or fail (it exits
+with the build's status either way):
+
+- **totals**: wall time from `make` starting to the last compile ending, CPU
+  time, the average and peak number of compiles running against the job
+  slots `-j` offered, and how long the build ran at most one compile;
+- **parallelism over time**, as a chart of running compiles;
+- the **critical path** as it happened: from the compile that finished last,
+  back through the dependency each step waited for. `idle` is the gap
+  between that dependency finishing and the step starting, which is waiting
+  for a free job slot (or, first step, for `make` to start). It also gives
+  the longest dependency chain by compile time, which is how long the build
+  would take with unlimited cores;
+- the **slowest files** (time, CPU, peak memory), **where the CPU went** by
+  directory, and any **failed compiles**.
+
+In GitHub Actions the same report, as markdown, goes on the run's summary
+page (`BUILD_REPORT_ARGS="--markdown-to $GITHUB_STEP_SUMMARY"` in
+`ci.yml`). By hand:
+
+```
+make build-report                          # the latest build, whatever its goals
+./etc/build-report.py --list               # every build recorded
+./etc/build-report.py --build ID --format markdown
+./etc/build-report.py --selftest
+```
+
+It works because `rocqc.py` also files each compile under the `make` run it
+belongs to: the Makefile sets `ROCQ_BUILD_ID` (with its start time and goals)
+once per top-level `make`, and `rocqc.py` records start, end, CPU, peak memory
+and exit status per compile in the `builds`/`build_files` tables, failed
+compiles included. With `TIMED=false`, or under Rocq CI's `TIMING`, there is
+no wrapper and so no report. Dependencies come from `.rocqdeps.d`.
 
 ## Updating Goose output
 
 This repo has committed versions of the output of Goose, to avoid making Goose
 and all the projects involved dependencies for compilation. You should update
-these using the `./etc/update-goose.py` and `./new/etc/update-goose.py` scripts,
-which record exactly how to generate the output for the various Goose projects
-we have (in particular, the list of packages that should be translated).
+these using `./new/etc/update-goose-new.py`, which records exactly how to
+generate the output for the various Goose projects we have (in particular, the
+list of packages that should be translated), including
+[upamanyus/etcd-raft](https://github.com/upamanyus/etcd-raft) and
+[upamanyus/etcd](https://github.com/upamanyus/etcd).
 
 You can run `./etc/ci-goose-check.py` to clone all the projects whose proofs are
-included in this repo and run both update-goose scripts. This is what the
-check-goose CI job does.
+included in this repo and re-run the translation. This is what the check-goose
+CI job does.
 
-You can use `./etc/update-goose.py -a` to build all supported projects, assuming
-they are checked out as siblings.
-
-If you submit a PR to goose that changes the output, submit a PR to perennial
-(this repo) in parallel and **link to the goose PR in the description**. This link
-causes the perennial CI to build against your PR, so that the CI check-goose job
-passes while the goose PR is open. This feature is implemented by
-`etc/ci-use-goose-pr`, which reads the PR description and identifies the
-corresponding goose branch using the GitHub API.
+Because the Go sources live in separate repos, a change to them is a two-commit
+affair: push the Go change to the relevant fork's `goose` branch, then
+re-run the update script here and commit the regenerated `new/code/` and
+`new/generatedproof/` output.
 
 ## Integer templating
 
