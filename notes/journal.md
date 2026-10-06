@@ -3958,3 +3958,25 @@ one took **21 minutes, not 13, because another session was running
 is how it showed; the per-file CPU < wall is the tell. So it is a
 demonstration of the report, not a timing; the 13-minute figure in
 STATUS.md stands from the uncontended run.
+
+
+## 2026-10-06 — a table-driven Go checker establishes becomeFollower
+
+Merged into bootstrap-go (which holds the earlier checker, `checker/`), so
+that a Go checker and the raft proofs share one build. `tcheck/` executes
+core GooseLang symbolically, knowing the program only through a table of
+rules (Hoare triples over applications of values) and facts; for raft the
+rules are the `wp_raft_load_*`/`wp_raft_store_*` lemmas, the pure steps
+`wp_auto` takes, and the callees' postulates. `becomeFollower` checks in
+0.15 s and its Rocq side is three files: the generated observation (one
+axiom recording the 6.7 KB of bytes the run read), a hand-written link of
+the 26 shared rules (10 s, once per table), and an 8 s proof module giving
+both `RAFT_RULE_BECOMEFOLLOWER` and, by `exact`, `BECOMEFOLLOWER`.
+
+Lesson: never compute a denotation inside a hypothesis with `lazy`. It
+normalizes the table's denotation (a 50-case dependent match) wherever it
+occurs unapplied, e.g. in binder annotations, and the first version of the
+proof took 4.5 minutes; the statement the observation gives converts to
+the hand-written spec directly, in 0.08 s. Computing a *goal* (the rule
+links) is fine. Next: `if:`, a cheaper encoding of the byte literal (3.8 s
+of the observation file), and the proof of `check_adequate`.

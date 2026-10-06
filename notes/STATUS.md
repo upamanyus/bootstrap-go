@@ -24,6 +24,18 @@ forks, both on branch `goose`, wired up in `new/etc/update-goose-new.py` and
 - `upamanyus/etcd-raft` → translated into `new/code/go_etcd_io/raft/`
 - `upamanyus/etcd` → translated into `new/code/go_etcd_io/etcd/`
 
+### OBSERVE-EXECUTION: a table-driven Go checker (2026-10-06)
+
+`new/proof/go_etcd_io/raft/tcheck/` establishes `becomeFollower` from one
+observed run of a Go checker (`tcheck/`, frontend `gocheck/tcheck/`; see
+`gocheck/tcheck/README.md`). The checker's knowledge of raft is a table
+(`raft.tbl`) whose rules are the `inv_raft_phys` accessor lemmas, pure
+steps and callee specs, each proved by linking (`link_table_raft.v`). It
+is **not reached from `new/should_build.v`** and adds two kinds of
+assumption: `check_adequate` (the checker's soundness, unproved,
+`new/tcheck/observe.v`) and one generated observation axiom per function;
+`bash gocheck/tcheck/observe.sh` rechecks the observations.
+
 ### The raft proof
 
 `new/proof/go_etcd_io/raft/` holds two developments side by side, both
