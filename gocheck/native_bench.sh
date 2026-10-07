@@ -14,6 +14,9 @@
 #   kernel   just the triple, by lcheck_sound and `decide +kernel` (no axiom
 #            beyond Lean's)
 #   gocheck  one run of the built gocheck binary on the same specification
+#   Check    checker.Check alone, in milliseconds: the mean of $CHECK_N calls
+#            on gocheck's input (gocheck -time-check), with no process start,
+#            Go package loading or translation
 #
 # Run from the repository root, after lake build:
 #   bash gocheck/native_bench.sh
@@ -23,6 +26,7 @@ cd "$(dirname "$0")/.." || exit 2
 . gocheck/specs.sh
 
 RUNS=${RUNS:-3}
+CHECK_N=${CHECK_N:-10000}
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 go build -o "$tmp/gocheck" ./gocheck || exit 2
@@ -54,13 +58,13 @@ lean_cost() {
 
 secs() { awk -v us="$1" 'BEGIN { printf "%.3f", us / 1e6 }'; }
 
-row() { printf '%-10s %7s %7s %7s %7s %8s\n' "$@"; }
+row() { printf '%-10s %7s %7s %7s %7s %8s %9s\n' "$@"; }
 
 # bench FUNC NAME GOCHECK-ARGS...
 bench() {
 	local fn=$1 name=$2
 	shift 2
-	local hand file native kernel go
+	local hand file native kernel go check
 	hand=$(lean_cost "Checkers/Checker/Examples/$fn.lean")
 	file=$(lean_cost "Checkers/Native/Examples/$fn.lean")
 	triple "$name" native_decide >"$tmp/Native.lean"
@@ -68,7 +72,10 @@ bench() {
 	triple "$name" "decide +kernel" >"$tmp/Kernel.lean"
 	kernel=$(lean_cost "$tmp/Kernel.lean")
 	go=$(run_med "$tmp/gocheck" -pkg ./checker/examples "$@" "$fn") && go=$(secs "$go") || go=fail
-	row "$fn" "$hand" "$file" "$native" "$kernel" "$go"
+	check=$("$tmp/gocheck" -pkg ./checker/examples "$@" -time-check "$CHECK_N" "$fn" |
+		sed -n 's/^checker.Check: true, \([0-9.]*\) us\/call.*/\1/p')
+	[ -n "$check" ] && check=$(awk -v us="$check" 'BEGIN { printf "%.4f", us / 1e3 }') || check=fail
+	row "$fn" "$hand" "$file" "$native" "$kernel" "$go" "$check"
 }
 
 # triple NAME TACTIC -- a file proving NAME's triple by lcheck_sound and TACTIC
@@ -83,8 +90,8 @@ LEAN
 }
 
 lean --version 2>/dev/null | head -1
-echo "seconds, median of $RUNS runs; Lean columns exclude loading imports"
-row function hand file native kernel gocheck
+echo "seconds (Check: ms), median of $RUNS runs; Lean columns exclude loading imports"
+row function hand file native kernel gocheck "Check(ms)"
 bench Double double -pre "$DOUBLE_PRE" -post "$DOUBLE_POST"
 bench Max max -post "$MAX_POST"
 bench Swap swap -pre "$SWAP_PRE" -post "$SWAP_POST"

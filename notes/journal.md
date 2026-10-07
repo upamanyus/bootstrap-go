@@ -80,3 +80,12 @@ Append-only, newest last.
 - `native_decide` in this Lean version adds an auxiliary axiom per use, not
   `Lean.ofReduceBool`; and under `lake build` it runs interpreted IR, since
   the library does not set `precompileModules`.
+
+## 2026-10-07 — timing checker.Check alone
+
+- `gocheck -time-check N` reports the mean of N calls of `checker.Check` on
+  the built input; `native_bench.sh` shows it as the `Check` column. It is
+  8-138 us per example (Median3 the largest), so gocheck's ~40 ms is process
+  start plus loading and translating the Go package, and the compiled Go
+  check is 50-150x faster than `lcheck` under `native_decide` (1-8 ms,
+  interpreted IR). Numbers in `Checkers/Native/README.md`.

@@ -87,6 +87,25 @@ CondStore  1.5-1.6 ms                 0.44-0.47 s
 Median3    6.2-7.6 ms                 1.27-1.28 s
 ```
 
+The Go checker's own work is smaller still. `gocheck -time-check N` (the
+`Check` column of `native_bench.sh`) reports the mean of N calls of
+`checker.Check` on the built input, with no process start, Go package
+loading or translation; with N = 10000 (2026-10-07):
+
+```
+function   checker.Check
+Double     21 us
+Max         8 us
+Swap       18 us
+Abs        10 us
+CondStore  17 us
+Median3   138 us
+```
+
+So gocheck's ~0.04 s is almost all process start and the Go frontend, and
+compiled Go runs the check 50-150x faster than `native_decide`'s
+interpreted `lcheck` (1-8 ms).
+
 `native_decide` evaluation here is Lean's IR interpreter (the profiler's
 "interpretation"): the library does not set `precompileModules`, so the
 checker's own functions run as interpreted IR, calling compiled code only for

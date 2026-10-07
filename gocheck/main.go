@@ -5,11 +5,13 @@
 // Usage:
 //
 //	gocheck [-pkg P] [-pre A] [-post A] [-moddir D] [-configdir D] [-ast] [-v]
-//	        [-lean FILE [-lean-name N]] Func
+//	        [-lean FILE [-lean-name N]] [-time-check N] Func
 //
 // With -lean (which needs -post), gocheck also calls checker.Check on the
 // input and writes that input, as Lean terms over Checkers/Checker/Defs.lean, to FILE
-// (see render.LeanFile).
+// (see render.LeanFile). With -time-check N (which needs -post), it also
+// reports the mean time of N calls of checker.Check on the built input, with
+// no process start, package loading or translation included.
 package main
 
 import (
@@ -17,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/upamanyus/bootstrap-go/checker"
 	"github.com/upamanyus/bootstrap-go/gocheck/render"
@@ -42,7 +45,7 @@ func run() (int, error) {
 	fs := flag.NewFlagSet("gocheck", flag.ContinueOnError)
 	usage := func() {
 		fmt.Fprintf(os.Stderr, "usage: gocheck [-pkg P] [-pre A] [-post A] [-moddir D] "+
-			"[-configdir D] [-ast] [-v] [-lean FILE [-lean-name N]] Func\n")
+			"[-configdir D] [-ast] [-v] [-lean FILE [-lean-name N]] [-time-check N] Func\n")
 		fs.PrintDefaults()
 	}
 	fs.Usage = usage
@@ -55,6 +58,7 @@ func run() (int, error) {
 	verbose := fs.Bool("v", false, "print extra detail")
 	leanFile := fs.String("lean", "", "write the checker input as Lean definitions to this file (needs -post)")
 	leanName := fs.String("lean-name", "", "prefix of the Lean definitions (default: the function name, lowercased)")
+	timeCheck := fs.Int("time-check", 0, "also time checker.Check alone: the mean of this many calls on the built input (needs -post)")
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return exitUsage, nil
 	}
@@ -159,6 +163,17 @@ func run() (int, error) {
 		}
 		fmt.Fprintf(out, "checker.Check: %v (input written to %s)\n",
 			checker.Check(f, vars, preAssn, postAssn), *leanFile)
+	}
+
+	if *timeCheck > 0 {
+		ok := checker.Check(f, vars, preAssn, postAssn) // warm-up
+		start := time.Now()
+		for i := 0; i < *timeCheck; i++ {
+			checker.Check(f, vars, preAssn, postAssn)
+		}
+		per := time.Since(start) / time.Duration(*timeCheck)
+		fmt.Fprintf(out, "checker.Check: %v, %.3f us/call (mean of %d calls)\n",
+			ok, float64(per.Nanoseconds())/1e3, *timeCheck)
 	}
 
 	okCount := 0
