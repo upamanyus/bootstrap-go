@@ -360,3 +360,40 @@ namespace `Perennial.Checker`. Rocq's `_aux` + public pair (e.g.
 * An allocated struct node from `wp_auto` is named `«$v0»`/`«$r0»`; `ipersist
   «$v0»`, then close `is_term` with `simp only [is_term, tnode]; iExactEq «$v0»; rfl`.
 * `if_pos`/`if_neg` are deprecated in this toolchain: `ite_eq_left`/`ite_eq_right`.
+
+## Top of the development (Verify, Analyze, Check, soundness, adequacy, observed Median3)
+
+* Built and imported by `Checkers.lean`: `Fn/Verify` (`path_ok`,
+  `wp_Verify`), `Fn/Analyze` (`wp_Analyze`), `Fn/Check` (`check_triple`,
+  `triple_holds_intro`, `wp_Check`), `CheckSound` (`check_sound_proof`),
+  `Soundness` (`check_sound`, the statement file: its text is
+  `check_sound_proof`'s, character for character), `Adequacy`
+  (`check_adequate`), `Examples/Observed/Median3` (`median3_check_run`, the
+  one axiom; `wp_Median3`). No `sorry`. `#print axioms check_sound` /
+  `check_adequate`: `propext, Classical.choice, Quot.sound`; observed
+  `wp_Median3`: those plus `median3_check_run`.
+* **Deviation, ghost state in adequacy.** Rocq's adequacy.v builds
+  `checkΣ := #[heapΣ; all.allΣ]` from the FFI's `ffiΣ`/`subG_ffiPreG`
+  (fields of `ffi_interp_adequacy`). Perennial Lean's `FfiInterpAdequacy` has
+  no such fields (`ffiGpreS : BundledGFunctors → Type` is opaque), so no
+  `GF` with `GooseGpreS ffi GF` can be assembled for an arbitrary FFI.
+  `check_adequate` takes `{GF} [GooseGpreS ffi GF]` (as Perennial Lean's
+  `disk_adequacy` does), and `median3_check_run`'s existential includes
+  `GF` and `GooseGpreS ffi GF` as part of the model the run is in. If
+  Perennial Lean's `FfiInterpAdequacy` gains an `ffiΣ`-style field, both can
+  drop it.
+* Using the ghost state adequacy hands out: `goose_adequacy_heap`'s `∀ [hG]`
+  is destructed (`obtain ⟨G, ⟨ffiL, lctx', naG, goG⟩⟩ := hG`), the two
+  local-context equations are `subst`ed, and the WP lemma is applied with
+  `(hG := ⟨G, ⟨ffiL, σ.goState.goLctx, naG, goG⟩⟩)` (without the named
+  argument, instance search finds no `HeapGS` after the destruct).
+* Range loop + Go local `i` (Analyze): `rename_i gi_ptr; irename: gi_ptr ↦
+  (W64 0) => gi`, as in findCell. The loop test after `wp_for` is `if
+  decide (sint.Z k < sint.Z s.len) = true then …`: `by_cases` on the
+  comparison and `simp only [decide_eq_true H, ↓reduceIte]` (or
+  `decide_eq_false H, Bool.false_eq_true`) instead of `wp_if_destruct`.
+* A doc comment (`/-- … -/`) cannot precede `set_option … in local macro`
+  or `variable`: use `--`.
+* `iapply` of a triple stated on `apply_vals (func_val f) (arg_vals f θ)`
+  does not unify with the literal application; `rw [show apply_vals … =
+  App (App … ) … from rfl] at H` first (observed Median3).
