@@ -344,3 +344,19 @@ namespace `Perennial.Checker`. Rocq's `_aux` + public pair (e.g.
 * `BigSepL.bigSepL_intro` needs its `P` given explicitly
   (`(P := heap_ro (GF := GF) h)`) or the `Intuitionistic` instance is not
   found.
+* (exec chain, later) `ExecDef.lean`: `exec_like fn ce : IProp GF` as in Rocq;
+  use `exec_like_intro` to prove `⊢ exec_like fn ce` from the plain triples
+  and `exec_like_triple _ _ Hex le lρ lst ρ sst` to `wp_apply` a premise
+  `Hex : ⊢ exec_like …`. `exec_post_ok`/`exec_post_fail` are in `ExecSoundB`.
+* All exec-chain modules build with no `sorry` (`lake build Checkers.Checker.Fn.exec`;
+  `#print axioms wp_exec`: propext, Classical.choice, Quot.sound). `oterm_ok`
+  and `sort_code_inj'` live only in `Fn/applyUnOp.lean` (Rocq redefines them in
+  applyBinOp.v; Lean forbids the duplicate when both are imported).
+* `wp_start` sometimes already unfolds `is_expr` of a constructor (then `simp
+  only [is_expr]` fails with "no progress"): use `try`.
+* Literal kind dispatch: `simp (config := {decide := true}) only [expr_code,
+  checker.EInt, …]` then `wp_auto`, repeated (`Fn/exec.lean`'s `exec_dispatch`
+  macro, written under `set_option hygiene false` so it can name `HΦ`).
+* An allocated struct node from `wp_auto` is named `«$v0»`/`«$r0»`; `ipersist
+  «$v0»`, then close `is_term` with `simp only [is_term, tnode]; iExactEq «$v0»; rfl`.
+* `if_pos`/`if_neg` are deprecated in this toolchain: `ite_eq_left`/`ite_eq_right`.
