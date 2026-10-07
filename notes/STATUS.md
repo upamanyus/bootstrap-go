@@ -38,14 +38,6 @@ all of it (680 jobs); no file of this repository has a `sorry`.
 - `raft.tbl` is written against the Lean election proof's lemmas (see
   [decisions.md](decisions.md)); `bash gocheck/tcheck/observe.sh` rechecks it.
 
-## Known issues
-
-- **The dependencies' pins are not on GitHub yet.** Perennial `8c75a3dd4`
-  (local `lean`, 5 commits ahead of GitHub's `f3b8ef80f`) and etcd-grove
-  `51d6df02d` (branch `lean`, not pushed). Until both are pushed, Lake can
-  only use an already-populated `.lake/packages`; a fresh clone cannot
-  resolve them.
-
 ## Next
 
 - Prove tcheck's `check_adequate`, the way `Checkers/Checker/` proves the

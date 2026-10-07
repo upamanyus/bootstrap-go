@@ -1,6 +1,6 @@
 # Porting `new/checker/` to Lean
 
-How the Rocq soundness development of the Go checker (`~/bootstrap-go/new/checker/`)
+How the Rocq soundness development of the Go checker (`new/checker/` on branch `main`)
 maps onto `Checkers/Checker/` here. Read `notes/porting.md` first (layout,
 build, conventions) and the etcdGrove porting guide
 (`.lake/packages/etcdGrove/notes/porting-guide.md`, Rocq → Lean cheat sheet).

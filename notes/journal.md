@@ -25,3 +25,11 @@ Append-only, newest last.
   Median3 proof 5.8–6.2 s, observed Median3 3.8–4.0 s, tcheck's observation
   file 7.7 s (5.1 s of it the kernel checking the bytes), its proof 2.8 s;
   a checker run 0.04 s.
+
+## 2026-10-07 — one checkout
+
+- The `lean` branch and both dependency pins (Perennial `8c75a3dd4`,
+  etcd-grove `51d6df02d`) are pushed. `~/bootstrap-go` is now the `lean`
+  checkout (the temporary `~/bootstrap-go-lean` clone is gone; its
+  populated `.lake/` was moved here). The Rocq sources are read with
+  `git show main:<path>`.
