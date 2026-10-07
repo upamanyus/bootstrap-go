@@ -20,7 +20,9 @@ specification in Perennial.
   proved in Lean. Its soundness is stated, not yet proved
   (`check_adequate`, `Checkers/TCheck/Observe.lean`). Its client is etcd
   raft's `becomeFollower`: its specification, from the Lean raft election
-  proof, follows from one observed run.
+  proof, follows from one observed run -- or, with no axiom about the
+  checker, from its Lean version `ltcheck` (proved sound, `ltcheck_sound`) run
+  by `decide` or `native_decide`.
 
 This is branch `lean`; the Rocq version is on `main`. It depends on
 [Perennial's Lean port](https://github.com/mit-pdos/perennial/tree/lean) and on
@@ -38,6 +40,7 @@ bash gocheck/observe.sh               # re-observe Median3's run
 bash gocheck/native.sh                # regenerate the Lean-native checker's inputs
 bash gocheck/native_bench.sh          # time it against the hand-written proofs
 bash gocheck/tcheck/observe.sh        # recheck and regenerate tcheck's observations
+bash gocheck/tcheck/reflect_bench.sh  # time tcheck's Lean version against the observation
 ```
 
 See [CLAUDE.md](CLAUDE.md) for the layout and [notes/STATUS.md](notes/STATUS.md)

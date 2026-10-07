@@ -13,7 +13,9 @@ Goose, and Perennial's own proofs live there.
   soundness is the one stated axiom `check_adequate`
   (`Checkers/TCheck/Observe.lean`). Its client is etcd raft's
   `becomeFollower`, over the Lean raft election proof (the `etcdGrove`
-  dependency).
+  dependency). Its Lean version `ltcheck` (`LCheck/TCheck/`) is proved sound
+  (`ltcheck_sound`, `Checkers/TCheck/Reflect/`), and proves the same spec by
+  reflection (`Checkers/TCheck/Raft/Reflect/`).
 
 ## Read the notes first
 
@@ -33,8 +35,9 @@ Goose, and Perennial's own proofs live there.
   on `main` to its Lean file. `Checkers/Native/` (not a port) proves the
   Lean-native checker sound (`lcheck_sound`) and runs it on the examples by
   `native_decide`.
-- `LCheck/` — the Lean-native checker `lcheck`, its data types and the pure
-  functions the Go proof's specifications are stated over. Imports nothing
+- `LCheck/` — the Lean versions of both checkers (`lcheck`; `ltcheck` in
+  `LCheck/TCheck/`), their data types, and the pure functions the Go proof's
+  specifications are stated over. Imports nothing
   beyond Lean's core (not even `Perennial.Std`: Lake would then compile all of
   Perennial and Iris) and is precompiled to native code (`lakefile.toml`).
 
@@ -53,6 +56,7 @@ Perennial's Lean docs are in the dependency:
     bash gocheck/demo.sh                         # checker demo + Lean timings
     bash gocheck/observe.sh; bash gocheck/tcheck/observe.sh   # recheck the observations
     bash gocheck/native.sh; bash gocheck/native_bench.sh      # Lean-native checker inputs, timings
+    bash gocheck/tcheck/reflect_bench.sh                      # ltcheck against tcheck's observation
 
 Go uses goose from the Lake dependency (`go.mod` replaces
 `github.com/mit-pdos/perennial` with `.lake/packages/perennial`), so run

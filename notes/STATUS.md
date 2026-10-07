@@ -42,7 +42,7 @@ all of it (680 jobs); no file of this repository has a `sorry`.
   `native_decide` evaluation in a proof 0.3-1.6 ms (interpreted: 0.6-6 ms);
   kernel 0.12-1.3 s; hand-written proofs 0.4-4.0 s.
 
-### tcheck/ (soundness stated)
+### tcheck/ (soundness stated for Go; proved for its Lean version)
 
 - `Perennial.TCheck.raft.becomeFollower.wp_proof` proves etcdGrove's own
   `raft.becomeFollower.spec`, given `raft.reset.spec` and
@@ -54,11 +54,23 @@ all of it (680 jobs); no file of this repository has a `sorry`.
   packages (`fmt.pp`, `os.*`, `sync.Map`, …).
 - `raft.tbl` is written against the Lean election proof's lemmas (see
   [decisions.md](decisions.md)); `bash gocheck/tcheck/observe.sh` rechecks it.
+- `ltcheck` (`LCheck/TCheck/Check.lean`, precompiled) is tcheck's algorithm in
+  Lean; `ltcheck_sound : ltcheck i = true → input_holds i`
+  (`Checkers/TCheck/Reflect/Sound.lean`) is a theorem (Lean's three axioms).
+  `Checkers/TCheck/Raft/Reflect/raft__becomeFollower.lean` proves
+  `raft.becomeFollower.spec` from it by `decide +kernel`
+  (`raft.becomeFollower.wp_proof_reflect`: no `check_adequate`, no
+  observation) and `input_holds` by `native_decide` too.
+- Cost (`bash gocheck/tcheck/reflect_bench.sh`, gocheck/tcheck/README.md):
+  `input_holds` 5.1 s observed, 1.5 s kernel, 0.15 s `native_decide`; one
+  check 0.2 ms compiled (`ltcheck`, Go's `tcheck.Run`), 3 ms interpreted.
 
 ## Next
 
 
-- Prove tcheck's `check_adequate`, the way `Checkers/Checker/` proves the
-  checker's soundness.
+- Prove tcheck's `check_adequate` (the Go checker's soundness), the way
+  `Checkers/Checker/` proves the checker's: `Checkers/TCheck/Reflect/` already
+  proves the same algorithm sound on Lean mirrors, which is the semantic layer
+  such a proof needs.
 - When etcdGrove gains a hand-written proof of `raft.becomeFollower`, compare
   costs with tcheck's (`gocheck/tcheck/README.md` has the tcheck numbers).

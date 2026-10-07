@@ -18,3 +18,4 @@ import Checkers.Native.Examples.Abs
 import Checkers.Native.Examples.CondStore
 import Checkers.Native.Examples.Median3
 import Checkers.TCheck.Raft.Proof.raft__becomeFollower
+import Checkers.TCheck.Raft.Reflect.raft__becomeFollower

@@ -109,3 +109,26 @@ Append-only, newest last.
   about Go's `checker.Check` (8-143 us); interpreted 130-2300 us. In a proof,
   `native_decide` evaluation is 0.3-1.6 ms precompiled vs 0.6-6 ms
   interpreted — below wall-clock noise; the rest of the proof file dominates.
+
+## 2026-10-07 — tcheck by reflection
+
+- `ltcheck` (LCheck/TCheck/Check.lean) and `ltcheck_sound`
+  (Checkers/TCheck/Reflect/: Terms, Code, Heap, Rules, Eval, Sound; ~2,600
+  lines, no `sorry`, Lean's three axioms). The tcheck input types moved from
+  Checkers/TCheck/Syntax.lean (which keeps `ser_input`) to
+  LCheck/TCheck/Syntax.lean, so the checker is precompiled with `LCheck`.
+- Raft: Checkers/TCheck/Raft/Reflect/raft__becomeFollower.lean proves
+  `raft.becomeFollower.spec` with `decide +kernel` (axioms: the observed
+  proof's minus `check_adequate` and `becomeFollower_check_run`).
+- Lessons. Lean derives no `DecidableEq` for the nested `tterm`; a Bool `teq`
+  with a soundness lemma is all the checker needs. Proofs are continuation-
+  passing over evaluation contexts (`fill K`), which composes the App/Pair/
+  let/exception cases and the spine search the same way. Making the
+  continuation `kont` an `abbrev` lets the proof mode see through it without
+  unfolding the outer one. `Language.ofVal`'s coercion in `wp_bind` is not
+  syntactically `Val`: give `iapply` the postcondition explicitly. A section
+  variable used only in a proof needs `include`.
+- `gocheck/tcheck -verify OBS -time-check N` times `tcheck.Check` (with
+  parsing) and `tcheck.Run`; `gocheck/tcheck/reflect_bench.sh` reports
+  observed 5.1 s / kernel 1.5 s / native 0.15 s for `input_holds`, and 0.2 ms
+  per check compiled (Lean and Go alike), 3 ms interpreted.

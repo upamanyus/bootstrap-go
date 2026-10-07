@@ -106,3 +106,23 @@ Perennial's, which is all of Perennial and pulls in Iris, Batteries and Qq
 (~630 modules compiled to C, observed). Writing `w64`/`GoString`/`W64 0` as
 `BitVec 64`/`List (BitVec 8)`/`BitVec.ofInt 64 0` costs nothing (they are
 `abbrev`s).
+
+## tcheck's algorithm in Lean, proved sound, for reflection
+
+**2026-10-07 · accepted**
+
+`ltcheck` (`LCheck/TCheck/`) re-implements tcheck/ in Lean and
+`Checkers/TCheck/Reflect/` proves `ltcheck_sound` from scratch (tcheck had no
+semantic layer to reuse, unlike checker/). Choices that keep the proof small:
+no up-front well-formedness check -- each step checks what its soundness
+needs (a closed value of sort `val`, all of a rule's or fact's variables
+bound, instantiated variables in range, a rule's result of sort `val`); fuel
+for normalization and re-reduction; one `eval` with a shallow flag, so the
+recursion is structural (the kernel can then evaluate it); GooseLang's
+evaluation order. The raft input is the generated observation file's,
+reused without its axiom.
+
+**Rejected — prove `check_adequate` for the Go code first.** The Lean version
+is what reflection needs, and its semantic layer is what a proof of the Go
+code would be built on (as `Checkers/Checker/` is), so it comes first either
+way.

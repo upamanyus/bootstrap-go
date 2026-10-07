@@ -8,7 +8,7 @@
 //	    run the checker on function NAME of the table; with -observe, write
 //	    the observation file of the run (the input restricted to the rules
 //	    and facts it used, and the axiom that Check returned true on it)
-//	tcheck -verify OBS.lean
+//	tcheck -verify OBS.lean [-time-check N]
 //	    rerun tcheck.Check on the bytes recorded in an observation file
 //
 // Exit codes: 0 established (or verified), 1 the checker answered false,
@@ -21,6 +21,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/upamanyus/bootstrap-go/tcheck"
 )
@@ -32,7 +33,7 @@ func die(code int, format string, args ...any) {
 
 var axiomRe = regexp.MustCompile(`(?m)^axiom (\S+) : observed_run\s+go!("(?:[^"\\]|\\.)*")`)
 
-func verify(path string) {
+func verify(path string, timeN int) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		die(2, "%v", err)
@@ -54,6 +55,24 @@ func verify(path string) {
 		die(1, "%s: %s: tcheck.Check answered false (failure code %d)", path, ms[0][1], f.Code)
 	}
 	fmt.Printf("%s: %s: tcheck.Check: true (%d bytes)\n", path, ms[0][1], len(bytes))
+	if timeN > 0 {
+		// tcheck.Check (parse and run), then tcheck.Run alone on the parsed input:
+		// the mean of timeN calls each, after one warm-up call.
+		start := time.Now()
+		for i := 0; i < timeN; i++ {
+			tcheck.Check([]byte(bytes))
+		}
+		perCheck := time.Since(start) / time.Duration(timeN)
+		inp := tcheck.Parse([]byte(bytes))
+		tcheck.Run(inp)
+		start = time.Now()
+		for i := 0; i < timeN; i++ {
+			tcheck.Run(inp)
+		}
+		perRun := time.Since(start) / time.Duration(timeN)
+		fmt.Printf("tcheck.Check: %.3f us/call, tcheck.Run: %.3f us/call (mean of %d calls)\n",
+			float64(perCheck.Nanoseconds())/1e3, float64(perRun.Nanoseconds())/1e3, timeN)
+	}
 }
 
 func main() {
@@ -63,9 +82,10 @@ func main() {
 	fn := flag.String("func", "", "function to check")
 	observe := flag.String("observe", "", "write the observation file here")
 	verifyPath := flag.String("verify", "", "rerun the checker on an observation file's bytes")
+	timeCheck := flag.Int("time-check", 0, "with -verify: also time tcheck.Check and tcheck.Run on the bytes, the mean of this many calls")
 	flag.Parse()
 	if *verifyPath != "" {
-		verify(*verifyPath)
+		verify(*verifyPath, *timeCheck)
 		return
 	}
 	if *tablePath == "" {

@@ -33,17 +33,22 @@ gocheck/tcheck/            the frontend (not translated, not trusted)
   goose.go                 reads a function out of Goose's Lean output
   ser.go lean.go main.go   serialization, Lean output, the command
   observe.sh               recheck and regenerate every observation
+  reflect_bench.sh         time the Lean checker against the observation
+LCheck/TCheck/
+  Syntax.lean Check.lean   the input's types, and `ltcheck` (precompiled)
 Checkers/TCheck/
   Syntax.lean              the input in Lean, and `ser_input`
   Denote.lean              what an input means (`input_holds`)
   Observe.lean             `observed_run`, and the axiom `check_adequate`
   Link.lean                tactics and lemmas for linking rules to lemmas
+  Reflect/                 `ltcheck_sound` (Terms, Code, Heap, Rules, Eval, Sound)
 Checkers/TCheck/Raft/
   raft.tbl                 the raft table (hand-written)
   TableRaft.lean           its syntax and denotation (generated)
   LinkTableRaft.lean       each rule proved from its lemma (hand-written)
   Observed/raft__becomeFollower.lean   one run (generated)
   Proof/raft__becomeFollower.lean      the rule, and etcdGrove's spec, from that run (hand-written)
+  Reflect/raft__becomeFollower.lean    the same, from `ltcheck` instead of the run
 ```
 
 The Goose output the frontend reads is Perennial's Lean translation of the
@@ -161,6 +166,63 @@ imports; Rocq's from `main`'s README for comparison):
 | `LinkTableRaft.lean` (once per table; `tc_simp` 0.1–0.25 s per hand-proved rule) | 3.1 s | 9.9 s |
 | `TableRaft.lean` (once per table) | 3.8 s | |
 | the hand-written proof of `becomeFollower` | (not ported to Lean) | 12.1 s |
+
+## The Lean checker: `becomeFollower` by reflection
+
+`ltcheck` (`LCheck/TCheck/Check.lean`) is this checker's algorithm as Lean
+functions, and its soundness is **proved**:
+
+```lean
+theorem ltcheck_sound (i : tinput) : ltcheck i = true → input_holds i
+```
+
+(`Checkers/TCheck/Reflect/Sound.lean`; `#print axioms`: Lean's three). That is
+the statement `check_adequate` claims for a `true` answer of the Go checker, so
+`Checkers/TCheck/Raft/Reflect/raft__becomeFollower.lean` proves etcdGrove's
+`raft.becomeFollower.spec` (`raft.becomeFollower.wp_proof_reflect`) from
+`ltcheck_sound` and `decide +kernel` on the same input, with neither
+`check_adequate` nor the observation: `#print axioms` is the observed proof's
+minus those two. The file also proves the input's `input_holds` by
+`native_decide` (`ltcheck` is in the precompiled library `LCheck`).
+
+`ltcheck` follows `tcheck/` closely, but checks what its soundness needs where
+it needs it instead of checking the input's well-formedness up front, has fuel
+for its loops, evaluates in GooseLang's order, and is structurally recursive
+(the header of `Check.lean` lists the differences). The proof
+(`Checkers/TCheck/Reflect/`, about 2,600 lines) is in five layers: terms (sorts,
+substitution, matching, normalization by valid facts), the code (substitution
+of the environment, the function's beta steps), the symbolic state (persistent
+and non-persistent atoms), rules (`applyRule_sound`: the rule's triple, at the
+values matching bound; the spine search and `reduce`), and evaluation
+(`eval_sound`, one case per construct, in continuation-passing style).
+
+`bash gocheck/tcheck/reflect_bench.sh` (2026-10-07):
+
+```
+Lean (version 4.34.1, x86_64-unknown-linux-gnu, commit 5045d0056413266e57c625dcd7c365b10e377c52, Release)
+
+input_holds becomeFollower_input: seconds of wall clock, median of 3 runs, minus imports
+  observed  5.13
+  kernel    1.50
+  native    0.15
+  interp    0.12
+
+Lean's profiler (one run; cumulative over the file):
+  observed  type checking 4.77s (of which the bytes = ser_input check is most)
+  kernel    type checking 1.17s
+  native    evaluation 3.84ms
+  interp    evaluation 7.64ms
+
+One call of the checker on becomeFollower's input, microseconds, mean of 10000 calls:
+  Go        tcheck.Check 327.777, tcheck.Run 192.645
+  ltcheck   compiled 208.6, interpreted 3118.8 (1000 calls)
+```
+
+The observed proof's cost is nearly all the kernel's check that the axiom's
+bytes are `ser_input` of the input; the reflective proof replaces it with the
+kernel running the checker itself (1.2 s) or, with `native_decide`, with 4 ms of
+evaluation. Compiled, `ltcheck` costs what the Go checker's `tcheck.Run` costs
+(about 0.2 ms; `tcheck.Check` also parses the bytes).
 
 ## How the checker executes
 
