@@ -299,3 +299,48 @@ namespace `Perennial.Checker`. Rocq's `_aux` + public pair (e.g.
   works); for pure lemmas about `Option`-valued mirrors prefer `simp_all`
   with small `isSome` lemmas (`tbind2_isSome` in Fn/instantiate.lean) over
   hand-written destructuring.
+* (parse/pre chain, cont.) Also built: `Fn/collectDisjuncts` (`assn_disjuncts`,
+  `is_assns`), `Fn/growPats` (`pad`, `grow_pats`), `Fn/flatten`
+  (`assn_flatten`, `dj_atoms`, `flatten_post`), `ParseSound`
+  (`binders_interp`, `binders_entails`, `assn_disjuncts_sound`, …),
+  `Fn/parseDisjunct`, `Fn/parseDisjuncts` (`is_disjuncts`), `PreSound`
+  (`pre_state`, `penv`, `analyze_sound`, `analyze_ok`), `Layout`
+  (`inputs_in`, `heap_ro`, `heap_ro_init`, `heap_ro_init_cells`,
+  `inputs_in_sound`), `PostSimp` (`assn_interp_simp_eq` is an *equation*,
+  so `rw [assn_interp_simp_eq]` then `simp only [assn_interp_simp,
+  pure_meaning, int_rel, teval, …]` computes a postcondition; see the
+  `example` at the bottom of PostSimp.lean).
+* Each `wp_append_nil` of Rocq got a distinct Lean name
+  (`wp_append_nil_cell`/`_term`/`_assn`): two modules defining the same
+  name cannot be imported together.
+* **Recursive method** (`d.flatten(a.L)`): `wp_start`'s simp also rewrites
+  the Löb hypothesis, turning `ld @!! T @!! "m"` into the unfolded method
+  body, which the recursive call no longer matches. State the spec as a
+  `def X_spec … : IProp GF` (+ `Persistent` instance), Löb over
+  `∀ …, X_spec …`, `rw [X_spec]` (not `unfold`, which also hits the
+  hypothesis), and for the call `ihave #IH1 := IH $$ %a %b; rw [X_spec];
+  wp_apply IH1 $$ […]` (`Fn/flatten.lean`).
+* `unfold P` / `simp only [P]` on an Iris goal rewrites *all* hypotheses too
+  (the context is part of the Lean goal), e.g. `unfold is_disjunct` also
+  unfolds it inside `HΦ` and a loop invariant; later `iexists` then works on
+  the unfolded form directly.
+* A loop condition with `&&` (`for body != nil && body.Kind == AExists`):
+  after `wp_for HI`, `iapply wp_wand (Φ := fun v => iprop(⌜v = #(f ob)⌝ ∗
+  body_ptr ↦ lb)) $$ [body]`, prove the condition WP by `cases ob`, then
+  `cases Hex : f ob`; the `decide (#false = #true)` needs
+  `rw [bval_eq, bval_eq]; simp [bval]` on a separate `have`
+  (`Fn/parseDisjunct.lean`). Make the condition's persistent hypotheses
+  intuitionistic first (`icases Hb with #Hb`; `ipersist` fails on them).
+* `iapply HΦ` with `HΦ : ∀ ld dj, …` leaves `dj` an evar that `iexists` on
+  the unfolded `is_disjunct` cannot fill: give it, `iapply HΦ $$ %_ %dj`.
+* `ihave` of an `IProp` after `wp_auto` allocated a struct `&T{}`: the
+  points-to is named `«$r0»` (and `«$r0_ptr»`); a later allocation reuses the
+  name and the old one becomes `$r0_ptr✝`.
+* Lean instance-implicit section variables are included in a theorem
+  whenever their dependencies are, so every theorem in a section with
+  `[sem : go.Semantics]` takes it (`heap_ro_init_cells` needs it too).
+* No `bigSepM_bupd` in Lean's Iris: an update over a `[∗map]` is an
+  induction with `GMap.map_ind` + `BigSepM.bigSepM_insert` (`heap_ro_init`).
+* `BigSepL.bigSepL_intro` needs its `P` given explicitly
+  (`(P := heap_ro (GF := GF) h)`) or the `Intuitionistic` instance is not
+  found.
