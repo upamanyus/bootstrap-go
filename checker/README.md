@@ -4,7 +4,7 @@
 program, as translated to GooseLang by Goose, under a concurrent-separation-logic
 precondition, and checks that every execution path is safe and establishes a
 given postcondition. It exists to explore the "Observe-Execution" idea: rather
-than checking a Perennial proof in Rocq (slow), run a Go checker on real
+than checking a Perennial proof in Lean (slow), run a Go checker on real
 hardware and trust its answer via the axiom
 
     Executed Go program p and saw it return v
@@ -13,16 +13,22 @@ hardware and trust its answer via the axiom
 
 ## Status and trust boundary
 
-- The checker is verified: `new/checker/soundness.v` states what a `true`
-  answer means (`check_sound`) in terms of the Goose translation of
-  `checker.Check` (`new/code/github_com/mit_pdos/perennial/checker.v`), and
-  it is proved (`new/checker/NOTES.md` describes the proof).
-- `new/checker/adequacy.v` closes the program logic: a crash-free run of
-  `checker.Check` from a heap holding the input that returns `true` gives
+- The checker is verified: `Checkers/Checker/Soundness.lean` states what a
+  `true` answer means (`check_sound`) in terms of the Goose translation of
+  `checker.Check` (`Generated/Code/github_com/upamanyus/bootstrap_go/checker.lean`),
+  and it is proved (`Checkers/Checker/CheckSound.lean`; `notes/checker-port.md`
+  describes the port, and `git show main:new/checker/NOTES.md` the proof).
+- `Checkers/Checker/Adequacy.lean` closes the program logic: a finite real run
+  of `checker.Check` from a heap holding the input that returns `true` gives
   `triple_holds`, the triple for every FFI, ghost state and Go semantics.
+  (It takes `[GooseGpreS ffi GF]` as a premise, as Perennial Lean's own
+  adequacy theorems do: Perennial Lean cannot build that instance for an
+  arbitrary FFI.)
+- `#print axioms` of `check_sound` and `check_adequate`: `propext`,
+  `Classical.choice`, `Quot.sound`.
 - The frontend `gocheck/` (Go source → checker input, spec parsing) is unverified
-  marshalling, in the same role a kernel-level `exec` term would play. Its
-  output can be checked in Rocq, though (see "From a run to a Rocq proof").
+  marshalling. Its output is checked in Lean, though (see "From a run to a Lean
+  proof").
 - Trusted: the GooseLang semantics, the Goose translation, and the
   observation that the checker returned `true`.
 
@@ -39,16 +45,13 @@ checker/            core, translated by Goose; NO imports (see below)
   check.go          Analyze / Verify / Check / Explain
   examples/         target Go programs for the demo
 gocheck/            frontend + CLI (not translated): translate/, spec/, render/, demo.sh
-  rocqgoal/         reads Rocq goals exported by new/proof/rocqgoal/ (see its README)
-new/checker/soundness.v   the soundness statement (definitions + Axiom)
-new/proof/github_com/mit_pdos/perennial/checker/examples/   hand-written Rocq
-                          proofs of the same six specifications, one file
-                          per function
-  reflect/                the same six lemmas again, proved with wp_symex
-new/proof/symex/          wp_symex: symbolic execution by reflection (see below)
-new/proof/rocqgoal/       export.v: a generic goal exporter, Rocq proof state -> S-expression
-new/code/github_com/mit_pdos/perennial/checker.v      Goose output for checker/
-new/code/github_com/mit_pdos/perennial/checker/examples.v  Goose output for the examples
+Checkers/Checker/Defs.lean        the vocabulary of the statement (cfunc, cassn, triple_holds, ...)
+Checkers/Checker/Soundness.lean   the soundness statement, check_sound
+Checkers/Checker/**               its proof (Fn/: one file per Go function of checker/)
+Checkers/Checker/Examples/        hand-written Lean proofs of the same six
+                                  specifications, one file per function
+  Observed/                       wp_Median3 from one observed run
+Generated/Code/github_com/upamanyus/bootstrap_go/checker{,/examples}.lean   Goose output
 ```
 
 ## Fragment
@@ -129,46 +132,24 @@ points-to, two wrong posts, an ill-sorted spec) and a few variants, asserting th
 exit code of each.
 
 The last section of the demo establishes each of the six specifications the
-other way too, in Rocq, with two proofs of each: the hand-written one in
-`new/proof/github_com/mit_pdos/perennial/checker/examples/`, and one by
-reflection in its `reflect/` subdirectory (see "Proof by reflection" below). It
-prints the wall-clock time of each: it rebuilds one `.vok` file per proof -- the
-incremental cost of re-checking that one proof against prebuilt dependencies --
-and compares it against one whole run of the checker.
-
-Most of a `-vok` run is spent loading the proof's imports, which says nothing
-about the proof, so the table splits the Rocq time in two: `rocq compile -time`
-attributes wall-clock time to each vernacular command, and an import is one
-command, so the time spent on the imports and the time spent checking the proof
-can be summed separately.
-
-This part needs `rocq` in `PATH` and the dependencies built once, with
+other way too, with the hand-written Lean proof in `Checkers/Checker/Examples/`,
+and prints the wall-clock time of each: `lake env lean` on that one file
+against prebuilt dependencies -- the incremental cost of re-checking that one
+proof -- against one whole run of the checker. Most of a check is spent
+loading the proof's imports, which says nothing about the proof, so the table
+also times a file with the same imports and nothing else and reports the
+difference. A typical run (`lake build Checkers.Checker.Examples.ExamplesInit`
+first):
 
 ```
-make -j$(nproc) TIMED=false \
-  new/proof/github_com/mit_pdos/perennial/checker/examples/examples_init.vo \
-  new/proof/symex/tactic.vo
+function      lean  imports   proof  gocheck proof/go
+Double        2.88     1.97    0.91     0.04      23x
+Max           2.53     2.02    0.51     0.05      10x
+Swap          2.61     2.12    0.49     0.04      12x
+Abs           2.48     2.00    0.48     0.04      12x
+CondStore     2.63     2.03    0.60     0.04      15x
+Median3       6.09     1.94    4.15     0.04     104x
 ```
-
-(or the same targets as `.vos`), and says so and skips itself if either is
-missing. A typical run:
-
-```
-                hand-written     by reflection
-function        -vok   proof      -vok   proof  gocheck hand/refl  refl/go
-Double          5.16    2.38      3.43    0.76     0.05        3x      15x
-Max             4.10    1.21      3.05    0.51     0.05        2x      10x
-Swap            4.49    1.49      3.06    0.26     0.05        6x       5x
-Abs             3.74    1.25      3.41    0.33     0.05        4x       7x
-CondStore       3.93    1.41      3.24    0.57     0.05        2x      11x
-Median3        24.27   21.63      5.79    3.16     0.05        7x      63x
-```
-
-The gap grows with the length of the program: the hand-written Median3 spends
-about 17 of its 22 seconds stepping through the eight paths with `wp_auto` and
-`wp_if_destruct`, which `wp_symex` does in a quarter of a second. What is left of
-the reflective proofs is the per-path reasoning (for Median3, refuting the two
-infeasible paths with `word`, about 1.7 seconds), which the two proofs share.
 
 Or by hand, e.g.
 
@@ -182,21 +163,21 @@ Exit codes: 0 verified (or strongest postcondition printed when `-post` is
 omitted), 1 the checker answered false (unsafe path or post not established),
 2 usage/parse/translation error.
 
-## From a run to a Rocq proof
+## From a run to a Lean proof
 
-`gocheck -rocq FILE` (with `-post`) also calls `checker.Check` on the input and
-writes that input to FILE as Rocq terms over `new/checker/defs.v` (`cfunc`,
-`cassn`, `sort`). `gocheck/observe.sh` does this for Median3, producing
-`new/proof/github_com/mit_pdos/perennial/checker/examples/observed/median3_input.v`,
-and fails unless the checker answers `true`.
+`gocheck -lean FILE` (with `-post`) also calls `checker.Check` on the input and
+writes that input to FILE as Lean terms over `Checkers/Checker/Defs.lean`
+(`cfunc`, `cassn`, `sort`). `gocheck/observe.sh` does this for Median3,
+producing `Checkers/Checker/Examples/Observed/Median3Input.lean`, and fails
+unless the checker answers `true`.
 
-`observed/median3.v` then proves `wp_Median3` from one axiom,
-`median3_check_run`: some GooseLang run of `checker.Check` on exactly that
-input returns `#true` (OBSERVE-EXECUTION). `check_adequate` turns the run into
-`triple_holds`. The function in the input is checked to be Goose's `Median3`
-by `reflexivity`, so the frontend's translation is not trusted. The
-postcondition is read off by computation (`new/checker/post_simp.v`: one
-rewrite and `simpl`), with no case analysis or arithmetic per program.
+`Checkers/Checker/Examples/Observed/Median3.lean` then proves `wp_Median3`
+from one axiom, `median3_check_run`: some GooseLang run of `checker.Check` on
+exactly that input returns `#true` (OBSERVE-EXECUTION). `check_adequate` turns
+the run into `triple_holds`. The function in the input is checked to be
+Goose's `Median3` by `rfl`, so the frontend's translation is not trusted. The
+postcondition is read off by computation (`Checkers/Checker/PostSimp.lean`:
+one rewrite and `simp only`), with no case analysis or arithmetic per program.
 
 The resulting specification returns a `val`: `RET v` with `⌜v = #b⌝`, not
 `RET #r` with `⌜r = b⌝`. The two forms are equivalent, but only the first is
@@ -205,90 +186,42 @@ the checker's postcondition up to simplification. In the second, the last two
 `r` can be produced, and each of the others would need a case of its own to
 pick one.
 
-With the dependencies built, the three proofs of `wp_Median3` cost (`rocq
-compile -vok -time`, as in the demo):
+With the dependencies built, the two proofs of `wp_Median3` cost
+(`lake env lean`, wall clock; about 2 s of each is loading imports):
 
 ```
-proof                  total  imports  proof
-median3.v              22.88     2.29  20.34   hand-written
-reflect/median3.v       5.50     2.11   3.21   wp_symex
-observed/median3.v      3.31     2.55   0.57   from the checker's run
-gocheck                 0.23                   go run, including go build
+Examples/Median3.lean            5.8-6.2 s   hand-written
+Examples/Observed/Median3.lean   3.8-4.0 s   from the checker's run
+gocheck                          0.04 s      built binary
 ```
 
-## Proof by reflection: `wp_symex`
-
-`new/proof/symex/` is a from-scratch reflective symbolic executor for the same
-kind of Go code, written in Gallina and proved sound once, so that a proof of a
-function's specification does not have to step through the function in the
-proof mode. It is independent of the Go checker and of
-`new/checker/`: nothing in it mirrors checker/ or the checker's Rocq model.
-
-```
-syntax.v   the reflected syntax (sexpr: the loop-free fragment Goose emits for
-           int/int64/uint64/bool/pointer code, including its exception monad),
-           symbolic values over numbered atoms, and the executor [exec]
-           (continuation-passing, forks on if:, one path per branch)
-denote.v   what the syntax means: values and expressions as GooseLang,
-           symbolic heaps as typed points-to, paths as the residual goal
-sound.v    symex_sound, proved once by induction on the executor's fuel
-tactic.v   wp_symex: an Ltac reifier and the tactic
-```
-
-On a goal `WP e {{ Φ }}` (for instance right after `wp_start`), `wp_symex`
-reifies `e`, and the full-ownership typed points-to facts of the spatial context,
-into syntax over an environment of the Rocq words, booleans and locations they
-mention; runs the executor with `vm_compute`; applies `symex_sound`, checking
-that the syntax denotes `e` by conversion and the executor's answer with a
-`vm_cast`; frames the initial heap; and leaves one goal per path:
-
-```
-∀ (locations allocated on the path) (_ : path condition) .., cells -∗ .. -∗ Φ ret
-```
-
-with the path condition stated the way a person would write it
-(`uint.Z b ≤ uint.Z a` for the `else` branch of `a < b`), and without the cells
-Goose allocates for parameters and locals, which nothing the caller can name
-points to. `symex_intros` introduces all of it. For `Max`:
-
-```
-wp_start as "_". wp_symex.
-- symex_intros. iApply "HΦ". iLeft. by iPureIntro.
-- symex_intros. iApply "HΦ". iRight. by iPureIntro.
-```
-
-Unlike the Go checker, the executor needs no trust: a `wp_symex` proof is an
-ordinary Rocq proof, checked by the kernel. What it does not do is reason about
-the path conditions -- infeasible paths are left as goals with contradictory
-hypotheses, to be refuted by `word` -- or support loops, calls, structs or slices.
+(`main`'s Rocq version also had a third proof, by reflection with `wp_symex`;
+that executor is not ported.)
 
 ## Constraints on the core package (Goose translatability)
 
-The core is translated by Goose so that the Rocq statement can talk about the
+The core is translated by Goose so that the Lean statement can talk about the
 real program. Therefore `checker/` has **no imports** (an import would become a
 package dependency in the translation), no maps, no generics, no `range` over
 integers or strings, no labels. Failures are structured `Failure` values;
 printing lives in `gocheck/render`. Terms, expressions, assertions and types are
 never mutated after construction; states are cloned before forking. The numeric
 kind codes in `ast.go`, `term.go`, `assn.go` are written out in
-`new/checker/soundness.v`: do not renumber them.
+`Checkers/Checker/Defs.lean`: do not renumber them.
+
 
 ## Regenerating the Goose output
 
 ```
-go install ./goose/cmd/goose ./goose/cmd/proofgen
-~/go/bin/goose    -out new/code/          -dir . ./checker ./checker/examples
-~/go/bin/proofgen -out new/generatedproof -configdir new/code -dir . ./checker ./checker/examples
-make -j$(nproc) TIMED=false new/code/github_com/mit_pdos/perennial/checker.vos \
-     new/generatedproof/github_com/mit_pdos/perennial/checker.vos new/checker/soundness.vos
+bash etc/goose.sh            # goose and proofgen of the pinned Perennial dependency
+lake build Generated
 ```
 
+`etc/goose.sh` lists the packages (`./checker ./checker/examples ./tcheck`).
 Never pass `./checker/...`: that would try to translate the frontend.
 
 ## Future work
 
 - loops (`for:`) with invariants supplied as hints; function calls; structs.
 - a pure prover (or VC emission) instead of syntactic matching.
-- the soundness proof of `check_sound`, in Perennial, once the tool has proven
-  useful.
 - a kernel-level `exec` term replacing the hand-instantiated axiom.
