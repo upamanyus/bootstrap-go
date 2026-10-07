@@ -9,9 +9,6 @@ import (
 )
 
 func (p *Printer) tyAnn(t *checker.Type) string {
-	if p.ASCII {
-		return "[" + GoType(t) + "]"
-	}
 	return "⟨" + GoType(t) + "⟩"
 }
 

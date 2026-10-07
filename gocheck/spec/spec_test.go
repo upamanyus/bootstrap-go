@@ -88,68 +88,19 @@ func lowerPost(t *testing.T, ps []translate.ParamInfo, pre, post string) (*spec.
 	return sc, a, err
 }
 
-// TestUnicodeASCII checks that the Unicode and ASCII spellings of the same
-// assertion lower to the same checker assertion.
-func TestUnicodeASCII(t *testing.T) {
-	cases := []struct {
-		name    string
-		ps      []translate.ParamInfo
-		post    bool
-		pre     string
-		unicode string
-		ascii   string
-	}{
-		{name: "pointsTo", ps: doubleParams(), pre: "emp",
-			unicode: "z ↦ z0", ascii: "z |-> z0"},
-		{name: "pureSep", ps: doubleParams(), pre: "emp",
-			unicode: "⌜x == 0⌝ ∗ z ↦ z0", ascii: "[x == 0] * z |-> z0"},
-		{name: "existsPre", ps: doubleParams(), pre: "emp",
-			unicode: "∃ v, z ↦ v", ascii: "exists v, z |-> v"},
-		{name: "existsSorted", ps: doubleParams(), pre: "emp",
-			unicode: "∃ (v : int), z ↦ v", ascii: "exists (v : int), z |-> v"},
-		{name: "doublePost", ps: doubleParams(), post: true, pre: "z ↦ z0",
-			unicode: "(⌜x == 0⌝ ∗ z ↦ 37 + 37) ∨ (⌜x ≠ 0⌝ ∗ z ↦ x + x)",
-			ascii:   `([x == 0] * z |-> 37 + 37) \/ ([x != 0] * z |-> x + x)`},
-		{name: "absPost", ps: absParams(), post: true, pre: "emp",
-			unicode: "(⌜x <s 0⌝ ∗ ⌜ret == -x⌝) ∨ (⌜x ≥s 0⌝ ∗ ⌜ret == x⌝)",
-			ascii:   `([x <s 0] * [ret == -x]) \/ ([x >=s 0] * [ret == x])`},
-		{name: "notFlag", ps: condStoreParams(), post: true, pre: "p ↦ v0",
-			unicode: "⌜¬flag⌝ ∗ p ↦ v0", ascii: "[!flag] * p |-> v0"},
-		{name: "existsPost", ps: condStoreParams(), post: true, pre: "p ↦ v0",
-			unicode: "∃ (w : int), p ↦ w", ascii: "exists (w : int), p |-> w"},
-		{name: "ite", ps: maxParams(), post: true, pre: "emp",
-			unicode: "⌜ret == if a <u b then b else a⌝",
-			ascii:   "[ret == if a <u b then b else a]"},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			var au, aa *checker.Assn
-			var err error
-			if c.post {
-				_, au, err = lowerPost(t, c.ps, c.pre, c.unicode)
-				if err != nil {
-					t.Fatalf("unicode: %v", err)
-				}
-				_, aa, err = lowerPost(t, c.ps, c.pre, c.ascii)
-				if err != nil {
-					t.Fatalf("ascii: %v", err)
-				}
-			} else {
-				_, au, err = lowerPre(t, c.ps, c.unicode)
-				if err != nil {
-					t.Fatalf("unicode: %v", err)
-				}
-				_, aa, err = lowerPre(t, c.ps, c.ascii)
-				if err != nil {
-					t.Fatalf("ascii: %v", err)
-				}
-			}
-			if !assnEq(au, aa) {
-				pr := &render.Printer{}
-				t.Fatalf("different lowerings:\n  unicode: %s\n  ascii:   %s",
-					pr.Assn(au), pr.Assn(aa))
-			}
-		})
+// TestNoASCII checks that the ASCII spellings of Iris notation are rejected:
+// assertions are written in Iris's Unicode notation only.
+func TestNoASCII(t *testing.T) {
+	for _, src := range []string{
+		"z |-> z0",
+		"[x == 0] ∗ z ↦ z0",
+		"⌜x == 0⌝ * z ↦ z0",
+		"exists v, z ↦ v",
+		`⌜x == 0⌝ \/ z ↦ z0`,
+	} {
+		if _, err := spec.Parse(src); err == nil {
+			t.Errorf("%q: parsed, want an error", src)
+		}
 	}
 }
 

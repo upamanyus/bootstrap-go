@@ -2,7 +2,7 @@
 
 The specification gocheck checks with
 
-     gocheck -pkg ./checker/examples -pre 'p |-> a ∗ q |-> b' \
+     gocheck -pkg ./checker/examples -pre 'p ↦ a ∗ q ↦ b' \
        -post 'p ↦ b ∗ q ↦ a' Swap
 -/
 import Checkers.Checker.Examples.ExamplesInit

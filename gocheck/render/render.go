@@ -16,7 +16,6 @@ import (
 type Printer struct {
 	Names []string
 	Pats  []string
-	ASCII bool
 }
 
 // WithPats returns a copy of p that knows the given pattern-variable names.
@@ -26,36 +25,26 @@ func (p *Printer) WithPats(names []string) *Printer {
 	return &q
 }
 
-func (p *Printer) sym(unicode, ascii string) string {
-	if p.ASCII {
-		return ascii
-	}
-	return unicode
-}
-
 // Sep is the separating conjunction symbol.
-func (p *Printer) Sep() string { return p.sym("∗", "*") }
+func (p *Printer) Sep() string { return "∗" }
 
 // PointsTo is the points-to arrow.
-func (p *Printer) PointsTo() string { return p.sym("↦", "|->") }
+func (p *Printer) PointsTo() string { return "↦" }
 
 // Or is the disjunction symbol.
-func (p *Printer) Or() string { return p.sym("∨", `\/`) }
+func (p *Printer) Or() string { return "∨" }
 
 // Emp is the empty assertion.
 func (p *Printer) Emp() string { return "emp" }
 
 // Pure wraps a term as a pure assertion.
 func (p *Printer) Pure(s string) string {
-	if p.ASCII {
-		return "[" + s + "]"
-	}
 	return "⌜" + s + "⌝"
 }
 
-func (p *Printer) not() string { return p.sym("¬", "!") }
+func (p *Printer) not() string { return "¬" }
 
-func (p *Printer) exists() string { return p.sym("∃", "exists") }
+func (p *Printer) exists() string { return "∃" }
 
 // Var renders logical variable i.
 func (p *Printer) Var(i uint64) string {

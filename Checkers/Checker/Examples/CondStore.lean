@@ -2,7 +2,7 @@
 
 The specification gocheck checks with
 
-     gocheck -pkg ./checker/examples -pre 'p |-> v0' \
+     gocheck -pkg ./checker/examples -pre 'p ↦ v0' \
        -post '(⌜!flag⌝ ∗ p ↦ v0 ∗ ⌜ret == false⌝) ∨
               (⌜flag⌝ ∗ p ↦ v ∗ ⌜ret == true⌝)' CondStore
 

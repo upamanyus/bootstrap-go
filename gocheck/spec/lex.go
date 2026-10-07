@@ -1,6 +1,6 @@
 // Package spec implements the surface language for pre- and postconditions:
-// separation-logic assertions written in Iris notation (with ASCII
-// alternatives), plus their lowering to checker assertions.
+// separation-logic assertions written in Iris's Unicode notation, plus their
+// lowering to checker assertions.
 package spec
 
 import (
@@ -43,16 +43,11 @@ func (t token) String() string {
 // The canonical spelling is what the parser matches on.
 var canon = map[string]string{
 	"∨":   "∨",
-	`\/`:  "∨",
 	"∗":   "∗",
-	"*":   "∗",
 	"⌜":   "⌜",
-	"[":   "⌜",
 	"⌝":   "⌝",
-	"]":   "⌝",
 	"∃":   "∃",
 	"↦":   "↦",
-	"|->": "↦",
 	"(":   "(",
 	")":   ")",
 	",":   ",",
@@ -150,13 +145,8 @@ func lex(src string) ([]token, error) {
 				j += w2
 			}
 			text := src[i:j]
-			n := utf8.RuneCountInString(text)
-			if text == "exists" {
-				toks = append(toks, token{kind: tSym, text: "∃", pos: rpos})
-			} else {
-				toks = append(toks, token{kind: tIdent, text: text, pos: rpos})
-			}
-			rpos += n
+			toks = append(toks, token{kind: tIdent, text: text, pos: rpos})
+			rpos += utf8.RuneCountInString(text)
 			i = j
 			continue
 		}

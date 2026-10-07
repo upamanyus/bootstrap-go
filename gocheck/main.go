@@ -4,7 +4,7 @@
 //
 // Usage:
 //
-//	gocheck [-pkg P] [-pre A] [-post A] [-moddir D] [-configdir D] [-ascii] [-ast] [-v]
+//	gocheck [-pkg P] [-pre A] [-post A] [-moddir D] [-configdir D] [-ast] [-v]
 //	        [-lean FILE [-lean-name N]] Func
 //
 // With -lean (which needs -post), gocheck also calls checker.Check on the
@@ -42,7 +42,7 @@ func run() (int, error) {
 	fs := flag.NewFlagSet("gocheck", flag.ContinueOnError)
 	usage := func() {
 		fmt.Fprintf(os.Stderr, "usage: gocheck [-pkg P] [-pre A] [-post A] [-moddir D] "+
-			"[-configdir D] [-ascii] [-ast] [-v] [-lean FILE [-lean-name N]] Func\n")
+			"[-configdir D] [-ast] [-v] [-lean FILE [-lean-name N]] Func\n")
 		fs.PrintDefaults()
 	}
 	fs.Usage = usage
@@ -51,7 +51,6 @@ func run() (int, error) {
 	post := fs.String("post", "", "postcondition to verify (default: print the strongest one)")
 	modDir := fs.String("moddir", ".", "directory containing go.mod")
 	configDir := fs.String("configdir", "new/code", "goose output root (its -out directory)")
-	ascii := fs.Bool("ascii", false, "print ASCII instead of Unicode notation")
 	showAST := fs.Bool("ast", false, "print the translated GooseLang body")
 	verbose := fs.Bool("v", false, "print extra detail")
 	leanFile := fs.String("lean", "", "write the checker input as Lean definitions to this file (needs -post)")
@@ -65,7 +64,7 @@ func run() (int, error) {
 	}
 	fname := fs.Arg(0)
 	out := os.Stdout
-	pr := &render.Printer{ASCII: *ascii}
+	pr := &render.Printer{}
 
 	// 1. Translate.
 	p, err := translate.LoadPackage(*configDir, *modDir, *pkg)

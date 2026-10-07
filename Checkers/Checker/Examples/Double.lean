@@ -2,7 +2,7 @@
 
 The specification gocheck checks with
 
-     gocheck -pkg ./checker/examples -pre 'z |-> z0' \
+     gocheck -pkg ./checker/examples -pre 'z ↦ z0' \
        -post '(⌜x == 0⌝ ∗ z ↦ 37 + 37) ∨ (⌜x != 0⌝ ∗ z ↦ x + x)' Double
 
 Lean notes: `word.add x x` is `x + x`. Rocq's

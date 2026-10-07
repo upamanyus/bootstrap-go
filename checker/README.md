@@ -155,7 +155,7 @@ Or by hand, e.g.
 
 ```
 go run ./gocheck -pkg ./checker/examples \
-   -pre 'z |-> z0' \
+   -pre 'z ↦ z0' \
    -post '(⌜x == 0⌝ ∗ z ↦ 37 + 37) ∨ (⌜x != 0⌝ ∗ z ↦ x + x)' Double
 ```
 

@@ -47,3 +47,11 @@ Append-only, newest last.
   remote: `git -C .lake/packages/etcdGrove remote set-url origin
   git@github.com:upamanyus/etcd-grove`, or Lake re-clones it at the next
   pin change.
+
+## 2026-10-07 — specs in Iris Unicode notation only
+
+- gocheck's spec language no longer accepts ASCII spellings of Iris
+  notation (`|->`, `*`, `[…]`, `\/`, `exists`); write `↦ ∗ ⌜…⌝ ∨ ∃`. The
+  `-ascii` print flag is gone too. Term operators keep their Go spellings
+  (`<=`, `!=`, `!`) alongside `≤ ≠ ¬`. `TestNoASCII` checks the rejection;
+  the demo has 12 cases (the all-ASCII Swap run was dropped).

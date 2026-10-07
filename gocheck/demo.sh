@@ -53,13 +53,13 @@ run() {
 # The specifications that both the checker and a Rocq proof establish. Each
 # entry is the function name, the basename of its proof file, and then the
 # gocheck arguments; compare() below uses all three.
-DOUBLE_PRE='z |-> z0'
+DOUBLE_PRE='z ↦ z0'
 DOUBLE_POST='(⌜x == 0⌝ ∗ z ↦ 37 + 37) ∨ (⌜x != 0⌝ ∗ z ↦ x + x)'
 MAX_POST='(⌜a <u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜a >=u b⌝ ∗ ⌜ret == a⌝)'
-SWAP_PRE='p |-> a ∗ q |-> b'
+SWAP_PRE='p ↦ a ∗ q ↦ b'
 SWAP_POST='p ↦ b ∗ q ↦ a'
 ABS_POST='(⌜x <s 0⌝ ∗ ⌜ret == -x⌝) ∨ (⌜x >=s 0⌝ ∗ ⌜ret == x⌝)'
-CONDSTORE_PRE='p |-> v0'
+CONDSTORE_PRE='p ↦ v0'
 CONDSTORE_POST='(⌜!flag⌝ ∗ p ↦ v0 ∗ ⌜ret == false⌝) ∨ (⌜flag⌝ ∗ p ↦ v ∗ ⌜ret == true⌝)'
 # The checker has no arithmetic, so the median is stated path by path, with
 # each path's conditions exactly as they print; the last two disjuncts are the
@@ -83,10 +83,6 @@ run 0 "Abs: signed comparison and a negated result" \
 run 0 "CondStore: a boolean result and a conditional write" \
 	-pkg $PKG -pre "$CONDSTORE_PRE" -post "$CONDSTORE_POST" CondStore
 
-# The same two assertions in pure ASCII, printed in ASCII notation.
-run 0 "Swap again, all ASCII (-ascii)" \
-	-pkg $PKG -ascii -pre 'p |-> a * q |-> b' -post 'p |-> b * q |-> a' Swap
-
 # A longer function: Median3 sorts three locals with a three-comparator
 # sorting network and returns the middle one, 8 paths in all.
 run 0 "Median3: a sorting network, eight paths, the median returned" \
@@ -95,24 +91,24 @@ run 0 "Median3: a sorting network, eight paths, the median returned" \
 # --- Rejected inputs --------------------------------------------------------
 
 run 1 "Swap without owning q: the load from q is unsafe" \
-	-pkg $PKG -pre 'p |-> a' Swap
+	-pkg $PKG -pre 'p ↦ a' Swap
 
 run 1 "Double against a postcondition it does not establish" \
-	-pkg $PKG -pre 'z |-> z0' -post 'z ↦ 74' Double
+	-pkg $PKG -pre 'z ↦ z0' -post 'z ↦ 74' Double
 
 run 1 "Median3 claiming the maximum, not the median, when c < b < a" \
 	-pkg $PKG -post "${MEDIAN_POST/⌜c <u b⌝ ∗ ⌜ret == b⌝)/⌜c <u b⌝ ∗ ⌜ret == a⌝)}" \
 	Median3
 
 run 2 "Double against an ill-sorted postcondition" \
-	-pkg $PKG -pre 'z |-> z0' -post '⌜x && z0⌝' Double
+	-pkg $PKG -pre 'z ↦ z0' -post '⌜x && z0⌝' Double
 
 # --- Strongest postconditions, with no -post at all -------------------------
 
 run 0 "Max: just print the strongest postcondition" -pkg $PKG Max
 
 run 0 "Double: the translated GooseLang body too (-ast)" \
-	-pkg $PKG -ast -pre 'z |-> z0' Double
+	-pkg $PKG -ast -pre 'z ↦ z0' Double
 
 echo
 echo "=============================================================="
