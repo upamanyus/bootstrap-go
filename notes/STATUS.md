@@ -64,6 +64,9 @@ all of it (680 jobs); no file of this repository has a `sorry`.
 - Cost (`bash gocheck/tcheck/reflect_bench.sh`, gocheck/tcheck/README.md):
   `input_holds` 5.1 s observed, 1.5 s kernel, 0.15 s `native_decide`; one
   check 0.2 ms compiled (`ltcheck`, Go's `tcheck.Run`), 3 ms interpreted.
+  etcdGrove's hand-written proof (its `lean` branch, past our pin) checks in
+  2.24 s; to the spec, observed 5.87 s, `ltcheck` kernel 1.47 s, native 0.35 s
+  (plus the table, 2.7 s per table; README there).
 
 ## Next
 
@@ -72,5 +75,3 @@ all of it (680 jobs); no file of this repository has a `sorry`.
   `Checkers/Checker/` proves the checker's: `Checkers/TCheck/Reflect/` already
   proves the same algorithm sound on Lean mirrors, which is the semantic layer
   such a proof needs.
-- When etcdGrove gains a hand-written proof of `raft.becomeFollower`, compare
-  costs with tcheck's (`gocheck/tcheck/README.md` has the tcheck numbers).

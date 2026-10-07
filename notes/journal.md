@@ -132,3 +132,16 @@ Append-only, newest last.
   parsing) and `tcheck.Run`; `gocheck/tcheck/reflect_bench.sh` reports
   observed 5.1 s / kernel 1.5 s / native 0.15 s for `input_holds`, and 0.2 ms
   per check compiled (Lean and Go alike), 3 ms interpreted.
+
+## 2026-10-07 — tcheck against the hand-written becomeFollower proof
+
+- etcdGrove's `lean` branch (d96cf39f8, past our pin 51d6df02d) has
+  `Proof/raft__becomeFollower.lean`, ~20 tactic lines over the accessor
+  lemmas; the specs are unchanged since the pin and it compiles against it.
+  Seconds minus imports, median of 5: hand-written 2.24; observed tcheck 5.87
+  (Observed 5.17 + Proof 0.70); reflective tcheck 1.47 (kernel) or 0.35
+  (`native_decide`). Per table: TableRaft 1.66 + LinkTableRaft 1.04.
+- A trap when timing: ascribing `raft.becomeFollower.spec` directly to the
+  `spec_rule_valid` term took 5.9 s of elaboration (unification through the
+  denotation with metavariables); stating `rule_valid ... raft_rule_becomeFollower`
+  first and converting, as both tcheck proofs do, takes 0.2 s.

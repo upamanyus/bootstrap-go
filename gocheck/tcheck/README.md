@@ -224,6 +224,25 @@ kernel running the checker itself (1.2 s) or, with `native_decide`, with 4 ms of
 evaluation. Compiled, `ltcheck` costs what the Go checker's `tcheck.Run` costs
 (about 0.2 ms; `tcheck.Check` also parses the bytes).
 
+### Against the hand-written proof
+
+etcdGrove's own hand-written proof of `raft.becomeFollower.spec`
+(`EtcdGrove/Raft/ElectionProof/Proof/raft__becomeFollower.lean`, on etcdGrove's
+`lean` branch after the pinned commit; it compiles unchanged against the pin)
+checks in 2.24 s. Per function, to the same specification (2026-10-07,
+`lake env lean`, seconds minus loading imports, median of 5):
+
+```
+hand-written proof (etcdGrove)                        2.24
+observed Go run: Observed/ 5.17 + Proof/ 0.70         5.87
+ltcheck, decide +kernel  (Reflect/, kernel only)      1.47
+ltcheck, native_decide   (Reflect/, native only)      0.35
+```
+
+Not per function: the table (`TableRaft.lean` 1.66, `LinkTableRaft.lean`
+1.04), once per table for both tcheck routes; `ltcheck_sound`
+(`Checkers/TCheck/Reflect/`, 12.5), once.
+
 ## How the checker executes
 
 It interprets core GooseLang. `let:`, `;;` and the exception monad (`do:`,
