@@ -25,15 +25,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-/-- The mirror. `none` stands for the nil `*Assn`, which is rejected. -/
-def atom_well_sorted (E : sort_env) : Option cassn → Bool
-  | some (CAPure x) =>
-      match sort_of E x with | some SBool => true | _ => false
-  | some (CAPointsTo x v) =>
-      match sort_of E x, sort_of E v with
-      | some SLoc, some _ => true
-      | _, _ => false
-  | _ => false
+-- `atom_well_sorted`: in LCheck/Fns.lean.
 
 section proof
 variable [ext : FfiSyntax] [ffi : FfiModel] [FfiInterp ffi] [FfiSemantics ext ffi]

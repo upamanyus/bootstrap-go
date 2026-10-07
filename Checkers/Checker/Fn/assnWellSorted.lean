@@ -18,16 +18,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-/-- The mirror. `none` is the nil `*Assn`, which is accepted (as `emp`). -/
-def cassn_ws (E : sort_env) : cassn → Bool
-  | CAEmp => true
-  | CASep p q => cassn_ws E p && cassn_ws E q
-  | CAPure t => match sort_of E t with | some SBool => true | _ => false
-  | CAPointsTo x v =>
-      match sort_of E x, sort_of E v with
-      | some SLoc, some _ => true
-      | _, _ => false
-  | _ => false
+-- `cassn_ws`: in LCheck/Fns.lean.
 
 def oassn_ws (E : sort_env) : Option cassn → Bool
   | none => true

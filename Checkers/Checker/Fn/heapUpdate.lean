@@ -29,12 +29,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-/-- The Lean mirror. -/
-def heap_update : List scell → term → term → Option (List scell)
-  | [], _, _ => none
-  | c :: H', x, v =>
-      if cloc c = x then some (mkCell (cloc c) v :: H')
-      else (heap_update H' x v).map (fun r => c :: r)
+-- `heap_update`: in LCheck/Fns.lean.
 
 /-- What the loop has built after scanning a prefix: the updated prefix if
 the prefix already contained the location, and the prefix itself

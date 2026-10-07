@@ -40,9 +40,7 @@ variable [ext : FfiSyntax]
 
 /-! ## Well-formedness of the result lists -/
 
-/-- The path `execAlloc` produces from a path of its operand. -/
-def alloc_path (p : spath) : spath :=
-  mkPath (TVar (svars (pst p)).length) (st_alloc (pst p) (pret p))
+-- `alloc_path`, `st_heap`: in LCheck/Fns.lean.
 
 theorem paths_wf_alloc (k : Nat) (ps : List spath) :
     paths_wf k ps → paths_wf k (ps.map alloc_path) := by
@@ -55,9 +53,6 @@ theorem paths_wf_alloc (k : Nat) (ps : List spath) :
   · simp only [alloc_path, st_alloc, List.length_append, List.length_singleton, vars_below]
     omega
 
-/-- The state `storeAll` produces: only the heap changes. -/
-def st_heap (sst : sstate) (H : List scell) : sstate :=
-  mkState H (spc sst) (svars sst)
 
 theorem heap_update_below (k : Nat) (H : List scell) (x y : term) (H' : List scell) :
     heap_below k H → vars_below k y → heap_update H x y = some H' → heap_below k H' := by

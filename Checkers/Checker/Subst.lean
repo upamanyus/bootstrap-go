@@ -246,10 +246,7 @@ theorem env_interp_nil (V : valuation) : env_interp V [] = ∅ := rfl
 theorem env_interp_bind (V : valuation) (x : GoString) (t : term) (ρ : List (GoString × term)) :
     env_interp V ((x, t) :: ρ) = <[pname x := teval V t]> (env_interp V ρ) := rfl
 
-/-- `envLookup` finds the first binding of `x`. -/
-def env_lookup : List (GoString × term) → GoString → Option term
-  | [], _ => none
-  | (y, t) :: ρ', x => if y = x then some t else env_lookup ρ' x
+-- `env_lookup`: in LCheck/Fns.lean.
 
 theorem env_interp_lookup (V : valuation) (ρ : List (GoString × term)) (x : GoString) :
     env_interp V ρ !! pname x = (env_lookup ρ x).map (teval V) := by

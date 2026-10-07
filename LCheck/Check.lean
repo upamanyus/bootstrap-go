@@ -4,7 +4,10 @@ A Lean-native checker.
 `lcheck f vars pre post` is the algorithm of `checker.Check` (checker/*.go),
 written as Lean functions over the mirrors of the checker's data
 (Checkers/Checker/Defs.lean, Interp.lean, Disjunct.lean) instead of as Go.
-It is proved sound in Checkers/Native/Sound.lean (`lcheck_sound`: a `true`
+It imports nothing beyond Lean's core (see LCheck/Syntax.lean), so the
+`LCheck` library is precompiled to native code
+(`precompileModules`, lakefile.toml). It is proved sound in
+Checkers/Native/Sound.lean (`lcheck_sound`: a `true`
 answer gives `triple_holds`), so a proof of a triple can run it by
 `native_decide` (compiled code) or by `decide` (the kernel), with no Go run in
 the trusted base.
@@ -27,16 +30,7 @@ Where it differs:
   atom, and then requires every points-to atom resolved; the Go loop counts
   down `remaining` instead.
 -/
-import Checkers.Checker.Fn.Check
-import Checkers.Checker.Fn.checkSorts
-import Checkers.Checker.Fn.parseDisjunct
-import Checkers.Checker.Fn.collectDisjuncts
-import Checkers.Checker.Fn.heapLookup
-import Checkers.Checker.Fn.heapUpdate
-import Checkers.Checker.Fn.findCell
-import Checkers.Checker.Fn.assnHeap
-import Checkers.Checker.Fn.assnPure
-import Checkers.Checker.Fn.assnWellSorted
+import LCheck.Fns
 
 namespace Perennial
 namespace Checker
@@ -55,7 +49,7 @@ def bindAll (ps : List spath) (k : spath → Option (List spath)) : Option (List
       | _, _ => none
 
 /-- `exec`: one path per feasible execution of `ce`, in evaluation order. -/
-def lexec : cexpr → List (GoString × term) → sstate → Option (List spath)
+def lexec : cexpr → List (List (BitVec 8) × term) → sstate → Option (List spath)
   | CEInt w, _, st => some [mkPath (TInt w) st]
   | CEBool b, _, st => some [mkPath (TBool b) st]
   | CEUnit, _, st => some [mkPath TUnit st]

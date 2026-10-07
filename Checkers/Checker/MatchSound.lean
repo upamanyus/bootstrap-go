@@ -350,12 +350,7 @@ def atom_scoped (k : Nat) : cassn → Prop
 
 /-! ## Phase 1: the points-to atoms -/
 
-def is_pts : cassn → Bool
-  | CAPointsTo _ _ => true
-  | _ => false
-def is_pure : cassn → Bool
-  | CAPure _ => true
-  | _ => false
+-- `is_pts`, `is_pure`, `undone`: in LCheck/Fns.lean.
 
 theorem is_pts_inv (a : cassn) : is_pts a = true → ∃ x v, a = CAPointsTo x v := by
   cases a <;> simp [is_pts]
@@ -454,11 +449,6 @@ theorem phase1_inv_step {H atoms pats pok PV r x v σ used done σ' used'} (i : 
       rw [List.getElem?_set_ne (Ne.symm H2)] at Hi2
       exact Hinj i1 i2 Hi1 Hi2
 
-/-- The number of points-to atoms not resolved yet: `remaining` in
-`matchHeap`. -/
-def undone : List cassn → List Bool → Nat
-  | a :: atoms', d :: done' => (if is_pts a && !d then 1 else 0) + undone atoms' done'
-  | _, _ => 0
 
 /-- Mirrors `countPointsTo`. -/
 def count_pts : List cassn → Nat

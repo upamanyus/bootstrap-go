@@ -1,5 +1,5 @@
 /-
-Soundness of the Lean-native checker (Checkers/Native/Check.lean).
+Soundness of the Lean-native checker (LCheck/Check.lean).
 
 `lcheck_sound`: if `lcheck f vars pre post = true` then
 `triple_holds f vars pre post`, the statement `check_sound` and
@@ -13,7 +13,17 @@ and the composition is `triple_holds_intro` (Fn/Check.lean). What is new is
 only the part the Go proof does with WP rules on Go loops: that the Lean
 functions establish those lemmas' premises.
 -/
-import Checkers.Native.Check
+import LCheck.Check
+import Checkers.Checker.Fn.Check
+import Checkers.Checker.Fn.checkSorts
+import Checkers.Checker.Fn.parseDisjunct
+import Checkers.Checker.Fn.collectDisjuncts
+import Checkers.Checker.Fn.heapLookup
+import Checkers.Checker.Fn.heapUpdate
+import Checkers.Checker.Fn.findCell
+import Checkers.Checker.Fn.assnHeap
+import Checkers.Checker.Fn.assnPure
+import Checkers.Checker.Fn.assnWellSorted
 
 set_option linter.unusedSectionVars false
 

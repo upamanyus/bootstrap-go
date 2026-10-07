@@ -27,17 +27,20 @@ all of it (680 jobs); no file of this repository has a `sorry`.
 
 ### Checkers/Native/ (the checker's algorithm in Lean, proved sound)
 
-- `lcheck` (`Check.lean`) follows `checker.Check` case for case;
+- `lcheck` (`LCheck/Check.lean`) follows `checker.Check` case for case;
   `lcheck_sound` (`Sound.lean`) is a theorem, `#print axioms`: `propext,
   Classical.choice, Quot.sound`. No Go run, no `GooseGpreS` model caveat.
 - `Examples/<F>.lean` prove all six demo specifications' `triple_holds` by
   `native_decide` (plus `wp_Median3` in client form); inputs from
   `bash gocheck/native.sh`. Each `native_decide` adds one axiom; the same
   triples also check with `decide +kernel` (no axiom), not committed.
-- Cost (`bash gocheck/native_bench.sh`, README there): the evaluation is
-  1-8 ms per example under `native_decide` (Lean's IR interpreter: the
-  library is not precompiled) and 0.12-1.3 s in the kernel, against
-  0.4-4.0 s for the hand-written proofs.
+- `LCheck/` (types, pure functions, `lcheck`) imports only Lean's core and
+  is precompiled (`precompileModules`); `Checkers/Checker/Defs.lean` imports
+  it, so the Go proof and `lcheck_sound` share the definitions.
+- Cost (`bash gocheck/native_bench.sh`, Checkers/Native/README.md):
+  compiled `lcheck` is 7-115 us per call (Go's `checker.Check`: 8-143 us);
+  `native_decide` evaluation in a proof 0.3-1.6 ms (interpreted: 0.6-6 ms);
+  kernel 0.12-1.3 s; hand-written proofs 0.4-4.0 s.
 
 ### tcheck/ (soundness stated)
 
@@ -54,9 +57,6 @@ all of it (680 jobs); no file of this repository has a `sorry`.
 
 ## Next
 
-- Optional: precompile the native checker (`precompileModules`, or a
-  `lean_exe`) to time it as machine code; this needs the ~510 non-core
-  modules it imports (Iris, Perennial, …) compiled to C.
 
 - Prove tcheck's `check_adequate`, the way `Checkers/Checker/` proves the
   checker's soundness.

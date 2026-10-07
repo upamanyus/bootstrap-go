@@ -41,8 +41,7 @@ theorem oassn_is_exists_true (ob : Option cassn) :
   | none => simp [oassn_is_exists]
   | some b => cases b <;> simp [oassn_is_exists]
 
-def dj_failed (dj : cdisjunct) : cdisjunct :=
-  mkDisjunct (d_pats dj) (d_pat_ok dj) (d_atoms dj) true
+-- `dj_failed`: in LCheck/Fns.lean.
 
 section proof
 variable [ext : FfiSyntax] [ffi : FfiModel] [FfiInterp ffi] [FfiSemantics ext ffi]

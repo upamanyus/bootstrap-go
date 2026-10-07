@@ -13,7 +13,8 @@ specification in Perennial.
   the observation of one run (`Checkers/Checker/Examples/Observed/Median3.lean`).
   Its algorithm also exists as Lean functions, proved sound with no
   observation at all ([`Checkers/Native/`](Checkers/Native/README.md),
-  `lcheck_sound`), so a proof can run it by `native_decide` or in the kernel.
+  `lcheck_sound`), so a proof can run it by `native_decide` or in the kernel;
+  `LCheck/` holds it, precompiled to native code.
 - [`tcheck/`](gocheck/tcheck/README.md) — a table-driven checker whose
   knowledge of a program is a table of rules, each linked to a lemma already
   proved in Lean. Its soundness is stated, not yet proved

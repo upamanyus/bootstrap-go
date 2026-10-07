@@ -1,6 +1,6 @@
 # The Lean-native checker
 
-`lcheck` (`Check.lean`) is the algorithm of the Go checker in `checker/` —
+`lcheck` (`LCheck/Check.lean`) is the algorithm of the Go checker in `checker/` —
 symbolic execution (`lexec`), then matching each path against a disjunct of
 the postcondition (`lverify`) — written as Lean functions over the mirrors of
 the checker's data (`Checkers/Checker/Defs.lean`, `Interp.lean`,
@@ -11,11 +11,30 @@ theorem lcheck_sound (f : cfunc) (vars : List sort) (pre post : cassn) :
     lcheck f vars pre post = true → triple_holds f vars pre post
 ```
 
-(`Sound.lean`; `#print axioms`: `propext, Classical.choice, Quot.sound`).
+(`Checkers/Native/Sound.lean`; `#print axioms`: `propext, Classical.choice, Quot.sound`).
 `triple_holds` is the conclusion `check_sound`/`check_adequate` give a `true`
 answer of the Go checker. So a Lean proof can run the checker itself, by
 `native_decide` or by the kernel (`decide +kernel`), instead of observing a run
 of the Go checker (`Checkers/Checker/Examples/Observed/`).
+
+## The precompiled library `LCheck`
+
+`lcheck` and everything it computes with live in the library `LCheck`
+(`LCheck/Syntax.lean`: the mirror types; `LCheck/Fns.lean`: the pure
+functions; `LCheck/Check.lean`: `lcheck`), which imports nothing beyond
+Lean's core and is compiled to machine code (`precompileModules = true`,
+lakefile.toml). `Checkers/Checker/Defs.lean` imports it, so the Go proof and
+`lcheck_sound` are about the very same definitions, with the same names.
+`lake build` loads `libbootstrapGo_LCheck.so` as a plugin when it elaborates
+a file importing `LCheck`, so `native_decide` runs `lcheck` as machine code.
+
+`LCheck` must not import even `Perennial.Std`: Lake links precompiled code
+per library, so importing `Perennial.Std.ByteString` made it build a shared
+library of all of Perennial (and, through Perennial, of Iris, Batteries and
+Qq: ~630 modules). Perennial's `w64`, `GoString` and `W64 0` are written out
+as the terms they abbreviate (`BitVec 64`, `List (BitVec 8)`,
+`BitVec.ofInt 64 0`). The inputs (`Inputs.lean`, which need `go!`) import
+`Perennial.Std.ByteString` themselves and are not precompiled.
 
 ## How the proof reuses the Go proof
 
@@ -35,7 +54,7 @@ replaces the second by ordinary induction:
 It also reuses the pure mirror functions the Go proof's specifications are
 stated over (`heap_lookup`, `heap_update`, `find_cell`, `instantiate_t`,
 `cond_holds`, `assn_flatten`, `grow_pats`, `cassn_ws`, `penv`, ...). How it
-differs from the Go code is in `Check.lean`'s header.
+differs from the Go code is in `LCheck/Check.lean`'s header.
 
 ## The examples
 
@@ -55,59 +74,47 @@ interpreter; `decide +kernel` adds none.
 
 ## Cost
 
-`bash gocheck/native_bench.sh` (2026-10-07, Lean 4.34.1; seconds of wall
-clock, median of 3 runs, each Lean column minus the time to load that file's
-imports, about 2 s; differences under ~0.1 s are noise):
+`bash gocheck/native_bench.sh` (2026-10-07, Lean 4.34.1). Lean columns are
+seconds of wall clock, median of 3 runs, each minus the time to load that
+file's imports (about 2 s), so differences under ~0.1-0.2 s are noise;
+`Check` and `lcheck` are microseconds per call, the mean of 10000 calls:
 
 ```
-function      hand    file  native  kernel  gocheck
-Double        0.90    0.13    0.04    0.25    0.043
-Max           0.68    0.17    0.13    0.42    0.038
-Swap          0.46    0.32    0.06    0.19    0.033
-Abs           0.61    0.09    0.09    0.14    0.031
-CondStore     0.42    0.19    0.08    0.24    0.040
-Median3       3.96    0.68    0.04    0.97    0.036
+function     hand   file native interp kernel  gocheck   Check  lcheck
+Double       0.87   0.35   0.12   0.00   0.29    0.048    26.2    18.0
+Max          0.57   0.30   0.02   0.20   0.15    0.044    10.2     9.1
+Swap         0.58   0.14   0.12   0.20   0.27    0.041    13.8    10.7
+Abs          0.58   0.16   0.17   0.10   0.17    0.041     7.7     7.3
+CondStore    0.38   0.21   0.08   0.06   0.30    0.045    15.7    10.7
+Median3      4.03   0.84   0.07   0.11   0.90    0.035   143.3   115.3
 ```
 
-`hand` is the hand-written proof (`Checkers/Checker/Examples/<F>.lean`);
-`file` is `Examples/<F>.lean` (the `rfl` check, the triple, and for Median3
-`wp_Median3`); `native` and `kernel` are the triple alone by `native_decide`
-and by `decide +kernel`; `gocheck` is one run of the Go binary (process start
-and loading the Go package included).
+- `hand`: the hand-written proof (`Checkers/Checker/Examples/<F>.lean`).
+- `file`: `Examples/<F>.lean` (the `rfl` check, the triple, and for Median3
+  `wp_Median3`), with `lcheck` precompiled, as `lake build` runs it.
+- `native` / `interp`: the triple alone by `native_decide`, with `lcheck`
+  precompiled / interpreted; `kernel`: by `decide +kernel`.
+- `gocheck`: one run of the Go binary (process start and loading the Go
+  package included); `Check`: `checker.Check` alone (`gocheck -time-check`).
+- `lcheck`: `lcheck` alone, precompiled, on the same inputs.
 
-Lean's profiler (`set_option profiler true`) isolates the checking itself:
-
-```
-function   native_decide evaluation   kernel type checking
-Double     3.2-3.8 ms                 0.12-0.15 s
-Max        1.2-1.4 ms                 0.17-0.21 s
-Swap       1.1-1.3 ms                 0.26-0.32 s
-Abs        1.0-1.6 ms                 0.33-0.38 s
-CondStore  1.5-1.6 ms                 0.44-0.47 s
-Median3    6.2-7.6 ms                 1.27-1.28 s
-```
-
-The Go checker's own work is smaller still. `gocheck -time-check N` (the
-`Check` column of `native_bench.sh`) reports the mean of N calls of
-`checker.Check` on the built input, with no process start, Go package
-loading or translation; with N = 10000 (2026-10-07):
+Compiled, `lcheck` runs about as fast as the Go checker (7-115 us against
+8-143 us per call); interpreted, it took 130-2300 us. Inside a proof that is
+lost in the noise of wall clock. Lean's profiler (`set_option profiler true`,
+3 runs each) isolates the `native_decide` evaluation and the kernel's work:
 
 ```
-function   checker.Check
-Double     21 us
-Max         8 us
-Swap       18 us
-Abs        10 us
-CondStore  17 us
-Median3   138 us
+function   native_decide, precompiled   native_decide, interpreted   kernel type checking
+Double     1.0-1.6 ms                   1.8-2.5 ms                   0.12-0.15 s
+Max        0.3-0.5 ms                   0.6-1.3 ms                   0.17-0.21 s
+Swap       0.5-0.7 ms                   1.0-1.4 ms                   0.26-0.32 s
+Abs        0.3-0.4 ms                   0.9-1.0 ms                   0.33-0.38 s
+CondStore  0.5 ms                       0.8-1.3 ms                   0.44-0.47 s
+Median3    0.9-1.4 ms                   3.6-5.7 ms                   1.27-1.28 s
 ```
 
-So gocheck's ~0.04 s is almost all process start and the Go frontend, and
-compiled Go runs the check 50-150x faster than `native_decide`'s
-interpreted `lcheck` (1-8 ms).
-
-`native_decide` evaluation here is Lean's IR interpreter (the profiler's
-"interpretation"): the library does not set `precompileModules`, so the
-checker's own functions run as interpreted IR, calling compiled code only for
-the core library. Compiling them to machine code would need the ~510
-non-core modules it imports (Iris, Perennial, ...) compiled to C as well.
+The precompiled evaluation (about 1 ms) is mostly fixed overhead: building
+the inputs, which are interpreted, and calling into the plugin; `lcheck`
+itself is 7-115 us of it. Either way the check is a negligible part of a
+proof, whose cost is the rest of the file (elaborating the statement, the
+`rfl` check, `wp_Median3`'s simplification).

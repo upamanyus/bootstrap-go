@@ -27,13 +27,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-/-- Mirrors `findCell`: the first index `i` at which the cell is unused and
-its location term is `y`, counting from `i`. -/
-def find_cell : List scell → List Bool → term → Nat → Option Nat
-  | [], _, _, _ => none
-  | c :: cs', u, y, i =>
-      if (!(u.getD i false) && decide (cloc c = y)) then some i
-      else find_cell cs' u y (i + 1)
+-- `find_cell`: in LCheck/Fns.lean.
 
 /-- What a caller gets out of the mirror: the answer is in range, and names a
 free cell whose location term really is `y`. -/

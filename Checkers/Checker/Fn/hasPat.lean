@@ -26,15 +26,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-/-- Mirrors `hasPat`: `TPat` anywhere below, reached through the `A`, `B` and
-`C` fields, which is exactly `term_a`/`term_b`/`term_c`. -/
-def has_pat : term → Bool
-  | TPat _ => true
-  | TPlus p q | TMinus p q | TMul p q | TEq p q | TLt _ p q | TLe _ p q =>
-      has_pat p || has_pat q
-  | TNeg p | TNot p | TRet p => has_pat p
-  | TIte p q r => (has_pat p || has_pat q) || has_pat r
-  | _ => false
+-- `has_pat`: in LCheck/Fns.lean.
 
 def ohas_pat : Option term → Bool
   | none => false

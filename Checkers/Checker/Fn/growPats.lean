@@ -18,9 +18,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-/-- Pad a list with `x` until index `k` is in range. -/
-def pad {A : Type} (xs : List A) (x : A) (k : Nat) : List A :=
-  xs ++ List.replicate (k + 1 - xs.length) x
+-- `pad`, `grow_pats`: in LCheck/Fns.lean.
 
 theorem pad_length {A : Type} (xs : List A) (x : A) (k : Nat) :
     (pad xs x k).length = max xs.length (k + 1) := by
@@ -41,10 +39,6 @@ theorem pad_step {A : Type} (xs : List A) (x : A) (k : Nat) :
     List.replicate_succ]
   rfl
 
-/-- The mirror: both fields are extended, so the length agreement
-`sort_env_wf` needs is preserved. -/
-def grow_pats (dj : cdisjunct) (k : Nat) : cdisjunct :=
-  mkDisjunct (pad (d_pats dj) SInt k) (pad (d_pat_ok dj) false k) (d_atoms dj) (d_fail dj)
 
 theorem grow_pats_wf (dj : cdisjunct) (k : Nat) :
     (d_pats dj).length = (d_pat_ok dj).length →

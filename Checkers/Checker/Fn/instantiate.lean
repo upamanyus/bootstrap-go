@@ -26,31 +26,8 @@ open github_com.upamanyus.bootstrap_go
 
 /-! ## The mirror -/
 
-def tbind1 (f : term → term) (oa : Option term) : Option term :=
-  match oa with | some a => some (f a) | none => none
-def tbind2 (f : term → term → term) (oa ob : Option term) : Option term :=
-  match oa, ob with | some a, some b => some (f a b) | _, _ => none
-def tbind3 (f : term → term → term → term) (oa ob oc : Option term) : Option term :=
-  match oa, ob, oc with | some a, some b, some c => some (f a b c) | _, _, _ => none
+-- `tbind1`, `tbind2`, `tbind3`, `instantiate_t`: in LCheck/Fns.lean.
 
-/-- `none` is the nil pointer. A node is rebuilt from its instantiated
-children, so it is `none` as soon as one of them is -- see `inst_wf` below
-for the side condition that rules that out. -/
-def instantiate_t (x : term) (σ : List (Option term)) (r : Option term) : Option term :=
-  match x with
-  | TPat n => some (match σ[n]? with | some (some y) => y | _ => TPat n)
-  | TResult => r
-  | TPlus p q => tbind2 TPlus (instantiate_t p σ r) (instantiate_t q σ r)
-  | TMinus p q => tbind2 TMinus (instantiate_t p σ r) (instantiate_t q σ r)
-  | TMul p q => tbind2 TMul (instantiate_t p σ r) (instantiate_t q σ r)
-  | TNeg p => tbind1 TNeg (instantiate_t p σ r)
-  | TEq p q => tbind2 TEq (instantiate_t p σ r) (instantiate_t q σ r)
-  | TLt sg p q => tbind2 (TLt sg) (instantiate_t p σ r) (instantiate_t q σ r)
-  | TLe sg p q => tbind2 (TLe sg) (instantiate_t p σ r) (instantiate_t q σ r)
-  | TNot p => tbind1 TNot (instantiate_t p σ r)
-  | TIte p q z => tbind3 TIte (instantiate_t p σ r) (instantiate_t q σ r) (instantiate_t z σ r)
-  | TRet p => tbind1 TRet (instantiate_t p σ r)
-  | _ => some x
 
 def oinstantiate_t (ox : Option term) (σ : List (Option term)) (r : Option term) :
     Option term :=

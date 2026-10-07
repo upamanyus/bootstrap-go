@@ -29,9 +29,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-/-- Appending to a disjunct's atom list. -/
-def dj_atoms (dj : cdisjunct) (ats : List cassn) : cdisjunct :=
-  mkDisjunct (d_pats dj) (d_pat_ok dj) (d_atoms dj ++ ats) (d_fail dj)
+-- `dj_atoms`, `assn_flatten`: in LCheck/Fns.lean.
 
 theorem dj_atoms_nil (dj : cdisjunct) : dj_atoms dj [] = dj := by
   cases dj; simp [dj_atoms]
@@ -40,20 +38,6 @@ theorem dj_atoms_app (dj : cdisjunct) (l1 l2 : List cassn) :
     dj_atoms (dj_atoms dj l1) l2 = dj_atoms dj (l1 ++ l2) := by
   cases dj; simp [dj_atoms]
 
-/-- The mirror: the atoms of a separating conjunction, left to right, or
-`none` if the assertion is not a separating conjunction of atoms. -/
-def assn_flatten : cassn → Option (List cassn)
-  | CAEmp => some []
-  | CASep p q =>
-      match assn_flatten p with
-      | some l1 => match assn_flatten q with
-                   | some l2 => some (l1 ++ l2)
-                   | none => none
-      | none => none
-  | CAPure t => some [CAPure t]
-  | CAPointsTo l v => some [CAPointsTo l v]
-  | CAOr _ _ => none
-  | CAExists _ _ _ => none
 
 def oassn_flatten : Option cassn → Option (List cassn)
   | none => none

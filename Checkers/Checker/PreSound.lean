@@ -79,9 +79,7 @@ theorem sort_of_vars_below (vars : List sort) (t : term) (s : sort) :
     all_goals first | exact ⟨ihc _ hc, iha _ ha, ihb _ hb⟩ | simp [hc, ha, hb] at h
   | _ => intro _; trivial
 
-/-- The initial symbolic state `Analyze` builds. -/
-def pre_state (vars : List sort) (pre : cassn) : sstate :=
-  mkState (cassn_heap pre) (cassn_pure pre) vars
+-- `pre_state`, `penv_from`, `penv`: in LCheck/Fns.lean.
 
 theorem pre_below (vars : List sort) (pre : cassn) :
     cassn_ws (vars_env vars) pre = true →
@@ -136,11 +134,7 @@ theorem pre_state_wf (vars : List sort) (pre : cassn) :
 Mirrors the parameter loop of `Analyze`: parameter `k + i` is bound to
 `TVar (k + i)`, each new binding in front, so a later parameter shadows an
 earlier one of the same name. -/
-def penv_from : Nat → List GoString → List (GoString × term) → List (GoString × term)
-  | _, [], ρ => ρ
-  | k, x :: xs', ρ => penv_from (k + 1) xs' ((x, TVar k) :: ρ)
 
-def penv (xs : List GoString) : List (GoString × term) := penv_from 0 xs []
 
 theorem penv_from_snoc (k : Nat) (xs : List GoString) (x : GoString) (ρ : List (GoString × term)) :
     penv_from k (xs ++ [x]) ρ = (x, TVar (k + xs.length)) :: penv_from k xs ρ := by

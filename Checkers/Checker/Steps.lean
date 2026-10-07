@@ -50,21 +50,8 @@ open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 
 Every `ctype` is supported, so unlike `TypeSort` in checker/sorts.go this
 is total. -/
-def ctype_sort : ctype → sort
-  | CTyInt | CTyInt64 | CTyUint64 => SInt
-  | CTyBool => SBool
-  | CTyPtr _ => SLoc
+-- `ctype_sort`, `ctype_signed`, `ctype_zero`, `apply_binop`, `apply_unop`: in LCheck/Fns.lean.
 
-/-- Mirrors `typeSigned`. -/
-def ctype_signed : ctype → Bool
-  | CTyInt | CTyInt64 => true
-  | _ => false
-
-/-- The zero value, mirroring `typeZero`. -/
-def ctype_zero : ctype → term
-  | CTyInt | CTyInt64 | CTyUint64 => TInt (W64 0)
-  | CTyBool => TBool false
-  | CTyPtr _ => TNull
 
 /-! ## Operators (pure)
 
@@ -72,27 +59,6 @@ def ctype_zero : ctype → term
 and `applyUnOp` in checker/exec.go; the sort checks those functions also
 perform become hypotheses of the WP lemmas below. -/
 
-def apply_binop (op : cop) (t : ctype) (a b : term) : Option term :=
-  match op with
-  | COEq => if ctype_sort t = SUnit then none else some (TEq a b)
-  | COAdd => if ctype_sort t = SInt then some (TPlus a b) else none
-  | COSub => if ctype_sort t = SInt then some (TMinus a b) else none
-  | COMul => if ctype_sort t = SInt then some (TMul a b) else none
-  | COLt => if ctype_sort t = SInt then some (TLt (ctype_signed t) a b) else none
-  | COLe => if ctype_sort t = SInt then some (TLe (ctype_signed t) a b) else none
-  | COGt => if ctype_sort t = SInt then some (TLt (ctype_signed t) b a) else none
-  | COGe => if ctype_sort t = SInt then some (TLe (ctype_signed t) b a) else none
-  | CONeg | CONot => none
-
-/-- Unary minus exists only at the signed integer types: GooseLang has no
-`GoUnOp GoNeg` at `go.uint64` (see Perennial/Golang/Defn/Predeclared.lean), which
-is why `applyUnOp` asks for `typeSigned`. -/
-def apply_unop (op : cop) (t : ctype) (a : term) : Option term :=
-  match op with
-  | CONeg => if ctype_sort t = SInt then
-               (if ctype_signed t then some (TNeg a) else none) else none
-  | CONot => if ctype_sort t = SBool then some (TNot a) else none
-  | _ => none
 
 /-! ## `intoVal` at the four value shapes
 

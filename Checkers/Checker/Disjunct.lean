@@ -37,20 +37,8 @@ open github_com.upamanyus.bootstrap_go
 
 `d_fail` records only *whether* the disjunct is malformed: the `*Failure`
 the Go code stores there is a diagnostic that nothing reads back. -/
-structure cdisjunct where
-  mkDisjunct ::
-  d_pats : List sort
-  d_pat_ok : List Bool
-  d_atoms : List cassn
-  d_fail : Bool
+-- `cdisjunct`, `disjunct_env`: in LCheck/Fns.lean and LCheck/Syntax.lean.
 
-export cdisjunct (mkDisjunct d_pats d_pat_ok d_atoms d_fail)
-
-/-- The sort environment a disjunct induces on a path: the path's logical
-variables, the disjunct's pattern variables, and the sort of the path's
-return term. This is the `sortEnv` that `checkDisjunct` builds. -/
-def disjunct_env (vars : List sort) (dj : cdisjunct) (rs : sort) (rok : Bool) : sort_env :=
-  mkSortEnv vars (d_pats dj) (d_pat_ok dj) rs rok
 
 section disjunct
 variable [ext : FfiSyntax] [ffi : FfiModel] [FfiInterp ffi] [FfiSemantics ext ffi]

@@ -89,3 +89,20 @@ confined to `Checkers/Native/Examples/`, each use adds its own axiom
 different algorithm from the checker's, with its own soundness proof to
 port; writing the checker's own algorithm in Lean reuses the semantic layer
 already proved, and keeps one algorithm.
+
+## `LCheck`: the native checker's code, precompiled, with no Perennial import
+
+**2026-10-07 · accepted**
+
+The mirror types and pure functions `lcheck` computes with moved out of
+`Checkers/Checker/` (Defs, Interp, TermLemmas, Steps, …, Fn/*) into the
+library `LCheck/`, which `Defs.lean` imports; names and namespaces are
+unchanged, so no proof changed. `LCheck` sets `precompileModules`, and
+imports nothing beyond Lean's core.
+
+**Rejected — let `LCheck` import `Perennial.Std.{Word,ByteString}`.** Lake
+links precompiled code per library: `LCheck`'s shared library then needs
+Perennial's, which is all of Perennial and pulls in Iris, Batteries and Qq
+(~630 modules compiled to C, observed). Writing `w64`/`GoString`/`W64 0` as
+`BitVec 64`/`List (BitVec 8)`/`BitVec.ofInt 64 0` costs nothing (they are
+`abbrev`s).

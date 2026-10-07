@@ -25,9 +25,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-def assn_disjuncts : cassn → List (Option cassn)
-  | CAOr p q => assn_disjuncts p ++ assn_disjuncts q
-  | x => [some x]
+-- `assn_disjuncts`: in LCheck/Fns.lean.
 
 def oassn_disjuncts : Option cassn → List (Option cassn)
   | none => [none]

@@ -24,10 +24,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-def cassn_heap : cassn → List scell
-  | CASep p q => cassn_heap p ++ cassn_heap q
-  | CAPointsTo lx ly => [mkCell lx ly]
-  | _ => []
+-- `cassn_heap`: in LCheck/Fns.lean.
 
 def oassn_heap : Option cassn → List scell
   | none => []

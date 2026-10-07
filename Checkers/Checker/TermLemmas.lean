@@ -52,18 +52,7 @@ theorem has_sort_unique (v : val) (s1 s2 : sort) :
 
 /-! ## The sort environment of checker/sorts.go -/
 
-/-- Mirrors `sortEnv`: sorts for the logical variables, for the
-postcondition's pattern variables (with `se_pat_ok` marking the ones a
-binder actually declared), and for `ret`. -/
-structure sort_env where
-  mkSortEnv ::
-  se_vars : List sort
-  se_pats : List sort
-  se_pat_ok : List Bool
-  se_ret : sort
-  se_ret_ok : Bool
-
-export sort_env (mkSortEnv se_vars se_pats se_pat_ok se_ret se_ret_ok)
+-- `sort_env`, `sort_of`, `vars_env`, `sort_of_vars`, `negate`: in LCheck/Fns.lean and LCheck/Syntax.lean.
 
 /-- `sortOfEnv` indexes `patOk` after bounds-checking against `pats`, so it is
 only well defined when the two have the same length. Every `sortEnv` the
@@ -71,44 +60,6 @@ checker builds satisfies this. -/
 def sort_env_wf (E : sort_env) : Prop :=
   (se_pats E).length = (se_pat_ok E).length
 
-/-- Mirrors `sortOfEnv`. `TExec` and `TRet` have no sort. -/
-def sort_of (E : sort_env) : term → Option sort
-  | TVar n => (se_vars E)[n]?
-  | TPat n =>
-      match (se_pats E)[n]?, (se_pat_ok E)[n]? with
-      | some s, some true => some s
-      | _, _ => none
-  | TResult => if se_ret_ok E then some (se_ret E) else none
-  | TInt _ => some SInt
-  | TBool _ => some SBool
-  | TUnit => some SUnit
-  | TNull => some SLoc
-  | TPlus a b | TMinus a b | TMul a b =>
-      match sort_of E a, sort_of E b with
-      | some SInt, some SInt => some SInt
-      | _, _ => none
-  | TNeg a => match sort_of E a with | some SInt => some SInt | _ => none
-  | TEq a b =>
-      match sort_of E a, sort_of E b with
-      | some sa, some sb => if sa = sb then some SBool else none
-      | _, _ => none
-  | TLt _ a b | TLe _ a b =>
-      match sort_of E a, sort_of E b with
-      | some SInt, some SInt => some SBool
-      | _, _ => none
-  | TNot a => match sort_of E a with | some SBool => some SBool | _ => none
-  | TIte c a b =>
-      match sort_of E c, sort_of E a, sort_of E b with
-      | some SBool, some sa, some sb => if sa = sb then some sa else none
-      | _, _, _ => none
-  | TExec => none
-  | TRet _ => none
-
-/-- Mirrors `SortOf`: only the logical variables are in scope. -/
-def vars_env (vars : List sort) : sort_env :=
-  mkSortEnv vars [] [] SInt false
-def sort_of_vars (vars : List sort) (t : term) : Option sort :=
-  sort_of (vars_env vars) t
 
 theorem vars_env_wf (vars : List sort) : sort_env_wf (vars_env vars) := rfl
 
@@ -339,11 +290,6 @@ theorem sort_of_vars_app (vars vars' : List sort) (t : term) (s : sort) :
 
 /-! ## `negate` -/
 
-/-- Mirrors `negate` in checker/exec.go: the double negation is cancelled so
-that the `else` branch after `if !b` records just `b`. -/
-def negate : term → term
-  | TNot a => a
-  | t => TNot t
 
 theorem teval_negate (V : valuation) (t : term) (b : Bool) :
     teval V t = bval b → teval V (negate t) = bval (!b) := by

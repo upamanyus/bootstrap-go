@@ -41,6 +41,7 @@ Lean notes:
 * `heap_pointsto` is `heapPointsto`; the persistent node points-to `l ↦□ v`
   is the typed one (`typedPointsto l v DFrac.discard`) as in Rocq.
 -/
+import LCheck.Fns
 import Generated.GeneratedProof.github_com.upamanyus.bootstrap_go.checker
 import Generated.Code.github_com.upamanyus.bootstrap_go.checker.examples
 
@@ -58,11 +59,7 @@ namespace Checker
 
 /-! ## Sorts and symbolic terms -/
 
-inductive sort where
-  | SInt | SBool | SLoc | SUnit
-deriving DecidableEq, Inhabited, Repr
-
-export sort (SInt SBool SLoc SUnit)
+-- `sort`, `term`, `ctype`, `cop`, `cexpr`, `cfunc`, `cassn`: in LCheck/Syntax.lean.
 
 /-- Codes as in checker/term.go. -/
 def sort_code : sort → w64
@@ -71,34 +68,6 @@ def sort_code : sort → w64
   | SLoc => W64 2
   | SUnit => W64 3
 
-/-- Mirrors checker.Term. `TVar` are logical variables (parameters, ghost
-variables of the precondition, and variables allocated during execution),
-`TPat` are pattern variables bound by `∃` in a postcondition, `TResult` is
-the return value `ret`. Signedness of comparisons is a flag here and folded
-into the kind on the Go side. -/
-inductive term where
-  | TVar (n : Nat)
-  | TPat (n : Nat)
-  | TResult
-  | TInt (w : w64)
-  | TBool (b : Bool)
-  | TUnit
-  | TNull
-  | TPlus (a b : term)
-  | TMinus (a b : term)
-  | TMul (a b : term)
-  | TNeg (a : term)
-  | TEq (a b : term)
-  | TLt (signed : Bool) (a b : term)
-  | TLe (signed : Bool) (a b : term)
-  | TNot (a : term)
-  | TIte (c a b : term)
-  | TExec
-  | TRet (a : term)
-deriving DecidableEq, Inhabited, Repr
-
-export term (TVar TPat TResult TInt TBool TUnit TNull TPlus TMinus TMul TNeg TEq TLt TLe
-  TNot TIte TExec TRet)
 
 section semantics
 variable [ext : FfiSyntax]
@@ -192,65 +161,6 @@ end semantics
 
 /-! ## The checker's input syntax, mirrored -/
 
-/-- Mirrors checker.Type. -/
-inductive ctype where
-  | CTyInt | CTyInt64 | CTyUint64 | CTyBool | CTyPtr (elem : ctype)
-deriving DecidableEq, Inhabited, Repr
-
-export ctype (CTyInt CTyInt64 CTyUint64 CTyBool CTyPtr)
-
-/-- Mirrors checker.Op (codes as in checker/ast.go). -/
-inductive cop where
-  | COAdd | COSub | COMul | COEq | COLt | COLe | COGt | COGe | CONeg | CONot
-deriving DecidableEq, Inhabited, Repr
-
-export cop (COAdd COSub COMul COEq COLt COLe COGt COGe CONeg CONot)
-
-/-- Mirrors checker.Expr. -/
-inductive cexpr where
-  | CEInt (w : w64)
-  | CEBool (b : Bool)
-  | CEUnit
-  | CEVar (x : GoString)
-  | CELet (x : GoString) (e1 e2 : cexpr)
-  | CESeq (e1 e2 : cexpr)
-  | CEIf (c e1 e2 : cexpr)
-  | CELoad (t : ctype) (e : cexpr)
-  | CEStore (t : ctype) (e1 e2 : cexpr)
-  | CEAlloc (t : ctype) (e : cexpr)
-  | CEZero (t : ctype)
-  | CEBinOp (op : cop) (t : ctype) (e1 e2 : cexpr)
-  | CEUnOp (op : cop) (t : ctype) (e : cexpr)
-  | CEConvert (from_ to : ctype) (e : cexpr)
-  | CEDo (e : cexpr)
-  | CEReturn (e : cexpr)
-  | CEExcSeq (e1 e2 : cexpr)
-  | CEExcDo (e : cexpr)
-deriving DecidableEq, Inhabited, Repr
-
-export cexpr (CEInt CEBool CEUnit CEVar CELet CESeq CEIf CELoad CEStore CEAlloc CEZero
-  CEBinOp CEUnOp CEConvert CEDo CEReturn CEExcSeq CEExcDo)
-
-/-- Mirrors checker.Func: a curried function value `λ: p0 .. pn, body`. -/
-structure cfunc where
-  mkFunc ::
-  fparams : List GoString
-  fbody : cexpr
-deriving DecidableEq, Inhabited, Repr
-
-export cfunc (mkFunc fparams fbody)
-
-/-- Mirrors checker.Assn. -/
-inductive cassn where
-  | CAEmp
-  | CASep (p q : cassn)
-  | CAOr (p q : cassn)
-  | CAExists (n : Nat) (s : sort) (p : cassn)
-  | CAPure (t : term)
-  | CAPointsTo (l v : term)
-deriving DecidableEq, Inhabited, Repr
-
-export cassn (CAEmp CASep CAOr CAExists CAPure CAPointsTo)
 
 /-! ## Denotation of the input syntax into GooseLang -/
 

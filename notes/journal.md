@@ -89,3 +89,23 @@ Append-only, newest last.
   start plus loading and translating the Go package, and the compiled Go
   check is 50-150x faster than `lcheck` under `native_decide` (1-8 ms,
   interpreted IR). Numbers in `Checkers/Native/README.md`.
+
+## 2026-10-07 — `lcheck` precompiled (`LCheck/`)
+
+- Moved the 15 types and 43 functions `lcheck` depends on (found by walking
+  the constants of `lcheck`'s definition) into `LCheck/{Syntax,Fns}.lean`,
+  and `lcheck` into `LCheck/Check.lean`; each old location keeps a one-line
+  pointer. `lake build` passed with no proof edits.
+- First attempt imported `Perennial.Std.ByteString` (for `GoString`, `go!`):
+  the build then made `libperennial_Perennial.so` (144 modules) plus Iris
+  (277), Batteries (192) and Qq (14) shared libraries, because the LCheck
+  library's `.so` needs `initialize_perennial_Perennial_Std_ByteString`. With
+  the abbreviations written out, LCheck's `.so` needs only Lean's runtime, and
+  the example modules load only it (`.setup.json` "plugins").
+- `lake env lean` does not load the plugin; `--plugin=.lake/build/lib/libbootstrapGo_LCheck.so`
+  does, as `lake build` does. `native_bench.sh` passes it and gained `interp`
+  and `lcheck` (per-call) columns; `Check` is now in microseconds too.
+- Results (README in Checkers/Native): compiled `lcheck` 7-115 us per call,
+  about Go's `checker.Check` (8-143 us); interpreted 130-2300 us. In a proof,
+  `native_decide` evaluation is 0.3-1.6 ms precompiled vs 0.6-6 ms
+  interpreted — below wall-clock noise; the rest of the proof file dominates.

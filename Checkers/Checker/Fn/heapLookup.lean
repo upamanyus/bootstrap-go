@@ -25,11 +25,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-/-- The Lean mirror: the first cell whose location term is syntactically
-`x`. -/
-def heap_lookup : List scell → term → Option term
-  | [], _ => none
-  | c :: H', x => if cloc c = x then some (cval c) else heap_lookup H' x
+-- `heap_lookup`: in LCheck/Fns.lean.
 
 theorem heap_lookup_app (H1 H2 : List scell) (x : term) :
     heap_lookup (H1 ++ H2) x =

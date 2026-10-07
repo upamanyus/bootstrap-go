@@ -24,10 +24,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-def cassn_pure : cassn → List term
-  | CASep p q => cassn_pure p ++ cassn_pure q
-  | CAPure t => [t]
-  | _ => []
+-- `cassn_pure`: in LCheck/Fns.lean.
 
 def oassn_pure : Option cassn → List term
   | none => []

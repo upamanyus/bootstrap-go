@@ -23,6 +23,13 @@ rev = "51d6df02dd3ffae5f2a95a83145978c35eab60a6"
 name = "Generated"
 globs = ["Generated.+"]
 
+# The Lean-native checker `lcheck`: the checker's data and algorithm, with no
+# program logic (imports only Perennial.Std), compiled to native code so that
+# `native_decide` runs it as machine code. Its soundness proof is in Checkers.
+[[lean_lib]]
+name = "LCheck"
+precompileModules = true
+
 # The checkers' Rocq development, ported.
 [[lean_lib]]
 name = "Checkers"

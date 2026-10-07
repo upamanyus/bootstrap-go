@@ -23,22 +23,8 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 open github_com.upamanyus.bootstrap_go
 
-/-- What the `range` loop decides: `t` is non-nil and is one of the recorded
-facts. `termEq c t` is `decide (some c = ox)`, and every cell of `is_cond`
-is a real term, so a nil `t` never matches. -/
-def cond_mem (pc : List term) : Option term → Bool
-  | none => false
-  | some y => decide (y ∈ pc)
+-- `cond_mem`, `cond_refl`, `cond_holds`: in LCheck/Fns.lean.
 
-/-- ... and what it checks afterwards. -/
-def cond_refl : term → Bool
-  | TEq p q => decide (p = q)
-  | TBool b => b
-  | _ => false
-
-def cond_holds (pc : List term) : Option term → Bool
-  | none => false
-  | some y => decide (y ∈ pc) || cond_refl y
 
 theorem cond_mem_holds (pc : List term) (ox : Option term) :
     cond_mem pc ox = true → cond_holds pc ox = true := by

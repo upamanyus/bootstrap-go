@@ -27,37 +27,8 @@ namespace Checker
 
 open Iris Iris.BI Iris.ProofMode
 
-/-- Mirrors `checker.Cell`: a location term and the value term stored there. -/
-structure scell where
-  mkCell ::
-  cloc : term
-  cval : term
-deriving DecidableEq, Repr
+-- `scell`, `sstate`, `spath`, `scell_inhabited`, `sstate_inhabited`, `spath_inhabited`: in LCheck/Syntax.lean.
 
-export scell (mkCell cloc cval)
-
-/-- Mirrors `checker.State`. -/
-structure sstate where
-  mkState ::
-  sheap : List scell
-  spc : List term
-  svars : List sort
-deriving DecidableEq, Repr
-
-export sstate (mkState sheap spc svars)
-
-/-- Mirrors `checker.Path`. -/
-structure spath where
-  mkPath ::
-  pret : term
-  pst : sstate
-deriving DecidableEq, Repr
-
-export spath (mkPath pret pst)
-
-instance scell_inhabited : Inhabited scell := ⟨mkCell TUnit TUnit⟩
-instance sstate_inhabited : Inhabited sstate := ⟨mkState [] [] []⟩
-instance spath_inhabited : Inhabited spath := ⟨mkPath TUnit default⟩
 
 section pure
 variable [ext : FfiSyntax]

@@ -59,15 +59,8 @@ open Iris Iris.BI Iris.ProofMode Iris.ProgramLogic
 
 /-! ## Pure parts -/
 
-/-- The two states `execIf` forks into. -/
-def st_assume (sst : sstate) (x : term) : sstate :=
-  mkState (sheap sst) (spc sst ++ [x]) (svars sst)
+-- `st_assume`, `st_alloc`: in LCheck/Fns.lean.
 
-/-- The state `exec` forks to on an allocation. -/
-def st_alloc (sst : sstate) (x : term) : sstate :=
-  mkState (sheap sst ++ [mkCell (TVar (svars sst).length) x])
-          (spc sst)
-          (svars sst ++ [SLoc])
 
 section pure
 variable [ext : FfiSyntax]

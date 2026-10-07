@@ -35,9 +35,7 @@ namespace Checker
 open Iris Iris.BI Iris.ProofMode
 open github_com.upamanyus.bootstrap_go
 
-/-- The binder a parse step records. -/
-def bind_pat (dj : cdisjunct) (k : Nat) (s : sort) : cdisjunct :=
-  mkDisjunct ((d_pats dj).set k s) ((d_pat_ok dj).set k true) (d_atoms dj) (d_fail dj)
+-- `bind_pat`: in LCheck/Fns.lean.
 
 theorem lookup_pad_Some {A : Type} (xs : List A) (x y : A) (k m : Nat) :
     (pad xs x k)[m]? = some y → xs[m]? = some y ∨ y = x := by
