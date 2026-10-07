@@ -9,12 +9,9 @@
 #   1  the checker rejected the program (unsafe) or the postcondition
 #   2  a usage, parse, translation or sort error
 #
-# The last section re-checks the same six specifications the slow way, twice:
-# with the hand-written Rocq proofs in
-# new/proof/github_com/mit_pdos/perennial/checker/examples/, and with the
-# proofs by reflection in its reflect/ subdirectory (which use the reflective
-# symbolic executor of new/proof/symex/), and times each proof against the
-# corresponding run of the checker.
+# The last section re-checks the same six specifications the slow way, with
+# the hand-written Lean proofs in Checkers/Checker/Examples/, and times each
+# proof against the corresponding run of the checker.
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
@@ -115,31 +112,18 @@ echo
 echo "=============================================================="
 echo "$pass cases behaved as expected, $fail did not"
 
-# --- The same specifications, checked by Rocq -------------------------------
+# --- The same specifications, checked by Lean -------------------------------
 #
-# For each function we rebuild just the .vok file of each of its two proofs --
-# that is, we re-check that one proof against already-built dependencies, the
-# way an incremental `make` would -- and run the checker on the same
-# specification, and report the wall-clock times.
+# For each function we re-check its hand-written proof (Checkers/Checker/
+# Examples/<Name>.lean) with `lake env lean`, against already-built
+# dependencies, the way an incremental `lake build` would, run the checker on
+# the same specification, and report the wall-clock times.
 #
-# The two proofs establish the same lemma. The hand-written one steps through
-# the program with wp_auto and wp_if_destruct, building a proof term one
-# instruction at a time. The one by reflection calls wp_symex, which reifies
-# the whole function body, runs a symbolic executor written in Gallina on it
-# with vm_compute, and applies a soundness theorem proved once and for all,
-# leaving one goal per path.
-#
-# Most of a -vok run is spent loading the proof's imports (the Perennial and
-# Iris prelude), which says nothing about the proof itself, so we also report
-# the time without it: `rocq compile -time` attributes wall-clock time to each
-# vernacular command, and every import is one command, so the two phases can
-# be summed separately.
+# Most of a check is spent loading the proof's imports (the Perennial and Iris
+# prelude), which says nothing about the proof itself, so we also time a file
+# holding the same imports and nothing else, and report the difference.
 
-PROOFS=new/proof/github_com/mit_pdos/perennial/checker/examples
-# examples_init and the tactic library are the last files in the proofs'
-# dependency closure, so their presence means the whole closure has been
-# built (as .vo, or as .vos by `make vos`; a -vok run can load either).
-DEPS="$PROOFS/examples_init new/proof/symex/tactic"
+PROOFS=Checkers/Checker/Examples
 NCPU=$(nproc 2>/dev/null || echo 4)
 
 # Microseconds since the epoch. $EPOCHREALTIME is a bash 5 builtin; it holds
@@ -154,55 +138,19 @@ now_us() {
 }
 
 secs() { awk -v us="$1" 'BEGIN { printf "%.2f", us / 1e6 }'; }
+sub_secs() { awk -v a="$1" -v b="$2" 'BEGIN { d = a - b; if (d < 0) d = 0; printf "%.2f", d }'; }
 
-# rocq_phase_secs LOG imports|proof -- add up the times `rocq compile -time`
-# reported for the import commands, or for every other command. Its lines look
-# like
-#
-#   Chars 721 - 738 [wp_start~as~"Hz".] 0.158 secs (0.155u,0.001s)
-#
-# with spaces in the command replaced by ~ and the command truncated to 30
-# characters, which is why an import is recognised by its leading From or
-# Require rather than by the word Require.
-rocq_phase_secs() {
-	awk -v want="$2" '
-		/^Chars [0-9]+ - [0-9]+ \[/ {
-			rest = $0
-			sub(/^Chars [0-9]+ - [0-9]+ \[/, "", rest)
-			close_bracket = index(rest, "]")
-			cmd = substr(rest, 1, close_bracket - 1)
-			split(substr(rest, close_bracket + 2), field, " ")
-			is_import = (cmd ~ /^(From|Require)/)
-			if ((want == "imports") == is_import) {
-				total += field[1] + 0
-			}
-		}
-		END { printf "%.2f", total + 0 }
-	' "$1"
-}
-
-# The global arguments Rocq needs, extracted from _RocqProject the same way
-# the Makefile does.
-rocq_args() {
-	sed -E -e '/^#/d' -e 's/-arg ([^ ]*)/\1/g' _RocqProject
-}
-
-rocq_available() {
-	if ! command -v rocq >/dev/null 2>&1; then
-		echo "rocq is not in PATH, so the Rocq proofs cannot be timed."
-		echo "(With opam: eval \$(opam env --switch=perennial))"
+lean_available() {
+	if ! command -v lake >/dev/null 2>&1; then
+		echo "lake is not in PATH, so the Lean proofs cannot be timed."
+		echo "(With elan: export PATH=\$HOME/.elan/bin:\$PATH)"
 		return 1
 	fi
-	local d missing=
-	for d in $DEPS; do
-		[ -f "$d.vo" ] || [ -f "$d.vos" ] || missing="$missing $d.vo"
-	done
-	if [ -n "$missing" ]; then
-		echo "The proofs' dependencies have not been built, so only the"
-		echo "checker can be timed. Build them once (this takes a few"
-		echo "minutes, and is not part of what we time) with"
+	if ! lake build Checkers.Checker.Examples.ExamplesInit >/dev/null 2>&1; then
+		echo "The proofs' dependencies do not build, so only the checker"
+		echo "can be timed. Build them once with"
 		echo
-		echo "    make -j$NCPU TIMED=false$missing"
+		echo "    lake build Checkers.Checker.Examples.ExamplesInit"
 		return 1
 	fi
 	return 0
@@ -211,24 +159,20 @@ rocq_available() {
 cmp_pass=0
 cmp_fail=0
 
-row() { printf '%-10s %9s %7s %9s %7s %8s %9s %8s\n' "$@"; }
+row() { printf '%-10s %7s %8s %7s %8s %8s\n' "$@"; }
 
-# time_proof FILE.v -- rebuild FILE.vok alone, and set t_total (seconds,
-# wall clock), t_proof (seconds spent on the proof itself, imports excluded)
-# and t_ok.
-time_proof() {
-	local v=$1 vok=${1%.v}.vok t0 t1 status
-	rm -f "$vok"
+# time_lean FILE.lean -- check FILE with lake env lean; set t_total (seconds,
+# wall clock) and t_ok.
+time_lean() {
+	local t0 t1 status
 	t0=$(now_us)
-	# shellcheck disable=SC2046 # the _RocqProject arguments must split
-	rocq compile $(rocq_args) -vok -time -o "$vok" "$v" >"$TIMELOG" 2>/dev/null
+	lake env lean "$1" >/dev/null 2>&1
 	status=$?
 	t1=$(now_us)
 	t_total=$(secs $((t1 - t0)))
-	t_proof=$(rocq_phase_secs "$TIMELOG" proof)
 	t_ok=yes
 	if [ "$status" -ne 0 ]; then
-		echo "rocq failed on $v"
+		echo "lean failed on $1"
 		t_ok=no
 	fi
 }
@@ -242,15 +186,14 @@ ratio() {
 compare() {
 	local name=$1 proof=$2
 	shift 2
-	local t0 t1 gocheck status ok=yes hand_total hand_proof refl_total refl_proof
+	local t0 t1 gocheck status ok=yes total imports
 
-	# Rocq, twice: the hand-written proof and the proof by reflection.
-	time_proof "$PROOFS/$proof.v"
-	hand_total=$t_total hand_proof=$t_proof
+	time_lean "$PROOFS/$proof.lean"
+	total=$t_total
 	[ "$t_ok" = yes ] || ok=no
-	time_proof "$PROOFS/reflect/$proof.v"
-	refl_total=$t_total refl_proof=$t_proof
-	[ "$t_ok" = yes ] || ok=no
+	grep '^import ' "$PROOFS/$proof.lean" >"$IMPORTS"
+	time_lean "$IMPORTS"
+	imports=$t_total
 
 	# The checker, on the same specification.
 	t0=$(now_us)
@@ -268,39 +211,35 @@ compare() {
 	else
 		cmp_fail=$((cmp_fail + 1))
 	fi
-	row "$name" "$hand_total" "$hand_proof" "$refl_total" "$refl_proof" \
-		"$gocheck" "$(ratio "$hand_proof" "$refl_proof")" \
-		"$(ratio "$refl_proof" "$gocheck")"
+	local p
+	p=$(sub_secs "$total" "$imports")
+	row "$name" "$total" "$imports" "$p" "$gocheck" "$(ratio "$p" "$gocheck")"
 }
 
 echo
 echo "=============================================================="
-echo "# The same six specifications, proved in Rocq and checked"
+echo "# The same six specifications, proved in Lean and checked"
 echo "--------------------------------------------------------------"
-if rocq_available; then
-	rocq --version | head -1
-	TIMELOG=$(mktemp)
-	printf '%-10s %17s %17s\n' "" "hand-written" "by reflection"
-	row function "-vok" proof "-vok" proof gocheck hand/refl refl/go
-	compare Double double -pkg $PKG -pre "$DOUBLE_PRE" \
+if lean_available; then
+	lean --version | head -1
+	IMPORTS=$(mktemp --suffix=.lean)
+	row function lean imports proof gocheck proof/go
+	compare Double Double -pkg $PKG -pre "$DOUBLE_PRE" \
 		-post "$DOUBLE_POST" Double
-	compare Max max -pkg $PKG -post "$MAX_POST" Max
-	compare Swap swap -pkg $PKG -pre "$SWAP_PRE" -post "$SWAP_POST" Swap
-	compare Abs abs -pkg $PKG -post "$ABS_POST" Abs
-	compare CondStore cond_store -pkg $PKG -pre "$CONDSTORE_PRE" \
+	compare Max Max -pkg $PKG -post "$MAX_POST" Max
+	compare Swap Swap -pkg $PKG -pre "$SWAP_PRE" -post "$SWAP_POST" Swap
+	compare Abs Abs -pkg $PKG -post "$ABS_POST" Abs
+	compare CondStore CondStore -pkg $PKG -pre "$CONDSTORE_PRE" \
 		-post "$CONDSTORE_POST" CondStore
-	compare Median3 median3 -pkg $PKG -post "$MEDIAN_POST" Median3
-	rm -f "$TIMELOG"
+	compare Median3 Median3 -pkg $PKG -post "$MEDIAN_POST" Median3
+	rm -f "$IMPORTS"
 	echo "--------------------------------------------------------------"
-	echo "Seconds. -vok is the wall-clock time of rebuilding that one"
-	echo ".vok against prebuilt dependencies; proof is the part of it"
-	echo "spent checking the proof itself rather than loading its"
-	echo "imports, as rocq -time attributes time per command (the rest"
-	echo "is imports and Rocq's own startup). hand/refl is how much"
-	echo "faster the proof by reflection (wp_symex, new/proof/symex/) is"
-	echo "than the hand-written one; refl/go compares it with one whole"
-	echo "run of the checker, process startup and loading the Go"
-	echo "package included, so that ratio is conservative."
+	echo "Seconds. lean is the wall-clock time of checking that one file"
+	echo "against prebuilt dependencies; imports is the time of checking"
+	echo "a file with the same imports and nothing else; proof is the"
+	echo "difference. proof/go compares it with one whole run of the"
+	echo "checker, process startup and loading the Go package included,"
+	echo "so that ratio is conservative."
 	echo "$cmp_pass of $((cmp_pass + cmp_fail)) comparisons agreed"
 	[ "$cmp_fail" -eq 0 ] || fail=$((fail + cmp_fail))
 fi
