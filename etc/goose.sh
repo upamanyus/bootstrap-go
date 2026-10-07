@@ -8,6 +8,12 @@
 # `Generated.` (the Lean namespaces inside are unchanged).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+if [ ! -d .lake/packages/perennial ]; then
+	echo "missing .lake/packages/perennial (go.mod's replacement for perennial):" >&2
+	echo "run 'lake build' first, which fetches the Lake dependencies" >&2
+	exit 2
+fi
 pkgs=(./checker ./checker/examples ./tcheck)
 bin=$(mktemp -d); out=$(mktemp -d); trap 'rm -rf "$bin" "$out"' EXIT
 (cd .lake/packages/perennial && GOBIN="$bin" go install ./goose/cmd/goose ./goose/cmd/proofgen)

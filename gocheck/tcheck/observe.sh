@@ -17,6 +17,12 @@
 # Run from the repository root: bash gocheck/tcheck/observe.sh
 set -euo pipefail
 
+if [ ! -d .lake/packages/perennial ]; then
+	echo "missing .lake/packages/perennial (go.mod's replacement for perennial):" >&2
+	echo "run 'lake build' first, which fetches the Lake dependencies" >&2
+	exit 2
+fi
+
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 go build -o "$tmp/tcheck" ./gocheck/tcheck

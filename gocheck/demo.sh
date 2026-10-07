@@ -16,6 +16,12 @@ set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
 
+if [ ! -d .lake/packages/perennial ]; then
+	echo "missing .lake/packages/perennial (go.mod's replacement for perennial):" >&2
+	echo "run 'lake build' first, which fetches the Lake dependencies" >&2
+	exit 2
+fi
+
 GOCHECK=${GOCHECK:-/tmp/gocheck}
 echo "building $GOCHECK"
 go build -o "$GOCHECK" ./gocheck || exit 2

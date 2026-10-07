@@ -12,6 +12,12 @@
 # Run from the repository root: bash gocheck/observe.sh
 set -euo pipefail
 
+if [ ! -d .lake/packages/perennial ]; then
+	echo "missing .lake/packages/perennial (go.mod's replacement for perennial):" >&2
+	echo "run 'lake build' first, which fetches the Lake dependencies" >&2
+	exit 2
+fi
+
 OUT=Checkers/Checker/Examples/Observed/Median3Input.lean
 MEDIAN_POST='(⌜b <u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜c >=u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜c >=u b⌝ ∗ ⌜c <u a⌝ ∗ ⌜ret == c⌝) ∨ (⌜c >=u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == c⌝) ∨ (⌜b <u a⌝ ∗ ⌜c >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜c <u a⌝ ∗ ⌜b >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜b <u a⌝ ∗ ⌜a <u b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜b <u a⌝)'
 

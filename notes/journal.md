@@ -33,3 +33,11 @@ Append-only, newest last.
   checkout (the temporary `~/bootstrap-go-lean` clone is gone; its
   populated `.lake/` was moved here). The Rocq sources are read with
   `git show main:<path>`.
+
+## 2026-10-07 — scripts need the Lake dependencies
+
+- On a fresh clone, `gocheck/demo.sh` failed in `go build` with "replacement
+  directory ./.lake/packages/perennial does not exist": go.mod's replace
+  target only exists after Lake fetches the dependencies. `demo.sh`, both
+  `observe.sh` and `etc/goose.sh` now check for it up front and say to run
+  `lake build` first.
