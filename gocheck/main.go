@@ -5,11 +5,11 @@
 // Usage:
 //
 //	gocheck [-pkg P] [-pre A] [-post A] [-moddir D] [-configdir D] [-ascii] [-ast] [-v]
-//	        [-rocq FILE [-rocq-name N]] Func
+//	        [-lean FILE [-lean-name N]] Func
 //
-// With -rocq (which needs -post), gocheck also calls checker.Check on the
-// input and writes that input, as Rocq terms over new/checker/defs.v, to FILE
-// (see render.RocqFile).
+// With -lean (which needs -post), gocheck also calls checker.Check on the
+// input and writes that input, as Lean terms over Checkers/Checker/Defs.lean, to FILE
+// (see render.LeanFile).
 package main
 
 import (
@@ -42,7 +42,7 @@ func run() (int, error) {
 	fs := flag.NewFlagSet("gocheck", flag.ContinueOnError)
 	usage := func() {
 		fmt.Fprintf(os.Stderr, "usage: gocheck [-pkg P] [-pre A] [-post A] [-moddir D] "+
-			"[-configdir D] [-ascii] [-ast] [-v] [-rocq FILE [-rocq-name N]] Func\n")
+			"[-configdir D] [-ascii] [-ast] [-v] [-lean FILE [-lean-name N]] Func\n")
 		fs.PrintDefaults()
 	}
 	fs.Usage = usage
@@ -54,8 +54,8 @@ func run() (int, error) {
 	ascii := fs.Bool("ascii", false, "print ASCII instead of Unicode notation")
 	showAST := fs.Bool("ast", false, "print the translated GooseLang body")
 	verbose := fs.Bool("v", false, "print extra detail")
-	rocqFile := fs.String("rocq", "", "write the checker input as Rocq definitions to this file (needs -post)")
-	rocqName := fs.String("rocq-name", "", "prefix of the Rocq definitions (default: the function name, lowercased)")
+	leanFile := fs.String("lean", "", "write the checker input as Lean definitions to this file (needs -post)")
+	leanName := fs.String("lean-name", "", "prefix of the Lean definitions (default: the function name, lowercased)")
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return exitUsage, nil
 	}
@@ -149,17 +149,17 @@ func run() (int, error) {
 	}
 	fmt.Fprintf(out, "post:\n  %s\n", pr.WithPats(sc.PatNames(0)).Assn(postAssn))
 
-	if *rocqFile != "" {
-		name := *rocqName
+	if *leanFile != "" {
+		name := *leanName
 		if name == "" {
 			name = strings.ToLower(fname)
 		}
-		src := render.RocqFile(name, f, vars, preAssn, postAssn)
-		if err := os.WriteFile(*rocqFile, []byte(src), 0o644); err != nil {
+		src := render.LeanFile(name, f, vars, preAssn, postAssn)
+		if err := os.WriteFile(*leanFile, []byte(src), 0o644); err != nil {
 			return exitUsage, err
 		}
 		fmt.Fprintf(out, "checker.Check: %v (input written to %s)\n",
-			checker.Check(f, vars, preAssn, postAssn), *rocqFile)
+			checker.Check(f, vars, preAssn, postAssn), *leanFile)
 	}
 
 	okCount := 0
