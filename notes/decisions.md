@@ -69,3 +69,23 @@ are unchanged. The Go module path is `github.com/upamanyus/bootstrap-go`
 Gallina — not one of the checkers), the `reflect/` example proofs that use it,
 and the Rocq goal exporter (`new/proof/rocqgoal/`, `gocheck/rocqgoal/`), which
 is specific to Rocq.
+
+## A Lean-native checker, run by `native_decide`
+
+**2026-10-07 · accepted**
+
+`Checkers/Native/` (not a port of anything on `main`) writes the checker's
+algorithm as Lean functions (`lcheck`) and proves them sound
+(`lcheck_sound : lcheck … = true → triple_holds …`), reusing the Go proof's
+semantic layer (`exec_sound_*`, `match_path_sat`, `binders_interp_step`, …)
+instead of observing a Go run. The six demo examples use `native_decide`, at
+the user's request (to see the checker's cost under compiled evaluation).
+This is the one exception to porting.md's "no `native_decide`": it is
+confined to `Checkers/Native/Examples/`, each use adds its own axiom
+(`…._native.native_decide.ax_1_1`), and the same triples also go through
+`decide +kernel` with no axiom (`gocheck/native_bench.sh` times both).
+
+**Rejected — port `wp_symex` (`main`'s reflective executor).** It is a
+different algorithm from the checker's, with its own soundness proof to
+port; writing the checker's own algorithm in Lean reuses the semantic layer
+already proved, and keeps one algorithm.

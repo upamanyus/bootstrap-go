@@ -19,7 +19,7 @@ if [ ! -d .lake/packages/perennial ]; then
 fi
 
 OUT=Checkers/Checker/Examples/Observed/Median3Input.lean
-MEDIAN_POST='(⌜b <u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜c >=u b⌝ ∗ ⌜ret == b⌝) ∨ (⌜c >=u b⌝ ∗ ⌜c <u a⌝ ∗ ⌜ret == c⌝) ∨ (⌜c >=u a⌝ ∗ ⌜c <u b⌝ ∗ ⌜ret == c⌝) ∨ (⌜b <u a⌝ ∗ ⌜c >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜c <u a⌝ ∗ ⌜b >=u a⌝ ∗ ⌜ret == a⌝) ∨ (⌜b <u a⌝ ∗ ⌜a <u b⌝) ∨ (⌜b >=u a⌝ ∗ ⌜b <u a⌝)'
+. gocheck/specs.sh
 
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT

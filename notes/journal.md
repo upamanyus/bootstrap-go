@@ -55,3 +55,28 @@ Append-only, newest last.
   `-ascii` print flag is gone too. Term operators keep their Go spellings
   (`<=`, `!=`, `!`) alongside `≤ ≠ ¬`. `TestNoASCII` checks the rejection;
   the demo has 12 cases (the all-ASCII Swap run was dropped).
+
+## 2026-10-07 — a Lean-native checker
+
+- `Checkers/Native/`: `lcheck`, the checker's algorithm as Lean functions, and
+  `lcheck_sound` (a `true` answer gives `triple_holds`). The proof reuses the
+  Go proof's semantic layer unchanged; only the induction over the Lean
+  functions is new (`Sound.lean`, ~700 lines; it compiled in a few rounds).
+- Lessons: the pure lemmas of `Checkers/Checker/` take an unused
+  `[FfiSyntax]` (Lean 4 always includes an instance-implicit section variable
+  whose type has no dependencies), and `penv_below` even takes an FFI, so
+  `lcheck_sound` introduces `triple_holds`'s instances before calling them.
+  `(h : ∃ …).2` elaborates but the kernel rejects it ("invalid projection");
+  destructure instead. `nomatch h, x` parses as `nomatch` on two
+  discriminants.
+- `matchTerm` is not structurally recursive in Go (the `TResult` case
+  recurses on the return term); `mt_core` takes the `TResult` case as a
+  parameter and `mt` instantiates it with a copy that rejects `TResult`.
+- `gocheck/specs.sh` now holds the six demo specifications, sourced by
+  `demo.sh`, `observe.sh` and the new `native.sh` (inputs) and
+  `native_bench.sh` (timings). Results are in `Checkers/Native/README.md`:
+  `native_decide` evaluation 1-8 ms, kernel 0.12-1.3 s, hand-written proofs
+  0.4-4.0 s, gocheck ~0.04 s.
+- `native_decide` in this Lean version adds an auxiliary axiom per use, not
+  `Lean.ofReduceBool`; and under `lake build` it runs interpreted IR, since
+  the library does not set `precompileModules`.

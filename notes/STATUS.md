@@ -25,6 +25,20 @@ all of it (680 jobs); no file of this repository has a `sorry`.
 - The six hand-written example proofs (`Examples/*.lean`) are ported;
   `gocheck/demo.sh` times them against the checker.
 
+### Checkers/Native/ (the checker's algorithm in Lean, proved sound)
+
+- `lcheck` (`Check.lean`) follows `checker.Check` case for case;
+  `lcheck_sound` (`Sound.lean`) is a theorem, `#print axioms`: `propext,
+  Classical.choice, Quot.sound`. No Go run, no `GooseGpreS` model caveat.
+- `Examples/<F>.lean` prove all six demo specifications' `triple_holds` by
+  `native_decide` (plus `wp_Median3` in client form); inputs from
+  `bash gocheck/native.sh`. Each `native_decide` adds one axiom; the same
+  triples also check with `decide +kernel` (no axiom), not committed.
+- Cost (`bash gocheck/native_bench.sh`, README there): the evaluation is
+  1-8 ms per example under `native_decide` (Lean's IR interpreter: the
+  library is not precompiled) and 0.12-1.3 s in the kernel, against
+  0.4-4.0 s for the hand-written proofs.
+
 ### tcheck/ (soundness stated)
 
 - `Perennial.TCheck.raft.becomeFollower.wp_proof` proves etcdGrove's own
@@ -39,6 +53,10 @@ all of it (680 jobs); no file of this repository has a `sorry`.
   [decisions.md](decisions.md)); `bash gocheck/tcheck/observe.sh` rechecks it.
 
 ## Next
+
+- Optional: precompile the native checker (`precompileModules`, or a
+  `lean_exe`) to time it as machine code; this needs the ~510 non-core
+  modules it imports (Iris, Perennial, …) compiled to C.
 
 - Prove tcheck's `check_adequate`, the way `Checkers/Checker/` proves the
   checker's soundness.

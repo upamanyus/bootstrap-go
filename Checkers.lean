@@ -10,4 +10,11 @@ import Checkers.Checker.Examples.Abs
 import Checkers.Checker.Examples.CondStore
 import Checkers.Checker.Examples.Median3
 import Checkers.Checker.Examples.Observed.Median3
+import Checkers.Native.Sound
+import Checkers.Native.Examples.Double
+import Checkers.Native.Examples.Max
+import Checkers.Native.Examples.Swap
+import Checkers.Native.Examples.Abs
+import Checkers.Native.Examples.CondStore
+import Checkers.Native.Examples.Median3
 import Checkers.TCheck.Raft.Proof.raft__becomeFollower

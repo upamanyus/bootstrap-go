@@ -192,8 +192,13 @@ With the dependencies built, the two proofs of `wp_Median3` cost
 ```
 Examples/Median3.lean            5.8-6.2 s   hand-written
 Examples/Observed/Median3.lean   3.8-4.0 s   from the checker's run
+Native/Examples/Median3.lean     2.7 s       Lean-native checker, native_decide
 gocheck                          0.04 s      built binary
 ```
+
+The third is `Checkers/Native/` ([README](../Checkers/Native/README.md)): the
+same algorithm as Lean functions, proved sound (`lcheck_sound`), so no run is
+observed; it covers all six demo specifications.
 
 (`main`'s Rocq version also had a third proof, by reflection with `wp_symex`;
 that executor is not ported.)

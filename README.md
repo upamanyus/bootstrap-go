@@ -11,6 +11,9 @@ specification in Perennial.
   **proved** (`Checkers/Checker/Soundness.lean`, `check_sound`; adequacy in
   `Checkers/Checker/Adequacy.lean`), so the only assumption a client adds is
   the observation of one run (`Checkers/Checker/Examples/Observed/Median3.lean`).
+  Its algorithm also exists as Lean functions, proved sound with no
+  observation at all ([`Checkers/Native/`](Checkers/Native/README.md),
+  `lcheck_sound`), so a proof can run it by `native_decide` or in the kernel.
 - [`tcheck/`](gocheck/tcheck/README.md) — a table-driven checker whose
   knowledge of a program is a table of rules, each linked to a lemma already
   proved in Lean. Its soundness is stated, not yet proved
@@ -31,6 +34,8 @@ lake build                            # all of Checkers/
 go build ./... && go test ./...       # needs .lake/packages/perennial (goose)
 bash gocheck/demo.sh                  # the checker on six examples, and Lean timings
 bash gocheck/observe.sh               # re-observe Median3's run
+bash gocheck/native.sh                # regenerate the Lean-native checker's inputs
+bash gocheck/native_bench.sh          # time it against the hand-written proofs
 bash gocheck/tcheck/observe.sh        # recheck and regenerate tcheck's observations
 ```
 

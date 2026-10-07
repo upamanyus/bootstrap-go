@@ -52,7 +52,8 @@ not a checker), the `reflect/` example proofs that use it, and
 - Never weaken a statement to make a proof go through. Never add an `axiom`
   that Rocq does not have. An unfinished proof is `sorry` with
   `-- TODO(port): <what is missing>`.
-- No `native_decide`/`bv_decide` (they trust native code). Use `decide`,
+- No `native_decide`/`bv_decide` (they trust native code); the one exception
+  is `Checkers/Native/Examples/` (decisions.md). Use `decide`,
   `rfl`, `simp`, `omega`, `bv_omega`, `word`.
 
 ## Building
