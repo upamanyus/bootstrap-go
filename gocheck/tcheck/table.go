@@ -11,14 +11,15 @@ import (
 // A table file:
 //
 //	(table NAME
-//	  (require "Rocq.Library")*            ; what the generated files Require Export
-//	  (code "path/to/code.v" MODULE)       ; the Goose output the functions come from
-//	  (assumptions `raft.Assumptions`)     ; the package assumptions the denotation needs
-//	  (sort NAME `Gallina type`)*          ; user sorts u0, u1, ...
-//	  (sym NAME (SORT*) SORT `Gallina function`)*
+//	  (import "Lean.Module")*              ; what the generated table file imports
+//	  (open "Ns1 Ns2 ..")                  ; the namespaces the denotations are written in
+//	  (code "path/to/code.lean" NAMESPACE) ; the Goose output the functions come from
+//	  (assumptions `pkg.Assumptions`)      ; the package assumptions the denotation needs
+//	  (sort NAME `Lean type`)*             ; user sorts u0, u1, ...
+//	  (sym NAME (SORT*) SORT `Lean function`)*
 //	  (const NAME `value`)*                ; a nullary symbol of sort val; also a code constant
 //	  (tconst NAME `go type`)*             ; a nullary symbol of sort type; also a code constant
-//	  (pred NAME [persistent] (SORT*) `Gallina function to iProp`)*
+//	  (pred NAME [persistent] (SORT*) `Lean function to IProp GF`)*
 //	  (rule NAME (vars (X SORT)*) (lhs PAT) (pre ATOM*) (ex (X SORT)*) (ret TERM) (post ATOM*))*
 //	  (fact NAME (vars (X SORT)*) (lhs TERM) (rhs TERM))*
 //	  (func NAME `impl` (vars ..) (head TERM) (args TERM*) (pre ..) (ex ..) (ret TERM) (post ..))*)
@@ -32,14 +33,14 @@ import (
 // (app PAT PAT) or a TERM. An ATOM is (PRED TERM*) or (= TERM TERM).
 
 type sortDecl struct {
-	name, rocq string
+	name, lean string
 }
 
 type symDecl struct {
-	name  string
-	args  []string
-	res   string
-	rocq  string
+	name   string
+	args   []string
+	res    string
+	lean   string
 	const_ bool // a code constant: matched against the leaves of the code
 }
 
@@ -47,7 +48,7 @@ type predDecl struct {
 	name string
 	pers bool
 	args []string
-	rocq string
+	lean string
 }
 
 type varDecl struct {
@@ -84,9 +85,10 @@ type funcDecl struct {
 
 type table struct {
 	name        string
-	requires    []string
+	imports     []string
+	opens       string
 	codeFile    string
-	module      string
+	namespace   string
 	assumptions string
 	sorts       []sortDecl
 	syms        []symDecl
@@ -121,9 +123,9 @@ func loadTable(path string) (*table, error) {
 	return t, nil
 }
 
-func rocqOf(n *node) (string, error) {
-	if n.kind != nRocq {
-		return "", errAt(n, "expected a Rocq term in backquotes, got %v", n)
+func leanOf(n *node) (string, error) {
+	if n.kind != nLean {
+		return "", errAt(n, "expected a Lean term in backquotes, got %v", n)
 	}
 	return strings.TrimSpace(n.text), nil
 }
@@ -210,21 +212,26 @@ func (t *table) decl(d *node) error {
 	h := d.head()
 	l := d.list
 	switch h {
-	case "require":
+	case "import":
 		if len(l) != 2 || l[1].kind != nString {
-			return errAt(d, "(require \"Library\")")
+			return errAt(d, "(import \"Module\")")
 		}
-		t.requires = append(t.requires, l[1].text)
+		t.imports = append(t.imports, l[1].text)
+	case "open":
+		if len(l) != 2 || l[1].kind != nString {
+			return errAt(d, "(open \"Ns1 Ns2 ..\")")
+		}
+		t.opens = l[1].text
 	case "code":
 		if len(l) != 3 || l[1].kind != nString || l[2].kind != nAtom {
-			return errAt(d, "(code \"file.v\" MODULE)")
+			return errAt(d, "(code \"file.lean\" NAMESPACE)")
 		}
-		t.codeFile, t.module = l[1].text, l[2].text
+		t.codeFile, t.namespace = l[1].text, l[2].text
 	case "assumptions":
 		if len(l) != 2 {
 			return errAt(d, "(assumptions `Class`)")
 		}
-		r, err := rocqOf(l[1])
+		r, err := leanOf(l[1])
 		if err != nil {
 			return err
 		}
@@ -233,7 +240,7 @@ func (t *table) decl(d *node) error {
 		if len(l) != 3 || l[1].kind != nAtom {
 			return errAt(d, "(sort NAME `type`)")
 		}
-		r, err := rocqOf(l[2])
+		r, err := leanOf(l[2])
 		if err != nil {
 			return err
 		}
@@ -246,16 +253,16 @@ func (t *table) decl(d *node) error {
 		if err != nil {
 			return err
 		}
-		r, err := rocqOf(l[4])
+		r, err := leanOf(l[4])
 		if err != nil {
 			return err
 		}
-		t.syms = append(t.syms, symDecl{name: l[1].text, args: args, res: l[3].text, rocq: r})
+		t.syms = append(t.syms, symDecl{name: l[1].text, args: args, res: l[3].text, lean: r})
 	case "const", "tconst":
 		if len(l) != 3 || l[1].kind != nAtom {
 			return errAt(d, "(%s NAME `term`)", h)
 		}
-		r, err := rocqOf(l[2])
+		r, err := leanOf(l[2])
 		if err != nil {
 			return err
 		}
@@ -263,7 +270,7 @@ func (t *table) decl(d *node) error {
 		if h == "tconst" {
 			res = "type"
 		}
-		t.syms = append(t.syms, symDecl{name: l[1].text, res: res, rocq: r, const_: true})
+		t.syms = append(t.syms, symDecl{name: l[1].text, res: res, lean: r, const_: true})
 	case "pred":
 		if len(l) < 4 || l[1].kind != nAtom {
 			return errAt(d, "(pred NAME [persistent] (SORT*) `function`)")
@@ -281,11 +288,11 @@ func (t *table) decl(d *node) error {
 		if err != nil {
 			return err
 		}
-		r, err := rocqOf(l[i+1])
+		r, err := leanOf(l[i+1])
 		if err != nil {
 			return err
 		}
-		p.args, p.rocq = args, r
+		p.args, p.lean = args, r
 		t.preds = append(t.preds, p)
 	case "rule":
 		if len(l) < 2 || l[1].kind != nAtom {
@@ -310,7 +317,7 @@ func (t *table) decl(d *node) error {
 		if len(l) < 3 || l[1].kind != nAtom {
 			return errAt(d, "(func NAME `impl` ...)")
 		}
-		impl, err := rocqOf(l[2])
+		impl, err := leanOf(l[2])
 		if err != nil {
 			return err
 		}
@@ -612,7 +619,7 @@ func (t *table) funcDecl(name string) (*funcDecl, error) {
 }
 
 // funcRule is the rule callers use for f: [spec_rule head spec]
-// (new/tcheck/syntax.v), built the same way.
+// (Checkers/TCheck/Syntax.lean), built the same way.
 func (t *table) funcRule(f funcDecl) (*tcheck.Rule, error) {
 	sp, err := t.spec(f)
 	if err != nil {

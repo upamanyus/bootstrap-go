@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -11,46 +12,135 @@ import (
 	"github.com/upamanyus/bootstrap-go/tcheck"
 )
 
-// Reading a function out of Goose's Rocq output (new/code/...), as the
-// checker's code. The parser knows the notations Goose prints (λ:, let:,
-// do:, return:, ;;;, ;;, <-[t], ![t], #) and treats everything else as
-// Rocq application; the leaves (values and Go types) are printed back as
-// Rocq text and looked up among the table's code constants. Nothing here is
-// trusted: the generated observation file checks by reflexivity that the
-// code's denotation is the Goose definition.
+// Reading a function out of Goose's Lean output (e.g.
+// .lake/packages/perennial/Perennial/Code/go_etcd_io/raft/v3.lean), as the
+// checker's code. Goose prints a function as a plain term of GooseLang's
+// constructors,
+//
+//	noncomputable def raft.becomeFollower.impl [FfiSyntax] [GoGlobalContext] : val :=
+//	  (LamV "r"
+//	  (Lam "term" ... (App (Val exceptionDo) (Let "r" (App (Val (GoInstruction ..)) (Var "r")) ..))))
+//
+// so the parser is one for Lean applications (identifiers, string and go!
+// literals, numbers, #, parentheses and lists); the reifier recognizes the
+// constructors and the exception monad's constants, and every leaf `Val v`
+// is printed back as Lean text and looked up among the table's code
+// constants. Nothing here is trusted: the generated observation file checks
+// by `rfl` that the code's denotation is the Goose definition.
 
 type gkind int
 
 const (
 	gIdent gkind = iota
-	gStr         // a string literal; goStr: with %go
+	gStr         // a Lean string literal (text: its contents, unescaped)
+	gGoStr       // go!"..." (text: its contents, unescaped)
 	gNum
-	gApp // kids[0] applied to kids[1:]
-	gList
+	gApp  // kids[0] applied to kids[1:]
+	gList // [kids, ..]
 	gHash // #kids[0]
-	gUnit // #()
-	gLam  // params, kids[0]
-	gLet  // text, kids[0], kids[1]
-	gDo
-	gRet
-	gXSeq
-	gSeq
-	gLoad  // kids[0] type, kids[1]
-	gStore // kids[0] type, kids[1], kids[2]
-	gPair
+	gUnit // ()
 )
 
 type gnode struct {
-	kind   gkind
-	text   string
-	goStr  bool
-	kids   []*gnode
-	params []string
+	kind gkind
+	text string
+	kids []*gnode
 }
 
 type gtok struct {
-	kind string // "(", ")", "[", "]", ",", ";", ";;", ";;;", ":=", "λ:", "let:", "do:", "return:", "<-[", "![", "#", "<>", "str", "gostr", "id", "num"
+	kind string // "(", ")", "[", "]", ",", "#", "str", "gostr", "id", "num"
 	text string
+}
+
+// leanString reads a Lean string literal starting at src[i] == '"'; it
+// returns the unescaped contents and the index after the closing quote.
+func leanString(src string, i int) (string, int, error) {
+	var b strings.Builder
+	j := i + 1
+	for j < len(src) {
+		c := src[j]
+		switch c {
+		case '"':
+			return b.String(), j + 1, nil
+		case '\\':
+			if j+1 >= len(src) {
+				return "", 0, fmt.Errorf("unterminated escape")
+			}
+			e := src[j+1]
+			switch e {
+			case '\\', '"', '\'':
+				b.WriteByte(e)
+				j += 2
+			case 'n':
+				b.WriteByte('\n')
+				j += 2
+			case 't':
+				b.WriteByte('\t')
+				j += 2
+			case 'r':
+				b.WriteByte('\r')
+				j += 2
+			case 'x':
+				if j+4 > len(src) {
+					return "", 0, fmt.Errorf("bad \\x escape")
+				}
+				n, err := strconv.ParseUint(src[j+2:j+4], 16, 8)
+				if err != nil {
+					return "", 0, fmt.Errorf("bad \\x escape")
+				}
+				b.WriteRune(rune(n))
+				j += 4
+			case 'u':
+				k := strings.IndexByte(src[j:], '}')
+				if j+2 >= len(src) || src[j+2] != '{' || k < 0 {
+					return "", 0, fmt.Errorf("bad \\u escape")
+				}
+				n, err := strconv.ParseUint(src[j+3:j+k], 16, 32)
+				if err != nil {
+					return "", 0, fmt.Errorf("bad \\u escape")
+				}
+				b.WriteRune(rune(n))
+				j += k + 1
+			default:
+				return "", 0, fmt.Errorf("unsupported escape \\%c", e)
+			}
+		default:
+			b.WriteByte(c)
+			j++
+		}
+	}
+	return "", 0, fmt.Errorf("unterminated string")
+}
+
+// leanQuote writes s as a Lean string literal.
+func leanQuote(s string) string {
+	var b strings.Builder
+	b.WriteByte('"')
+	for _, r := range s {
+		switch r {
+		case '"':
+			b.WriteString("\\\"")
+		case '\\':
+			b.WriteString("\\\\")
+		case '\n':
+			b.WriteString("\\n")
+		case '\t':
+			b.WriteString("\\t")
+		case '\r':
+			b.WriteString("\\r")
+		default:
+			b.WriteRune(r)
+		}
+	}
+	b.WriteByte('"')
+	return b.String()
+}
+
+func isIdentStart(r rune) bool { return unicode.IsLetter(r) || r == '_' || r == '«' }
+
+func isIdentRest(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '.' || r == '\'' || r == '!' ||
+		r == '?' || r == '«' || r == '»' || unicode.Is(unicode.Lm, r) || (r >= '₀' && r <= '₉')
 }
 
 func gooseTokens(src string) ([]gtok, error) {
@@ -61,46 +151,22 @@ func gooseTokens(src string) ([]gtok, error) {
 		switch {
 		case unicode.IsSpace(r):
 			i += w
-		case strings.HasPrefix(src[i:], ";;;"):
-			ts = append(ts, gtok{kind: ";;;"})
-			i += 3
-		case strings.HasPrefix(src[i:], ";;"):
-			ts = append(ts, gtok{kind: ";;"})
-			i += 2
-		case strings.HasPrefix(src[i:], ":="):
-			ts = append(ts, gtok{kind: ":="})
-			i += 2
-		case strings.HasPrefix(src[i:], "λ:"):
-			ts = append(ts, gtok{kind: "λ:"})
-			i += len("λ:")
-		case strings.HasPrefix(src[i:], "<-["):
-			ts = append(ts, gtok{kind: "<-["})
-			i += 3
-		case strings.HasPrefix(src[i:], "!["):
-			ts = append(ts, gtok{kind: "!["})
-			i += 2
-		case strings.HasPrefix(src[i:], "<>"):
-			ts = append(ts, gtok{kind: "<>"})
-			i += 2
-		case strings.ContainsRune("()[],;#", r):
+		case strings.ContainsRune("()[],#", r):
 			ts = append(ts, gtok{kind: string(r)})
 			i += w
+		case strings.HasPrefix(src[i:], "go!\""):
+			s, j, err := leanString(src, i+3)
+			if err != nil {
+				return nil, err
+			}
+			ts = append(ts, gtok{kind: "gostr", text: s})
+			i = j
 		case r == '"':
-			j := i + 1
-			for j < len(src) && src[j] != '"' {
-				j++
+			s, j, err := leanString(src, i)
+			if err != nil {
+				return nil, err
 			}
-			if j >= len(src) {
-				return nil, fmt.Errorf("unterminated string")
-			}
-			s := src[i+1 : j]
-			j++
-			k := "str"
-			if strings.HasPrefix(src[j:], "%go") {
-				k = "gostr"
-				j += 3
-			}
-			ts = append(ts, gtok{kind: k, text: s})
+			ts = append(ts, gtok{kind: "str", text: s})
 			i = j
 		case unicode.IsDigit(r):
 			j := i
@@ -109,27 +175,16 @@ func gooseTokens(src string) ([]gtok, error) {
 			}
 			ts = append(ts, gtok{kind: "num", text: src[i:j]})
 			i = j
-		case unicode.IsLetter(r) || r == '_' || r == '@':
-			j := i
+		case isIdentStart(r):
+			j := i + w
 			for j < len(src) {
 				r2, w2 := utf8.DecodeRuneInString(src[j:])
-				if unicode.IsLetter(r2) || unicode.IsDigit(r2) || r2 == '_' || r2 == '.' || r2 == '\'' ||
-					unicode.Is(unicode.Lm, r2) || (r2 == '@' && j == i) {
-					j += w2
-				} else {
+				if !isIdentRest(r2) || (r2 == '!' && strings.HasPrefix(src[j:], "!\"")) {
 					break
 				}
+				j += w2
 			}
-			id := src[i:j]
-			switch id {
-			case "let", "do", "return", "if":
-				if j < len(src) && src[j] == ':' {
-					ts = append(ts, gtok{kind: id + ":"})
-					i = j + 1
-					continue
-				}
-			}
-			ts = append(ts, gtok{kind: "id", text: id})
+			ts = append(ts, gtok{kind: "id", text: src[i:j]})
 			i = j
 		default:
 			return nil, fmt.Errorf("unexpected character %q in %q", r, excerpt(src, i))
@@ -173,127 +228,15 @@ func (p *gparser) expect(k string) error {
 }
 
 func (p *gparser) startsAtom() bool {
-	t := p.peek()
-	switch t.kind {
-	case "(", "[", "str", "gostr", "num", "#", "![":
+	switch p.peek().kind {
+	case "(", "[", "str", "gostr", "num", "#", "id":
 		return true
-	case "id":
-		return t.text != "in" && t.text != "then" && t.text != "else"
 	}
 	return false
 }
 
-// expr parses at the given Rocq level: 200 takes everything, 85 stops
-// before ;;;, 79 before <-[ .. ].
-func (p *gparser) expr(lvl int) (*gnode, error) {
-	var left *gnode
-	switch p.peek().kind {
-	case "λ:":
-		p.next()
-		n := &gnode{kind: gLam}
-		for p.peek().kind != "," {
-			t := p.next()
-			if t.kind == "str" {
-				n.params = append(n.params, t.text)
-			} else if t.kind == "<>" {
-				n.params = append(n.params, "")
-			} else {
-				return nil, fmt.Errorf("λ: expects parameter names, got %q", t.text)
-			}
-		}
-		p.next()
-		body, err := p.expr(200)
-		if err != nil {
-			return nil, err
-		}
-		n.kids = []*gnode{body}
-		return n, nil
-	case "let:":
-		p.next()
-		x := p.next()
-		if x.kind != "str" {
-			return nil, fmt.Errorf("let: expects a name")
-		}
-		if err := p.expect(":="); err != nil {
-			return nil, err
-		}
-		a, err := p.expr(200)
-		if err != nil {
-			return nil, err
-		}
-		if t := p.next(); t.kind != "id" || t.text != "in" {
-			return nil, fmt.Errorf("let: expects in")
-		}
-		b, err := p.expr(200)
-		if err != nil {
-			return nil, err
-		}
-		return &gnode{kind: gLet, text: x.text, kids: []*gnode{a, b}}, nil
-	case "do:", "return:":
-		k := gDo
-		if p.next().kind == "return:" {
-			k = gRet
-		}
-		a, err := p.expr(85)
-		if err != nil {
-			return nil, err
-		}
-		left = &gnode{kind: k, kids: []*gnode{a}}
-	case "if:":
-		return nil, fmt.Errorf("if: is not supported yet")
-	default:
-		var err error
-		left, err = p.app()
-		if err != nil {
-			return nil, err
-		}
-	}
-	for {
-		switch p.peek().kind {
-		case "<-[":
-			if lvl < 80 {
-				return left, nil
-			}
-			p.next()
-			ty, err := p.expr(200)
-			if err != nil {
-				return nil, err
-			}
-			if err := p.expect("]"); err != nil {
-				return nil, err
-			}
-			rhs, err := p.expr(79)
-			if err != nil {
-				return nil, err
-			}
-			left = &gnode{kind: gStore, kids: []*gnode{ty, left, rhs}}
-		case ";;;":
-			if lvl < 90 {
-				return left, nil
-			}
-			p.next()
-			rhs, err := p.expr(200)
-			if err != nil {
-				return nil, err
-			}
-			left = &gnode{kind: gXSeq, kids: []*gnode{left, rhs}}
-		case ";;":
-			if lvl < 100 {
-				return left, nil
-			}
-			p.next()
-			rhs, err := p.expr(200)
-			if err != nil {
-				return nil, err
-			}
-			left = &gnode{kind: gSeq, kids: []*gnode{left, rhs}}
-		default:
-			return left, nil
-		}
-	}
-}
-
-func (p *gparser) app() (*gnode, error) {
+// expr: an application of atoms.
+func (p *gparser) expr() (*gnode, error) {
 	h, err := p.atom()
 	if err != nil {
 		return nil, err
@@ -316,17 +259,13 @@ func (p *gparser) atom() (*gnode, error) {
 	t := p.next()
 	switch t.kind {
 	case "(":
-		e, err := p.expr(200)
+		if p.peek().kind == ")" {
+			p.next()
+			return &gnode{kind: gUnit}, nil
+		}
+		e, err := p.expr()
 		if err != nil {
 			return nil, err
-		}
-		if p.peek().kind == "," {
-			p.next()
-			e2, err := p.expr(200)
-			if err != nil {
-				return nil, err
-			}
-			e = &gnode{kind: gPair, kids: []*gnode{e, e2}}
 		}
 		return e, p.expect(")")
 	case "[":
@@ -336,12 +275,12 @@ func (p *gparser) atom() (*gnode, error) {
 			return n, nil
 		}
 		for {
-			e, err := p.expr(200)
+			e, err := p.expr()
 			if err != nil {
 				return nil, err
 			}
 			n.kids = append(n.kids, e)
-			if p.peek().kind == ";" {
+			if p.peek().kind == "," {
 				p.next()
 				continue
 			}
@@ -350,171 +289,124 @@ func (p *gparser) atom() (*gnode, error) {
 	case "str":
 		return &gnode{kind: gStr, text: t.text}, nil
 	case "gostr":
-		return &gnode{kind: gStr, text: t.text, goStr: true}, nil
+		return &gnode{kind: gGoStr, text: t.text}, nil
 	case "num":
 		return &gnode{kind: gNum, text: t.text}, nil
 	case "id":
 		return &gnode{kind: gIdent, text: t.text}, nil
 	case "#":
-		if p.peek().kind == "(" && p.i+1 < len(p.ts) && p.ts[p.i+1].kind == ")" {
-			p.i += 2
-			return &gnode{kind: gUnit}, nil
-		}
 		a, err := p.atom()
 		if err != nil {
 			return nil, err
 		}
 		return &gnode{kind: gHash, kids: []*gnode{a}}, nil
-	case "![":
-		ty, err := p.expr(200)
-		if err != nil {
-			return nil, err
-		}
-		if err := p.expect("]"); err != nil {
-			return nil, err
-		}
-		a, err := p.atom()
-		if err != nil {
-			return nil, err
-		}
-		return &gnode{kind: gLoad, kids: []*gnode{ty, a}}, nil
 	}
 	return nil, fmt.Errorf("unexpected token %s %q", t.kind, t.text)
 }
 
-// The code file: the definition of a function, and the names its module
-// defines (which the leaves print qualified).
+// The code file: the body of a definition in a namespace.
 
 type codeFile struct {
-	module string
-	defs   map[string]bool
-	src    string
+	namespace string
+	src       string
 }
 
-var defRe = regexp.MustCompile(`(?m)^Definition (\S+)`)
-
-func loadCode(path, module string) (*codeFile, error) {
+func loadCode(path, namespace string) (*codeFile, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	src := string(b)
-	start := strings.Index(src, "\nModule "+module+".\n")
+	start := strings.Index(src, "\nnamespace "+namespace+"\n")
 	if start < 0 {
-		return nil, fmt.Errorf("%s: no Module %s", path, module)
+		return nil, fmt.Errorf("%s: no namespace %s", path, namespace)
 	}
-	end := strings.LastIndex(src, "\nEnd "+module+".")
+	end := strings.Index(src[start:], "\nend "+namespace+"\n")
 	if end < 0 {
 		end = len(src)
+	} else {
+		end += start
 	}
-	cf := &codeFile{module: module, defs: map[string]bool{}, src: src}
-	for _, m := range defRe.FindAllStringSubmatch(src[start:end], -1) {
-		cf.defs[m[1]] = true
-	}
-	return cf, nil
+	return &codeFile{namespace: namespace, src: src[start:end]}, nil
 }
 
-// definition returns the body of [Definition name ... : val := BODY.].
+// definition returns the body of `def name … : val :=`, the indented
+// lines that follow it.
 func (cf *codeFile) definition(name string) (string, error) {
-	hdr := "\nDefinition " + name + " "
-	i := strings.Index(cf.src, hdr)
-	if i < 0 {
-		return "", fmt.Errorf("no Definition %s in the code file", name)
+	re := regexp.MustCompile(`(?m)^(?:noncomputable )?def ` + regexp.QuoteMeta(name) + ` [^\n]*:=\n`)
+	loc := re.FindStringIndex(cf.src)
+	if loc == nil {
+		return "", fmt.Errorf("no def %s in namespace %s of the code file", name, cf.namespace)
 	}
-	j := strings.Index(cf.src[i:], ":=")
-	if j < 0 {
-		return "", fmt.Errorf("Definition %s has no body", name)
-	}
-	body := cf.src[i+j+2:]
-	// The body ends at the first "." that ends a line outside a string.
-	inStr := false
-	for k := 0; k < len(body); k++ {
-		c := body[k]
-		if c == '"' {
-			inStr = !inStr
+	var body []string
+	for _, l := range strings.Split(cf.src[loc[1]:], "\n") {
+		if !strings.HasPrefix(l, "  ") {
+			break
 		}
-		if c == '.' && !inStr && (k+1 == len(body) || body[k+1] == '\n') {
-			return body[:k], nil
-		}
+		body = append(body, l)
 	}
-	return "", fmt.Errorf("Definition %s does not end", name)
+	if len(body) == 0 {
+		return "", fmt.Errorf("def %s has no body", name)
+	}
+	return strings.Join(body, "\n"), nil
 }
 
-// Printing leaves back as Rocq.
+// qualify names a definition of the code file's namespace.
+func (cf *codeFile) qualify(id string) string { return cf.namespace + "." + id }
 
-func (cf *codeFile) qualify(id string) string {
-	if cf.defs[id] {
-		return cf.module + "." + id
-	}
-	return id
-}
+// Printing leaves back as Lean.
 
-func (cf *codeFile) print(g *gnode) string {
+func printLean(g *gnode) string {
 	switch g.kind {
-	case gIdent:
-		return cf.qualify(g.text)
-	case gNum:
+	case gIdent, gNum:
 		return g.text
 	case gStr:
-		if g.goStr {
-			return "\"" + g.text + "\"%go"
-		}
-		return "\"" + g.text + "\""
+		return leanQuote(g.text)
+	case gGoStr:
+		return "go!" + leanQuote(g.text)
 	case gUnit:
-		return "#()"
+		return "()"
 	case gHash:
 		a := g.kids[0]
-		if a.kind == gIdent || a.kind == gStr || a.kind == gNum {
-			return "#" + cf.print(a)
+		if a.kind == gIdent || a.kind == gNum || a.kind == gUnit {
+			return "#" + printLean(a)
 		}
-		return "#(" + cf.print(a) + ")"
+		return "#(" + printLean(a) + ")"
 	case gList:
 		var parts []string
 		for _, k := range g.kids {
-			parts = append(parts, cf.print(k))
+			parts = append(parts, printLean(k))
 		}
-		return "[" + strings.Join(parts, "; ") + "]"
+		return "[" + strings.Join(parts, ", ") + "]"
 	case gApp:
-		parts := []string{cf.printArg(g.kids[0])}
-		for _, k := range g.kids[1:] {
-			parts = append(parts, cf.printArg(k))
+		var parts []string
+		for _, k := range g.kids {
+			parts = append(parts, printArg(k))
 		}
 		return strings.Join(parts, " ")
-	case gPair:
-		return "(" + cf.print(g.kids[0]) + ", " + cf.print(g.kids[1]) + ")"
 	}
 	return fmt.Sprintf("<unprintable %d>", g.kind)
 }
 
-func (cf *codeFile) printArg(g *gnode) string {
+func printArg(g *gnode) string {
 	if g.kind == gApp {
-		return "(" + cf.print(g) + ")"
+		return "(" + printLean(g) + ")"
 	}
-	return cf.print(g)
+	return printLean(g)
 }
 
-// normRocq canonicalizes Rocq text for comparison: whitespace runs become
-// one space, and there is none just inside brackets.
-func normRocq(s string) string {
+// normLean canonicalizes Lean text for comparison: whitespace runs become
+// one space, and there is none just inside brackets or before a comma.
+func normLean(s string) string {
 	s = strings.Join(strings.Fields(s), " ")
-	for _, r := range []struct{ a, b string }{{"( ", "("}, {" )", ")"}, {"[ ", "["}, {" ]", "]"}} {
+	for _, r := range []struct{ a, b string }{{"( ", "("}, {" )", ")"}, {"[ ", "["}, {" ]", "]"}, {" ,", ","}} {
 		s = strings.ReplaceAll(s, r.a, r.b)
 	}
 	return s
 }
 
-// instruction heads: the number of static arguments of each GoInstruction
-// constructor Goose applies directly.
-var instrArity = map[string]int{
-	"GoAlloc": 1, "GoLoad": 1, "GoStore": 1, "GoZeroVal": 1, "Convert": 2,
-	"FuncResolve": 2, "MethodResolve": 2, "StructFieldRef": 2, "StructFieldGet": 2,
-	"StructFieldSet": 2, "CompositeLiteral": 1, "IndexRef": 1, "Index": 1,
-	"TypeAssert": 1, "TypeAssert2": 1, "GlobalVarAddr": 1,
-}
-
 type reifier struct {
 	t       *table
-	cf      *codeFile
 	missing map[string]bool
 }
 
@@ -522,13 +414,13 @@ func (r *reifier) leaf(text string, sort tcheck.SortKind) *tcheck.Term {
 	if text == "#()" {
 		return &tcheck.Term{Kind: tcheck.TUnit}
 	}
-	want := normRocq(text)
+	want := normLean(text)
 	for i, s := range r.t.syms {
 		res := tcheck.SortVal
 		if s.res == "type" {
 			res = tcheck.SortType
 		}
-		if s.const_ && res == sort && normRocq(s.rocq) == want {
+		if s.const_ && res == sort && normLean(s.lean) == want {
 			return &tcheck.Term{Kind: tcheck.TSym, Num: uint64(i)}
 		}
 	}
@@ -536,113 +428,67 @@ func (r *reifier) leaf(text string, sort tcheck.SortKind) *tcheck.Term {
 	return &tcheck.Term{Kind: tcheck.TUnit}
 }
 
-func (r *reifier) val(text string) *tcheck.Expr {
-	return &tcheck.Expr{Kind: tcheck.EVal, T: r.leaf(text, tcheck.SortVal)}
+func isIdent(g *gnode, s string) bool { return g.kind == gIdent && g.text == s }
+
+// isCon: g is the constructor c applied to n arguments.
+func isCon(g *gnode, c string, n int) bool {
+	return g.kind == gApp && len(g.kids) == n+1 && isIdent(g.kids[0], c)
 }
 
-func app(f *tcheck.Expr, a *tcheck.Expr) *tcheck.Expr {
-	return &tcheck.Expr{Kind: tcheck.EApp, A: f, B: a}
-}
+// valOf: g is `Val c` for the constant c.
+func valOf(g *gnode, c string) bool { return isCon(g, "Val", 1) && isIdent(g.kids[1], c) }
 
 func (r *reifier) expr(g *gnode) (*tcheck.Expr, error) {
-	switch g.kind {
-	case gStr:
-		if !g.goStr {
-			return &tcheck.Expr{Kind: tcheck.EVar, Name: g.text}, nil
-		}
-	case gHash, gUnit, gIdent, gNum:
-		return r.val(r.cf.print(g)), nil
-	case gLet, gXSeq, gSeq:
-		a, err := r.expr(g.kids[0])
+	two := func(k tcheck.ExprKind, name string, a, b *gnode) (*tcheck.Expr, error) {
+		ea, err := r.expr(a)
 		if err != nil {
 			return nil, err
 		}
-		b, err := r.expr(g.kids[1])
+		eb, err := r.expr(b)
 		if err != nil {
 			return nil, err
 		}
-		k := map[gkind]tcheck.ExprKind{gLet: tcheck.ELet, gXSeq: tcheck.EXSeq, gSeq: tcheck.ESeq}[g.kind]
-		return &tcheck.Expr{Kind: k, Name: g.text, A: a, B: b}, nil
-	case gDo, gRet:
-		a, err := r.expr(g.kids[0])
-		if err != nil {
-			return nil, err
-		}
-		k := tcheck.EDo
-		if g.kind == gRet {
-			k = tcheck.ERet
-		}
-		return &tcheck.Expr{Kind: k, A: a}, nil
-	case gLoad:
-		a, err := r.expr(g.kids[1])
-		if err != nil {
-			return nil, err
-		}
-		return app(r.val("GoInstruction (GoLoad "+r.cf.printArg(g.kids[0])+")"), a), nil
-	case gStore:
-		a, err := r.expr(g.kids[1])
-		if err != nil {
-			return nil, err
-		}
-		b, err := r.expr(g.kids[2])
-		if err != nil {
-			return nil, err
-		}
-		return app(r.val("GoInstruction (GoStore "+r.cf.printArg(g.kids[0])+")"),
-			&tcheck.Expr{Kind: tcheck.EPair, A: a, B: b}), nil
-	case gPair:
-		a, err := r.expr(g.kids[0])
-		if err != nil {
-			return nil, err
-		}
-		b, err := r.expr(g.kids[1])
-		if err != nil {
-			return nil, err
-		}
-		return &tcheck.Expr{Kind: tcheck.EPair, A: a, B: b}, nil
-	case gApp:
-		h := g.kids[0]
-		args := g.kids[1:]
-		var f *tcheck.Expr
-		if h.kind == gIdent && h.text == "exception_do" && len(args) == 1 {
-			a, err := r.expr(args[0])
-			if err != nil {
-				return nil, err
-			}
-			return &tcheck.Expr{Kind: tcheck.EXDo, A: a}, nil
-		}
-		if h.kind == gIdent && h.text == "LiteralValue" && len(args) == 1 {
-			return r.literal(args[0])
-		}
-		if h.kind == gIdent {
-			if k, ok := instrArity[h.text]; ok {
-				if len(args) < k {
-					return nil, fmt.Errorf("%s needs %d static arguments", h.text, k)
-				}
-				st := &gnode{kind: gApp, kids: append([]*gnode{h}, args[:k]...)}
-				f = r.val("GoInstruction (" + r.cf.print(st) + ")")
-				args = args[k:]
-			}
-		}
-		if f == nil {
-			var err error
-			if f, err = r.expr(h); err != nil {
-				return nil, err
-			}
-		}
-		for _, a := range args {
-			ea, err := r.expr(a)
-			if err != nil {
-				return nil, err
-			}
-			f = app(f, ea)
-		}
-		return f, nil
+		return &tcheck.Expr{Kind: k, Name: name, A: ea, B: eb}, nil
 	}
-	return nil, fmt.Errorf("unsupported code: %s", r.cf.print(g))
+	switch {
+	case isCon(g, "Val", 1):
+		return &tcheck.Expr{Kind: tcheck.EVal, T: r.leaf(printLean(g.kids[1]), tcheck.SortVal)}, nil
+	case isCon(g, "Var", 1) && g.kids[1].kind == gStr:
+		return &tcheck.Expr{Kind: tcheck.EVar, Name: g.kids[1].text}, nil
+	case isCon(g, "App", 2):
+		f, a := g.kids[1], g.kids[2]
+		for _, m := range []struct {
+			c string
+			k tcheck.ExprKind
+		}{{"exceptionDo", tcheck.EXDo}, {"doExecute", tcheck.EDo}, {"doReturn", tcheck.ERet}} {
+			if valOf(f, m.c) {
+				ea, err := r.expr(a)
+				if err != nil {
+					return nil, err
+				}
+				return &tcheck.Expr{Kind: m.k, A: ea}, nil
+			}
+		}
+		// a ;;; b is exceptionSeq (λ: <>, b) a.
+		if isCon(f, "App", 2) && valOf(f.kids[1], "exceptionSeq") && isCon(f.kids[2], "Lam", 2) &&
+			isIdent(f.kids[2].kids[1], "BAnon") {
+			return two(tcheck.EXSeq, "", a, f.kids[2].kids[2])
+		}
+		return two(tcheck.EApp, "", f, a)
+	case isCon(g, "Pair", 2):
+		return two(tcheck.EPair, "", g.kids[1], g.kids[2])
+	case isCon(g, "Let", 3) && g.kids[1].kind == gStr:
+		return two(tcheck.ELet, g.kids[1].text, g.kids[2], g.kids[3])
+	case isCon(g, "Let", 3) && isIdent(g.kids[1], "BAnon"), isCon(g, "Seq", 2):
+		n := len(g.kids)
+		return two(tcheck.ESeq, "", g.kids[n-2], g.kids[n-1])
+	case isCon(g, "LiteralValue", 1):
+		return r.literal(g.kids[1])
+	}
+	return nil, fmt.Errorf("unsupported code: %s", excerpt(printLean(g), 0))
 }
 
-// literal: LiteralValue [KeyedElement None (ElementExpression T e); ..].
+// literal: LiteralValue [(KeyedElement none (ElementExpression T e)), ..].
 func (r *reifier) literal(l *gnode) (*tcheck.Expr, error) {
 	if l.kind != gList {
 		return nil, fmt.Errorf("LiteralValue of a non-list")
@@ -650,15 +496,12 @@ func (r *reifier) literal(l *gnode) (*tcheck.Expr, error) {
 	out := &tcheck.Expr{Kind: tcheck.ELit}
 	var ty string
 	for _, k := range l.kids {
-		if k.kind != gApp || len(k.kids) != 3 || !isIdent(k.kids[0], "KeyedElement") ||
-			!isIdent(k.kids[1], "None") {
-			return nil, fmt.Errorf("unsupported literal element %s", r.cf.print(k))
+		if !isCon(k, "KeyedElement", 2) || !isIdent(k.kids[1], "none") ||
+			!isCon(k.kids[2], "ElementExpression", 2) {
+			return nil, fmt.Errorf("unsupported literal element %s", printLean(k))
 		}
 		ee := k.kids[2]
-		if ee.kind != gApp || len(ee.kids) != 3 || !isIdent(ee.kids[0], "ElementExpression") {
-			return nil, fmt.Errorf("unsupported literal element %s", r.cf.print(k))
-		}
-		t := r.cf.print(ee.kids[1])
+		t := printLean(ee.kids[1])
 		if ty != "" && t != ty {
 			return nil, fmt.Errorf("literal elements of different types")
 		}
@@ -676,11 +519,9 @@ func (r *reifier) literal(l *gnode) (*tcheck.Expr, error) {
 	return out, nil
 }
 
-func isIdent(g *gnode, s string) bool { return g.kind == gIdent && g.text == s }
-
-// reifyFunc reads [Definition impl ... := λ: x1 .. xn, body.].
+// reifyFunc reads `def impl … : val := (LamV x1 (Lam x2 .. body))`.
 func reifyFunc(t *table, impl string) (*tcheck.Func, error) {
-	cf, err := loadCode(t.codeFile, t.module)
+	cf, err := loadCode(t.codeFile, t.namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -693,23 +534,27 @@ func reifyFunc(t *table, impl string) (*tcheck.Func, error) {
 		return nil, fmt.Errorf("%s: %v", impl, err)
 	}
 	p := &gparser{ts: ts}
-	g, err := p.expr(200)
+	g, err := p.expr()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", impl, err)
 	}
 	if p.peek().kind != "eof" {
 		return nil, fmt.Errorf("%s: trailing tokens at %d", impl, p.i)
 	}
-	if g.kind != gLam {
-		return nil, fmt.Errorf("%s is not λ: ..", impl)
+	if !isCon(g, "LamV", 2) {
+		return nil, fmt.Errorf("%s is not LamV ..", impl)
 	}
-	for _, x := range g.params {
-		if x == "" {
+	var params []string
+	for first := true; first || isCon(g, "Lam", 2); first = false {
+		x := g.kids[1]
+		if x.kind != gStr {
 			return nil, fmt.Errorf("%s: anonymous parameters are not supported yet", impl)
 		}
+		params = append(params, x.text)
+		g = g.kids[2]
 	}
-	r := &reifier{t: t, cf: cf, missing: map[string]bool{}}
-	e, err := r.expr(g.kids[0])
+	r := &reifier{t: t, missing: map[string]bool{}}
+	e, err := r.expr(g)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", impl, err)
 	}
@@ -721,5 +566,5 @@ func reifyFunc(t *table, impl string) (*tcheck.Func, error) {
 		return nil, fmt.Errorf("%s: the code uses constants the table does not declare; add:\n%s",
 			impl, strings.Join(ms, "\n"))
 	}
-	return &tcheck.Func{Params: g.params, Body: e}, nil
+	return &tcheck.Func{Params: params, Body: e}, nil
 }

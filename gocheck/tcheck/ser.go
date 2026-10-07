@@ -8,7 +8,7 @@ import (
 )
 
 // ser writes an input in the format tcheck.Parse reads; it must agree with
-// [ser_input] (new/tcheck/syntax.v) byte for byte, which every generated
+// `ser_input` (Checkers/TCheck/Syntax.lean) byte for byte, which every generated
 // observation file checks by computation.
 
 func serSort(s tcheck.Sort) string {

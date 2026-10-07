@@ -1,14 +1,14 @@
 // Command tcheck runs the table-driven checker (tcheck/) on a function and
-// writes the Rocq files that turn the run into a proof.
+// writes the Lean files that turn the run into a proof.
 //
-//	tcheck -table T.tbl -gen-table OUT.v
+//	tcheck -table T.tbl -gen-table OUT.lean
 //	    write the table's syntax and denotation (the link proving its rules
 //	    is written by hand, next to it)
-//	tcheck -table T.tbl -table-file OUT.v -func NAME [-observe OBS.v]
+//	tcheck -table T.tbl -table-file OUT.lean -func NAME [-observe OBS.lean]
 //	    run the checker on function NAME of the table; with -observe, write
 //	    the observation file of the run (the input restricted to the rules
 //	    and facts it used, and the axiom that Check returned true on it)
-//	tcheck -verify OBS.v
+//	tcheck -verify OBS.lean
 //	    rerun tcheck.Check on the bytes recorded in an observation file
 //
 // Exit codes: 0 established (or verified), 1 the checker answered false,
@@ -30,7 +30,7 @@ func die(code int, format string, args ...any) {
 	os.Exit(code)
 }
 
-var axiomRe = regexp.MustCompile(`(?s)Axiom (\S+) : observed_run\s+"((?:[^"]|"")*)"%go\.`)
+var axiomRe = regexp.MustCompile(`(?m)^axiom (\S+) : observed_run\s+go!("(?:[^"\\]|\\.)*")`)
 
 func verify(path string) {
 	b, err := os.ReadFile(path)
@@ -41,7 +41,10 @@ func verify(path string) {
 	if len(ms) != 1 {
 		die(2, "%s: expected exactly one observation axiom, found %d", path, len(ms))
 	}
-	bytes := strings.ReplaceAll(ms[0][2], "\"\"", "\"")
+	bytes, _, err := leanString(ms[0][2], 0)
+	if err != nil {
+		die(2, "%s: %s: %v", path, ms[0][1], err)
+	}
 	if !tcheck.Check([]byte(bytes)) {
 		inp := tcheck.Parse([]byte(bytes))
 		if inp == nil {
@@ -55,8 +58,8 @@ func verify(path string) {
 
 func main() {
 	tablePath := flag.String("table", "", "table file")
-	genTable := flag.String("gen-table", "", "write the table's Rocq file here")
-	tableFile := flag.String("table-file", "", "the table's Rocq file (for the observation file's Require)")
+	genTable := flag.String("gen-table", "", "write the table's Lean file here")
+	tableFile := flag.String("table-file", "", "the table's Lean file (for the observation file's import)")
 	fn := flag.String("func", "", "function to check")
 	observe := flag.String("observe", "", "write the observation file here")
 	verifyPath := flag.String("verify", "", "rerun the checker on an observation file's bytes")
@@ -152,7 +155,7 @@ func main() {
 		if err != nil {
 			die(2, "%v", err)
 		}
-		cf, err := loadCode(t.codeFile, t.module)
+		cf, err := loadCode(t.codeFile, t.namespace)
 		if err != nil {
 			die(2, "%v", err)
 		}

@@ -6,7 +6,7 @@ import (
 )
 
 // The table file is a sequence of S-expressions. Atoms are runs of
-// characters other than whitespace and parentheses; a Rocq term is written
+// characters other than whitespace and parentheses; a Lean term is written
 // between backquotes (and may contain anything but a backquote); a string
 // is written between double quotes. A semicolon starts a comment that runs
 // to the end of the line.
@@ -16,13 +16,13 @@ type nodeKind int
 const (
 	nAtom nodeKind = iota
 	nList
-	nRocq
+	nLean
 	nString
 )
 
 type node struct {
 	kind nodeKind
-	text string // atom, Rocq text, or string contents
+	text string // atom, Lean text, or string contents
 	list []*node
 	line int
 }
@@ -31,7 +31,7 @@ func (n *node) String() string {
 	switch n.kind {
 	case nAtom:
 		return n.text
-	case nRocq:
+	case nLean:
 		return "`" + n.text + "`"
 	case nString:
 		return fmt.Sprintf("%q", n.text)
@@ -88,10 +88,10 @@ func parseSexps(src string) ([]*node, error) {
 		case c == '`':
 			j := strings.IndexByte(src[i+1:], '`')
 			if j < 0 {
-				return nil, fmt.Errorf("line %d: unterminated Rocq term", line)
+				return nil, fmt.Errorf("line %d: unterminated Lean term", line)
 			}
 			text := src[i+1 : i+1+j]
-			top = append(top, &node{kind: nRocq, text: text, line: line})
+			top = append(top, &node{kind: nLean, text: text, line: line})
 			line += strings.Count(text, "\n")
 			i += j + 2
 		case c == '"':

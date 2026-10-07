@@ -1,0 +1,190 @@
+; The rule table for the raft code: what the table-driven checker (tcheck/)
+; may assume about it.  Every rule and fact here is proved, by linking to an
+; existing lemma, in LinkTableRaft.lean (rules for callees are linked to the
+; callee specs the proof that uses them takes as hypotheses).  gocheck/tcheck
+; turns this file into TableRaft.lean; see gocheck/tcheck/README.md.
+;
+; Port of new/proof/go_etcd_io/raft/tcheck/raft.tbl, rewritten against the
+; Lean port of the raft proof (etcdGrove: EtcdGrove/Raft/ElectionProof/
+; InvRaftPhys.lean, InvLogger.lean, Spec/*.lean) and Perennial's Lean Goose
+; output.  Differences from the Rocq table: [role] is [PRole], [pvs] is
+; [GMap w64 Progress], and the rule for [reset] has the second conjunct of
+; etcdGrove's [raft.reset.spec] (predicate [reset_matched]).
+(table raft
+  (import "EtcdGrove.Raft.ElectionProof.InvRaftPhys")
+  (import "EtcdGrove.Raft.ElectionProof.InvLogger")
+  (open "Iris Iris.BI EtcdGrove go_etcd_io.raft.v3")
+  (code ".lake/packages/perennial/Perennial/Code/go_etcd_io/raft/v3.lean" go_etcd_io.raft.v3)
+  (assumptions `go_etcd_io.raft.v3.Assumptions`)
+
+  ;; Sorts.
+  (sort cfgset `GSet w64`)
+  (sort loc `Loc`)
+  (sort w64 `w64`)
+  (sort nstate `NState`)
+  (sort func `GoFunc`)
+  (sort role `PRole`)
+  (sort lok `GoInterfaceOk`)
+  (sort pvs `GMap w64 Progress`)
+  (sort slice `GoSlice`)
+
+  ;; Values.
+  (sym val_loc (loc) val `fun l : Loc => #l`)
+  (sym val_w64 (w64) val `fun w : w64 => #w`)
+  (sym val_func (func) val `fun f : GoFunc => #f`)
+  (sym val_slice (slice) val `fun s : GoSlice => #s`)
+  (sym val_lok (lok) val `fun l : GoInterfaceOk => #(interface.ok l)`)
+  (sym conv_u64_iface (w64) val `fun w : w64 => #(interface.mkOk go.uint64 #w)`)
+
+  ;; Fields of the raft struct.
+  (sym fld_step (loc) loc `fun r : Loc => r.[raft, go!"step"]`)
+  (sym fld_tick (loc) loc `fun r : Loc => r.[raft, go!"tick"]`)
+  (sym fld_lead (loc) loc `fun r : Loc => r.[raft, go!"lead"]`)
+  (sym fld_state (loc) loc `fun r : Loc => r.[raft, go!"state"]`)
+  (sym fld_id (loc) loc `fun r : Loc => r.[raft, go!"id"]`)
+  (sym fld_Term (loc) loc `fun r : Loc => r.[raft, go!"Term"]`)
+  (sym fld_logger (loc) loc `fun r : Loc => r.[raft, go!"logger"]`)
+
+  ;; Functions and methods.
+  (sym fn_stepFollower () func `functions stepFollower []`)
+  (sym fn_traceBecomeFollower () func `functions traceBecomeFollower []`)
+  (sym meth_reset (loc) func `fun r : Loc => methods (go.GoType.PointerType raft.ty) go!"reset" #r`)
+  (sym meth_tickElection (loc) func `fun r : Loc => methods (go.GoType.PointerType raft.ty) go!"tickElection" #r`)
+  (sym meth_becomeFollower (loc) func `fun r : Loc => methods (go.GoType.PointerType raft.ty) go!"becomeFollower" #r`)
+  (sym meth_Infof (lok) func `fun l : GoInterfaceOk => methods l.ty go!"Infof" l.v`)
+
+  ;; The physical state NState (EtcdGrove/Raft/ElectionProof/Defs.lean).
+  (sym nterm (nstate) w64 `fun s : NState => s.term`)
+  (sym set_stepfn (nstate func) nstate `fun (s : NState) (f : GoFunc) => { s with stepfn := f }`)
+  (sym set_prvals (nstate pvs) nstate `fun (s : NState) (p : GMap w64 Progress) => { s with prvals := p }`)
+  (sym set_lead (nstate w64) nstate `fun (s : NState) (v : w64) => { s with lead := v }`)
+  (sym set_role (nstate role) nstate `fun (s : NState) (ro : PRole) => { s with role := ro }`)
+  (sym reset_to (nstate w64) nstate `EtcdGrove.resetTo`)
+  (sym become_follower (nstate w64 w64) nstate `EtcdGrove.becomeFollower`)
+  (sym role_Follower () role `PRole.follower`)
+
+  ;; Code constants: the values (and the one Go type) in the code, exactly as
+  ;; gocheck/tcheck prints them from the Goose output.
+  (const k_alloc_ptr_raft `GoInstruction (GoAlloc (go.GoType.PointerType raft.ty))`)
+  (const k_alloc_u64 `GoInstruction (GoAlloc go.uint64)`)
+  (const k_load_ptr_raft `GoInstruction (GoLoad (go.GoType.PointerType raft.ty))`)
+  (const k_load_u64 `GoInstruction (GoLoad go.uint64)`)
+  (const k_load_Logger `GoInstruction (GoLoad Logger.ty)`)
+  (const k_store_stepFunc `GoInstruction (GoStore stepFunc.ty)`)
+  (const k_store_func0 `GoInstruction (GoStore (go.GoType.FunctionType (go.signature.Signature [] false [])))`)
+  (const k_store_u64 `GoInstruction (GoStore go.uint64)`)
+  (const k_store_StateType `GoInstruction (GoStore StateType.ty)`)
+  (const k_sfr_step `GoInstruction (StructFieldRef raft.ty go!"step")`)
+  (const k_sfr_tick `GoInstruction (StructFieldRef raft.ty go!"tick")`)
+  (const k_sfr_lead `GoInstruction (StructFieldRef raft.ty go!"lead")`)
+  (const k_sfr_state `GoInstruction (StructFieldRef raft.ty go!"state")`)
+  (const k_sfr_id `GoInstruction (StructFieldRef raft.ty go!"id")`)
+  (const k_sfr_Term `GoInstruction (StructFieldRef raft.ty go!"Term")`)
+  (const k_sfr_logger `GoInstruction (StructFieldRef raft.ty go!"logger")`)
+  (const k_fr_stepFollower `GoInstruction (FuncResolve stepFollower [])`)
+  (const k_fr_traceBecomeFollower `GoInstruction (FuncResolve traceBecomeFollower [])`)
+  (const k_mr_reset `GoInstruction (MethodResolve (go.GoType.PointerType raft.ty) go!"reset")`)
+  (const k_mr_tickElection `GoInstruction (MethodResolve (go.GoType.PointerType raft.ty) go!"tickElection")`)
+  (const k_mr_Infof `GoInstruction (MethodResolve Logger.ty go!"Infof")`)
+  (const k_conv_u64_iface `GoInstruction (Convert go.uint64 (go.GoType.InterfaceType []))`)
+  (const k_complit_iface_slice `GoInstruction (CompositeLiteral (go.GoType.SliceType (go.GoType.InterfaceType [])))`)
+  (tconst k_ty_iface `go.GoType.InterfaceType []`)
+  (const k_StateFollower `StateFollower`)
+  (const k_fmt_becomeFollower `#(go!"%x became follower at term %d")`)
+
+  ;; Predicates.
+  (pred pkg_init persistent () `isPkgInit (PROP := IProp GF) pkg_id.go_etcd_io.raft.v3`)
+  (pred phys (cfgset loc w64 nstate) `ownRaftPhys`)
+  (pred pt_loc (loc loc) `fun l v : Loc => iprop(l ↦ v)`)
+  (pred pt_w64 (loc w64) `fun (l : Loc) (v : w64) => iprop(l ↦ v)`)
+  (pred logger persistent (lok) `isLogger`)
+  (pred reset_matched (pvs w64 nstate)
+    `fun (pvs : GMap w64 Progress) (id : w64) (s : NState) => iprop(⌜prvalsMatch pvs = resetMatched id (logLast s.logst) s.prvals⌝)`)
+
+  ;; Locals (IntoValTyped.wp_alloc, IntoValTyped.wp_load).
+  (rule alloc_loc (vars (v loc)) (lhs (app k_alloc_ptr_raft (val_loc v)))
+    (ex (l loc)) (ret (val_loc l)) (post (pt_loc l v)))
+  (rule alloc_w64 (vars (v w64)) (lhs (app k_alloc_u64 (val_w64 v)))
+    (ex (l loc)) (ret (val_loc l)) (post (pt_w64 l v)))
+  (rule load_loc (vars (l loc) (v loc)) (lhs (app k_load_ptr_raft (val_loc l)))
+    (pre (pt_loc l v)) (ret (val_loc v)) (post (pt_loc l v)))
+  (rule load_w64 (vars (l loc) (v w64)) (lhs (app k_load_u64 (val_loc l)))
+    (pre (pt_w64 l v)) (ret (val_w64 v)) (post (pt_w64 l v)))
+
+  ;; Pure steps: field references, function and method values, conversions.
+  (rule sfr_step (vars (r loc)) (lhs (app k_sfr_step (val_loc r))) (ret (val_loc (fld_step r))))
+  (rule sfr_tick (vars (r loc)) (lhs (app k_sfr_tick (val_loc r))) (ret (val_loc (fld_tick r))))
+  (rule sfr_lead (vars (r loc)) (lhs (app k_sfr_lead (val_loc r))) (ret (val_loc (fld_lead r))))
+  (rule sfr_state (vars (r loc)) (lhs (app k_sfr_state (val_loc r))) (ret (val_loc (fld_state r))))
+  (rule sfr_id (vars (r loc)) (lhs (app k_sfr_id (val_loc r))) (ret (val_loc (fld_id r))))
+  (rule sfr_Term (vars (r loc)) (lhs (app k_sfr_Term (val_loc r))) (ret (val_loc (fld_Term r))))
+  (rule sfr_logger (vars (r loc)) (lhs (app k_sfr_logger (val_loc r))) (ret (val_loc (fld_logger r))))
+  (rule fr_stepFollower (vars) (lhs (app k_fr_stepFollower unit)) (ret (val_func fn_stepFollower)))
+  (rule fr_traceBecomeFollower (vars) (lhs (app k_fr_traceBecomeFollower unit))
+    (ret (val_func fn_traceBecomeFollower)))
+  (rule mr_reset (vars (r loc)) (lhs (app k_mr_reset (val_loc r))) (ret (val_func (meth_reset r))))
+  (rule mr_tickElection (vars (r loc)) (lhs (app k_mr_tickElection (val_loc r)))
+    (ret (val_func (meth_tickElection r))))
+  (rule mr_Infof (vars (l lok)) (lhs (app k_mr_Infof (val_lok l))) (ret (val_func (meth_Infof l))))
+  (rule conv_u64_iface (vars (w w64)) (lhs (app k_conv_u64_iface (val_w64 w))) (ret (conv_u64_iface w)))
+
+  ;; Fields of the raft struct (the raft.wp_load_* / raft.wp_store_* lemmas
+  ;; of EtcdGrove/Raft/ElectionProof/InvRaftPhys.lean).
+  (rule store_step (vars (cfg cfgset) (r loc) (id w64) (s nstate) (f func))
+    (lhs (app k_store_stepFunc (pair (val_loc (fld_step r)) (val_func f))))
+    (pre (phys cfg r id s)) (ret unit) (post (phys cfg r id (set_stepfn s f))))
+  (rule store_tick (vars (cfg cfgset) (r loc) (id w64) (s nstate) (f func))
+    (lhs (app k_store_func0 (pair (val_loc (fld_tick r)) (val_func f))))
+    (pre (phys cfg r id s)) (ret unit) (post (phys cfg r id s)))
+  (rule store_lead (vars (cfg cfgset) (r loc) (id w64) (s nstate) (v w64))
+    (lhs (app k_store_u64 (pair (val_loc (fld_lead r)) (val_w64 v))))
+    (pre (phys cfg r id s)) (ret unit) (post (phys cfg r id (set_lead s v))))
+  (rule store_state_Follower (vars (cfg cfgset) (r loc) (id w64) (s nstate))
+    (lhs (app k_store_StateType (pair (val_loc (fld_state r)) k_StateFollower)))
+    (pre (phys cfg r id s)) (ret unit) (post (phys cfg r id (set_role s role_Follower))))
+  (rule load_id (vars (cfg cfgset) (r loc) (id w64) (s nstate))
+    (lhs (app k_load_u64 (val_loc (fld_id r))))
+    (pre (phys cfg r id s)) (ret (val_w64 id)) (post (phys cfg r id s)))
+  (rule load_Term (vars (cfg cfgset) (r loc) (id w64) (s nstate))
+    (lhs (app k_load_u64 (val_loc (fld_Term r))))
+    (pre (phys cfg r id s)) (ret (val_w64 (nterm s))) (post (phys cfg r id s)))
+  (rule load_logger (vars (cfg cfgset) (r loc) (id w64) (s nstate))
+    (lhs (app k_load_Logger (val_loc (fld_logger r))))
+    (pre (phys cfg r id s)) (ex (l lok)) (ret (val_lok l)) (post (phys cfg r id s) (logger l)))
+
+  ;; Logging: the argument slice, and the Logger spec (Logger.wp_logf,
+  ;; EtcdGrove/Raft/ElectionProof/InvLogger.lean).
+  (rule slice_lit_u64_u64 (vars (a w64) (b w64))
+    (lhs (app k_complit_iface_slice (lit k_ty_iface (conv_u64_iface a) (conv_u64_iface b))))
+    (ex (sl slice)) (ret (val_slice sl)))
+  (rule logf_Infof_becomeFollower (vars (l lok) (sl slice))
+    (lhs (app (app (val_func (meth_Infof l)) k_fmt_becomeFollower) (val_slice sl)))
+    (pre (logger l)) (ret unit))
+
+  ;; Callees (linked to the callee specs the proof that uses them takes as
+  ;; hypotheses: EtcdGrove's raft.reset.spec and traceBecomeFollower.spec).
+  (rule reset (vars (cfg cfgset) (r loc) (id w64) (s nstate) (term w64))
+    (lhs (app (val_func (meth_reset r)) (val_w64 term)))
+    (pre (pkg_init) (phys cfg r id s)) (ex (pvs pvs)) (ret unit)
+    (post (phys cfg r id (set_prvals (reset_to s term) pvs)) (reset_matched pvs id s)))
+  (rule traceBecomeFollower (vars (r loc))
+    (lhs (app (val_func fn_traceBecomeFollower) (val_loc r)))
+    (pre (pkg_init)) (ret unit))
+
+  ;; What becomeFollower's stores amount to (becomeFollower, Defs.lean).
+  (fact become_follower
+    (vars (s nstate) (term w64) (pvs pvs) (lead w64))
+    (lhs (set_role (set_lead (set_prvals (reset_to (set_stepfn s fn_stepFollower) term) pvs) lead)
+           role_Follower))
+    (rhs (set_prvals (become_follower s term lead) pvs)))
+
+  ;; Specifications (EtcdGrove/Raft/ElectionProof/Spec/*.lean).  Each func is
+  ;; checked against its specification, and is a rule for the others: the
+  ;; call of its head on its arguments after the receiver.
+  (func becomeFollower `raft.becomeFollower.impl`
+    (vars (cfg cfgset) (r loc) (id w64) (s nstate) (term w64) (lead w64))
+    (head (val_func (meth_becomeFollower r)))
+    (args (val_loc r) (val_w64 term) (val_w64 lead))
+    (pre (pkg_init) (phys cfg r id s))
+    (ex (pvs pvs)) (ret unit)
+    (post (phys cfg r id (set_prvals (become_follower s term lead) pvs)))))
