@@ -41,3 +41,9 @@ Append-only, newest last.
   target only exists after Lake fetches the dependencies. `demo.sh`, both
   `observe.sh` and `etc/goose.sh` now check for it up front and say to run
   `lake build` first.
+- etcd-grove is private, so `lakefile.toml` and `lake-manifest.json` now
+  fetch it over ssh (`git@github.com:upamanyus/etcd-grove`); Perennial and
+  the upstream packages stay on https. An existing clone keeps its old
+  remote: `git -C .lake/packages/etcdGrove remote set-url origin
+  git@github.com:upamanyus/etcd-grove`, or Lake re-clones it at the next
+  pin change.

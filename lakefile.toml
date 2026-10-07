@@ -12,9 +12,10 @@ rev = "8c75a3dd4afb507c789271e2ee85c2aaec7a7bf3"
 # The Lean port of the etcd raft election proof (branch `lean` of
 # upamanyus/etcd-grove). Only the table-driven checker's raft client uses it:
 # its rules are that development's accessor lemmas.
+# A private repository, so it is fetched over ssh.
 [[require]]
 name = "etcdGrove"
-git = "https://github.com/upamanyus/etcd-grove"
+git = "git@github.com:upamanyus/etcd-grove"
 rev = "51d6df02dd3ffae5f2a95a83145978c35eab60a6"
 
 # Goose output for this repository's Go packages (generated; do not edit).

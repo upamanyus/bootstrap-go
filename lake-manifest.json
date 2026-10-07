@@ -15,7 +15,7 @@
    "configFile": "lakefile.toml"
   },
   {
-   "url": "https://github.com/upamanyus/etcd-grove",
+   "url": "git@github.com:upamanyus/etcd-grove",
    "type": "git",
    "subDir": null,
    "scope": "",
