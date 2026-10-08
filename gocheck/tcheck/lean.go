@@ -302,12 +302,12 @@ func genObservation(t *table, tableFile string, f *funcDecl, inp *tcheck.Input, 
 	fmt.Fprintf(&b, "def %s_facts : List tfact := [%s]\n\n", F, strings.Join(fs, ", "))
 	fmt.Fprintf(&b, "def %s_input : tinput :=\n  mkInput %s_syms %s_preds %s_rules %s_facts %s_func %s_spec_%s\n\n", F, T, T, F, F, F, T, F)
 	b.WriteString("/-- OBSERVE-EXECUTION: tcheck.Check returned true on exactly these bytes. -/\n")
-	fmt.Fprintf(&b, "axiom %s_check_run : observed_run\n  go!%s\n\n", F, leanQuote(bytes))
-	b.WriteString("set_option maxRecDepth 100000 in\n")
-	b.WriteString("/-- The bytes are `ser_input` of the input, by kernel evaluation (`decide +kernel`; the\n" +
-		"list comparison recurses once per byte, hence `maxRecDepth`). -/\n")
+	fmt.Fprintf(&b, "axiom %s_check_run : observed_run\n  obs!%s\n\n", F, leanQuote(bytes))
+	b.WriteString("/-- The bytes are `ser_input` of the input: the encoder (Checkers/TCheck/Encode.lean)\n" +
+		"computes them, as a length and a number, from the input, and the kernel compares the two\n" +
+		"numbers with `obs!`'s (`rfl`, checked by the kernel alone). -/\n")
 	fmt.Fprintf(&b, "theorem %s_holds : input_holds %s_input :=\n", F, F)
-	fmt.Fprintf(&b, "  observed_input_holds _ _ (by decide +kernel) %s_check_run\n\n", F)
+	fmt.Fprintf(&b, "  observed_input_holds_enc _ _ _ (by kernel_rfl) %s_check_run\n\n", F)
 	b.WriteString("section den\n" + ambientVars)
 	fmt.Fprintf(&b, "variable [package_sem : %s]\n\n", t.assumptions)
 	b.WriteString("/-- The checked function is Goose's. -/\n")

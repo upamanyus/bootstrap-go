@@ -66,9 +66,11 @@ Reading `Checkers/TCheck/Observe.lean` once is the whole audit:
   `tcheck.Check`
   (`Generated/Code/github_com/upamanyus/bootstrap_go/tcheck.lean`), so it can
   be proved the way `new/checker/` proved `check_sound` for `checker/`.
-- **One observation per function**: `axiom f_check_run : observed_run go!"<bytes>"`,
+- **One observation per function**: `axiom f_check_run : observed_run obs!"<bytes>"`,
   generated, whose bytes are verbatim what the Go run read (as a Lean string
-  literal; Perennial's `go!` elaborator turns it into its UTF-8 bytes).
+  literal; the `obs!` elaborator, `Observe.lean`, turns it into
+  `bytes_of_nat len N`: its UTF-8 bytes, as their number and one big-endian
+  number).
   `bash gocheck/tcheck/observe.sh` reruns `tcheck.Check` on those bytes,
   regenerates every observation file from scratch (reifying the code and
   running the checker again), and fails unless the output is identical.
@@ -76,7 +78,10 @@ Reading `Checkers/TCheck/Observe.lean` once is the whole audit:
 Not trusted: the frontend. The function's code is checked to be Goose's by
 `rfl` (`f_func_val`); every rule is proved from a lemma (so a mis-transcribed
 rule fails to link); the bytes are checked to be `ser_input` of the Lean
-input by kernel evaluation (`decide +kernel`, never `native_decide`); and the
+input by the kernel (`Checkers/TCheck/Encode.lean`: an encoder computes the
+two numbers from the input, proved to be `ser_input`'s, and the proof is `rfl`
+between them, checked by the kernel alone -- `kernel_rfl` -- never
+`native_decide`); and the
 final specification is etcdGrove's, imported, not restated.
 
 `#print axioms raft.becomeFollower.wp_proof` lists `check_adequate` and
@@ -161,7 +166,7 @@ imports; Rocq's from `main`'s README for comparison):
 | | Lean | Rocq |
 |---|---|---|
 | `go run ./gocheck/tcheck ... -func becomeFollower` (built binary: 0.04 s) | 0.13 s | 0.15 s |
-| `Observed/raft__becomeFollower.lean` (5.1 s of it the kernel's `decide` of the bytes; `F_func_val`'s `rfl` 0.26 s) | 7.7 s | 8.9 s |
+| `Observed/raft__becomeFollower.lean` (the bytes' `rfl` 0.47 s; `F_func_val`'s `rfl` 0.30 s; until 2026-10-08, `decide` on the bytes as a list: 5.1 s, file 7.7 s) | 3.1 s | 8.9 s |
 | `Proof/raft__becomeFollower.lean` (`becomeFollower_table_ok` 0.34 s, the conversion to the spec 0.21 s) | 2.8 s | 8.0 s |
 | `LinkTableRaft.lean` (once per table; `tc_simp` 0.1–0.25 s per hand-proved rule) | 3.1 s | 9.9 s |
 | `TableRaft.lean` (once per table) | 3.8 s | |
@@ -196,32 +201,32 @@ and non-persistent atoms), rules (`applyRule_sound`: the rule's triple, at the
 values matching bound; the spine search and `reduce`), and evaluation
 (`eval_sound`, one case per construct, in continuation-passing style).
 
-`bash gocheck/tcheck/reflect_bench.sh` (2026-10-07):
+`bash gocheck/tcheck/reflect_bench.sh` (2026-10-08):
 
 ```
 Lean (version 4.34.1, x86_64-unknown-linux-gnu, commit 5045d0056413266e57c625dcd7c365b10e377c52, Release)
 
 input_holds becomeFollower_input: seconds of wall clock, median of 3 runs, minus imports
-  observed  5.13
-  kernel    1.50
-  native    0.15
-  interp    0.12
+  observed  0.71
+  kernel    1.42
+  native    0.14
+  interp    0.19
 
 Lean's profiler (one run; cumulative over the file):
-  observed  type checking 4.77s (of which the bytes = ser_input check is most)
-  kernel    type checking 1.17s
-  native    evaluation 3.84ms
-  interp    evaluation 7.64ms
+  observed  type checking 556ms (of which the bytes = ser_input check is most)
+  kernel    type checking 1.32s
+  native    evaluation 6.22ms
+  interp    evaluation 12.4ms
 
 One call of the checker on becomeFollower's input, microseconds, mean of 10000 calls:
-  Go        tcheck.Check 327.777, tcheck.Run 192.645
-  ltcheck   compiled 208.6, interpreted 3118.8 (1000 calls)
+  Go        tcheck.Check 400.401, tcheck.Run 219.632
+  ltcheck   compiled 232.3, interpreted 3028.7 (1000 calls)
 ```
 
-The observed proof's cost is nearly all the kernel's check that the axiom's
-bytes are `ser_input` of the input; the reflective proof replaces it with the
-kernel running the checker itself (1.2 s) or, with `native_decide`, with 4 ms of
-evaluation. Compiled, `ltcheck` costs what the Go checker's `tcheck.Run` costs
+The observed proof's cost is now mostly the kernel's comparison of the bytes as
+numbers (below; 4.8 s as a list, until 2026-10-08). The reflective proof
+replaces the observation by the kernel running the checker itself (1.3 s) or,
+with `native_decide`, by a few ms of evaluation. Compiled, `ltcheck` costs what the Go checker's `tcheck.Run` costs
 (about 0.2 ms; `tcheck.Check` also parses the bytes).
 
 ### Against the hand-written proof
@@ -234,10 +239,26 @@ checks in 2.24 s. Per function, to the same specification (2026-10-07,
 
 ```
 hand-written proof (etcdGrove)                        2.24
-observed Go run: Observed/ 5.17 + Proof/ 0.70         5.87
+observed Go run: Observed/ 0.96 + Proof/ 0.70         1.66
+  (with the bytes compared as a list, until 2026-10-08: 5.17 + 0.70 = 5.87)
 ltcheck, decide +kernel  (Reflect/, kernel only)      1.47
 ltcheck, native_decide   (Reflect/, native only)      0.35
 ```
+
+### Comparing the bytes fast
+
+An observation proves its bytes are `ser_input` of its input. As lists
+(`GoString`), the kernel needs about 0.4 ms per byte: it builds `ser_input`'s
+list one cons cell at a time (computing just its length takes 3.5 s), so
+`decide` took 4.8 s on becomeFollower's 6,735 bytes, and plain `rfl` 3.0 s in the
+kernel plus as much again in the elaborator. The kernel's fast data is `Nat`
+(GMP literals and arithmetic; `Array` and `ByteArray` are lists to it, and
+`String` literals must be expanded). So `Checkers/TCheck/Encode.lean` encodes a
+byte string as `(length, big-endian number)`, `encInput` computes that for
+`ser_input i` a token at a time (proved: `encInput_eq`), and the axiom's bytes
+are elaborated by `obs!` to `bytes_of_nat len N` with `N` one literal. The
+proof is `encInput i = (len, N)` by `rfl`, checked by the kernel alone
+(`kernel_rfl`, Observe.lean): 0.47 s.
 
 Not per function: the table (`TableRaft.lean` 1.66, `LinkTableRaft.lean`
 1.04), once per table for both tcheck routes; `ltcheck_sound`

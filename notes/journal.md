@@ -145,3 +145,18 @@ Append-only, newest last.
   `spec_rule_valid` term took 5.9 s of elaboration (unification through the
   denotation with metavariables); stating `rule_valid ... raft_rule_becomeFollower`
   first and converting, as both tcheck proofs do, takes 0.2 s.
+
+## 2026-10-08 — observation bytes compared as numbers
+
+- Where the observed proof's 5.1 s went: computing `ser_input`'s list in the
+  kernel (its length alone: 3.5 s), about 0.4 ms per cons cell (even
+  `(List.replicate 4000 x).length` costs 0.38 s), plus ~2 ms per character to
+  expand `String` literals (names). Comparing was not the cost.
+- Encode.lean: `encInput` computes `(length, big-endian value)` of
+  `ser_input` with whole-token `Nat` arithmetic (`tok!"…"` elaborates a token
+  to its literal pair with a proof); `encInput_eq` proves it is
+  `asEnc (ser_input i)` (a monoid map: `asEnc_append`, `eapp_assoc`;
+  normalize both sides to left-nested `eapp`s). A token proof must carry its
+  intended type (`mkExpectedTypeHint`), or `rw`/`simp` cannot match it.
+- Observed file: 0.96 s minus imports (was 5.17); observed route to the spec
+  1.66 s, below etcdGrove's hand-written proof (2.24 s).

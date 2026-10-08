@@ -11,9 +11,11 @@ order to trust a generated observation file.
   semantics, from a state whose heap holds the byte slice `b`, returns
   `#true`. A generated observation file
   (`Checkers/TCheck/**/Observed/*.lean`, written by gocheck/tcheck) contains
-  exactly one axiom, of the form `axiom name : observed_run go!"<bytes>"`,
+  exactly one axiom, of the form `axiom name : observed_run obs!"<bytes>"`,
   where the bytes are verbatim the ones the Go run was given (as a Lean
-  string literal, `"` escaped as `\"`).  It is *evidence*, not an
+  string literal, `"` escaped as `\"`), and `obs!` (below) elaborates them
+  to `bytes_of_nat len N`: their number and their value as one big-endian
+  number, the form the kernel compares with `ser_input` fast (Encode.lean).  It is *evidence*, not an
   assumption about the world: `bash gocheck/tcheck/observe.sh` reruns the
   Go checker on those very bytes and regenerates every such file, which
   must come out identical.
@@ -29,13 +31,16 @@ Lean notes: the run is `RealNsteps` (`Perennial/GooseLang/BoundedLang.lean`),
 the real thread-pool semantics the adequacy theorem `goose_adequacy` is
 about, for some number of steps (Rocq: `rtc erased_step`); `ffi_initgP` and
 `ffi_initP` are fields of `FfiInterpAdequacy`, as in Rocq's
-`ffi_interp_adequacy`. The trusted base is also the `go!` elaborator
-(`Perennial/Std/ByteString.lean`), which turns the axiom's string literal
-into its UTF-8 bytes.
+`ffi_interp_adequacy`. The trusted base is also the `obs!` elaborator
+(below), which turns the axiom's string literal into `bytes_of_nat` of its
+UTF-8 bytes (`bytes_of_nat`, Encode.lean, a five-line definition, is then part
+of what the axiom says). An older observation file may use Perennial's `go!`
+instead (the bytes as a list), with `observed_input_holds`.
 -/
 import Perennial.GooseLang.Adequacy
 import Generated.Code.github_com.upamanyus.bootstrap_go.tcheck
 import Checkers.TCheck.Denote
+import Checkers.TCheck.Encode
 
 noncomputable section
 
@@ -88,6 +93,36 @@ of its input (by computation), and the run on them was observed. -/
 theorem observed_input_holds (i : tinput) (b : GoString) :
     ser_input i = b → observed_run b → input_holds i := by
   intro h hrun; subst h; exact check_adequate i hrun
+
+open Lean Elab Term Meta in
+/-- `obs!"<bytes>"`: the UTF-8 bytes of the string literal, as
+`bytes_of_nat len N` (Encode.lean) with `len` the number of bytes and `N`
+the bytes read as one big-endian number -- the same `GoString` as
+`go!"<bytes>"`, in a form whose comparison with `ser_input` the kernel does
+with numbers. Trusted, as `go!` is: an observation axiom is stated with it. -/
+elab:max "obs!" s:str : term => do
+  let bs := s.getString.toUTF8.toList
+  let n := bs.foldl (fun acc b => acc * 256 + b.toNat) 0
+  return mkApp2 (mkConst ``bytes_of_nat) (mkNatLit bs.length) (mkNatLit n)
+
+/-- How a generated observation file concludes, with the bytes as
+`obs!"…"`: the encoder's answer on the input is the two numbers, which the
+kernel checks by `rfl` (`kernel_rfl`), and the run on those bytes was
+observed. -/
+theorem observed_input_holds_enc (i : tinput) (len n : Nat) :
+    encInput i = (len, n) → observed_run (bytes_of_nat len n) → input_holds i := by
+  intro h hrun
+  exact observed_input_holds i _ (ser_eq_of_enc i len n h) hrun
+
+open Lean Elab Tactic Meta in
+/-- Close `a = b` by `rfl`, `Eq.refl a`, checked by the kernel alone (the
+elaborator's own check of the same definitional equality, which `exact rfl`
+makes, is skipped: it is as slow as the kernel's, and redundant). -/
+elab "kernel_rfl" : tactic => do
+  let g ← getMainGoal
+  let some (_, lhs, _) := (← instantiateMVars (← g.getType)).eq?
+    | throwError "kernel_rfl: the goal is not an equation"
+  g.assign (← mkEqRefl lhs)
 
 end TCheck
 end Perennial

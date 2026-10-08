@@ -31,7 +31,7 @@ func die(code int, format string, args ...any) {
 	os.Exit(code)
 }
 
-var axiomRe = regexp.MustCompile(`(?m)^axiom (\S+) : observed_run\s+go!("(?:[^"\\]|\\.)*")`)
+var axiomRe = regexp.MustCompile(`(?m)^axiom (\S+) : observed_run\s+(?:go|obs)!("(?:[^"\\]|\\.)*")`)
 
 func verify(path string, timeN int) {
 	b, err := os.ReadFile(path)

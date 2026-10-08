@@ -126,3 +126,23 @@ reused without its axiom.
 is what reflection needs, and its semantic layer is what a proof of the Go
 code would be built on (as `Checkers/Checker/` is), so it comes first either
 way.
+
+## An observation's bytes are compared as numbers
+
+**2026-10-08 · accepted**
+
+`obs!"<bytes>"` (Observe.lean) elaborates an observation's recorded bytes to
+`bytes_of_nat len N` (their count and big-endian value), and the generated
+proof is `observed_input_holds_enc _ _ _ (by kernel_rfl) run`: `rfl` between
+`encInput i`, an encoder proved to compute `(length, value)` of `ser_input i`
+(Encode.lean, `encInput_eq`), and `(len, N)`. The kernel's only fast data is
+`Nat` (GMP), so this takes 0.47 s where `decide` on the list took 4.8 s and
+`rfl` on the list 3.0 s (the cost is building `ser_input`'s list, ~0.4 ms per
+cons cell, not comparing). The axiom still shows the bytes verbatim; the
+trusted base trades Perennial's `go!` for `obs!` and the five-line
+`bytes_of_nat`. `kernel_rfl` assigns `Eq.refl` without the elaborator's own
+defeq check (as slow as the kernel's, 0.9 s, plus 0.9 s registering an
+`rfl` theorem), so the kernel alone checks it.
+
+**Rejected — `native_decide` or `#eval` for the bytes.** The comparison is
+the link between the trusted axiom and the input; it stays in the kernel.
