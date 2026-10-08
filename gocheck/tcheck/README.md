@@ -234,31 +234,25 @@ with `native_decide`, by a few ms of evaluation. Compiled, `ltcheck` costs what 
 etcdGrove's own hand-written proof of `raft.becomeFollower.spec`
 (`EtcdGrove/Raft/ElectionProof/Proof/raft__becomeFollower.lean`, on etcdGrove's
 `lean` branch after the pinned commit; it compiles unchanged against the pin)
-checks in 2.24 s. Per function, to the same specification (2026-10-07,
-`lake env lean`, seconds minus loading imports, median of 5):
+checks in 2.26 s. Per function, to the same specification (2026-10-08,
+`lake env lean`, seconds minus loading imports, median of 5, one session). Both
+tcheck routes count the same work -- the input's definitions, the `rfl` that
+its function is Goose's, `call_ok`, the validity of the rules used, and the
+conversion to the spec -- and differ only in how `input_holds` is obtained:
 
 ```
-hand-written proof (etcdGrove)                        2.24
-observed Go run: Observed/ 0.96 + Proof/ 0.70         1.66
-  (with the bytes compared as a list, until 2026-10-08: 5.17 + 0.70 = 5.87)
-ltcheck, decide +kernel  (Reflect/, kernel only)      1.47
-ltcheck, native_decide   (Reflect/, native only)      0.35
+hand-written proof (etcdGrove)                          2.26
+observed Go run: Observed/ 0.72 + Proof/ 0.52           1.24
+ltcheck, decide +kernel  (the same, without the axiom)  1.89
+ltcheck, native_decide   (the same, without the axiom)  0.65
 ```
 
-### Comparing the bytes fast
-
-An observation proves its bytes are `ser_input` of its input. As lists
-(`GoString`), the kernel needs about 0.4 ms per byte: it builds `ser_input`'s
-list one cons cell at a time (computing just its length takes 3.5 s), so
-`decide` took 4.8 s on becomeFollower's 6,735 bytes, and plain `rfl` 3.0 s in the
-kernel plus as much again in the elaborator. The kernel's fast data is `Nat`
-(GMP literals and arithmetic; `Array` and `ByteArray` are lists to it, and
-`String` literals must be expanded). So `Checkers/TCheck/Encode.lean` encodes a
-byte string as `(length, big-endian number)`, `encInput` computes that for
-`ser_input i` a token at a time (proved: `encInput_eq`), and the axiom's bytes
-are elaborated by `obs!` to `bytes_of_nat len N` with `N` one literal. The
-proof is `encInput i = (len, N)` by `rfl`, checked by the kernel alone
-(`kernel_rfl`, Observe.lean): 0.47 s.
+The observed route's `input_holds` is the kernel's comparison of two numbers
+(0.47 s, below); the reflective kernel route's is the kernel running `ltcheck`
+(about 1.2 s); `native_decide` runs it compiled. (`Reflect/raft__becomeFollower.lean`
+imports the observed files' definitions and `becomeFollower_table_ok`, so timing
+that file alone undercounts it; an earlier version of this table did, and also
+predates the byte check below.)
 
 Not per function: the table (`TableRaft.lean` 1.66, `LinkTableRaft.lean`
 1.04), once per table for both tcheck routes; `ltcheck_sound`

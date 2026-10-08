@@ -66,7 +66,7 @@ all of it (680 jobs); no file of this repository has a `sorry`.
   numbers, Encode.lean), 1.4 s kernel, 0.15 s `native_decide`; one
   check 0.2 ms compiled (`ltcheck`, Go's `tcheck.Run`), 3 ms interpreted.
   etcdGrove's hand-written proof (its `lean` branch, past our pin) checks in
-  2.24 s; to the spec, observed 1.66 s (was 5.87), `ltcheck` kernel 1.47 s, native 0.35 s
+  2.26 s; to the spec, counting the same work, observed 1.24 s (was 5.87), `ltcheck` kernel 1.89 s, native 0.65 s
   (plus the table, 2.7 s per table; README there).
 
 ## Next

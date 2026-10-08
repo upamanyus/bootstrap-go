@@ -160,3 +160,12 @@ Append-only, newest last.
   intended type (`mkExpectedTypeHint`), or `rw`/`simp` cannot match it.
 - Observed file: 0.96 s minus imports (was 5.17); observed route to the spec
   1.66 s, below etcdGrove's hand-written proof (2.24 s).
+
+## 2026-10-08 — a fair per-function comparison
+
+- The earlier "reflective 1.47 s / 0.35 s" timed Reflect/raft__becomeFollower.lean,
+  which imports the observed files' definitions (`F_func_val`'s `rfl`, 0.3 s) and
+  `becomeFollower_table_ok` (0.34 s) instead of checking them, so it undercounted.
+  With the same contents (a scratch file: the observed files' bodies, the axiom
+  replaced by `ltcheck_sound`), one session: hand-written 2.26, observed 1.24,
+  reflective kernel 1.89, reflective native 0.65.
